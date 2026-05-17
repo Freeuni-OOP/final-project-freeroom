@@ -1,6 +1,6 @@
 # FreeRoom: Real-Time Campus Room Availability Tracker
 
-![Language](https://img.shields.io/badge/language-Java%2FTypeScript-blue.svg)
+![Language](https://img.shields.io/badge/language-Java%2FJavaScript-blue.svg)
 ![Framework](https://img.shields.io/badge/framework-Spring%20Boot-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)
 
@@ -24,7 +24,7 @@
 The core logic is driven by a **Java (Spring Boot)** backend, managing REST APIs, scheduled tasks, and database connections while strictly adhering to Object-Oriented Programming (OOP) principles. Data persistence is handled by **MySQL**, which stores user accounts, room metadata, schedule logs, waitlist requests, and gamification scores.
 
 ### 2. Frontend & Interactive Mapping
-The user interface is built with **Vanilla TypeScript/JavaScript, HTML5, and CSS3**. The mapping component utilizes **Leaflet.js**, layering clickable, responsive room overlays on top of a static SVG or image base map of the campus floor plan. Live map updates are supported seamlessly through HTTP short polling (refreshing approximately every 30 seconds).
+The user interface is built with **React, JavaScript, and Tailwind CSS**. 
 
 ### 3. External Integrations
 * **Google Calendar API:** Enables automated syncing of official university lecture schedules.
@@ -42,3 +42,27 @@ The user interface is built with **Vanilla TypeScript/JavaScript, HTML5, and CSS
 
 ## License
 MIT License. Free for educational and research use.
+
+***
+
+## Running the Project
+
+### Prerequisites
+- Node.js (for the frontend client)
+- Java 17+ (for the Spring Boot server)
+- MySQL Database
+
+### Client (Frontend)
+Navigate to the `client` directory to install dependencies and start the Vite development server:
+```bash
+cd client
+npm install
+npm run dev
+```
+
+### Server (Backend)
+Navigate to the `server` directory. Make sure to configure your database settings first (refer to `.env.example`).
+```bash
+cd server
+./mvnw spring-boot:run
+```
