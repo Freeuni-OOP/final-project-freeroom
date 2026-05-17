@@ -1,8 +1,39 @@
-# Compiled Java class files
-*.class
+# =========================
+# Spring Boot (Backend)
+# =========================
+HELP.md
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
 
-# Log files
-*.log
+# STS
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# IntelliJ IDEA
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/nbdist/
+/.nb-gradle/
+
+# Build tools (Maven/Gradle)
+.gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
 
 # Package Files
 *.jar
@@ -17,58 +48,51 @@
 hs_err_pid*
 replay_pid*
 
-# Build tools (Maven/Gradle)
-target/
-pom.xml.tag
-pom.xml.releaseBackup
-pom.xml.versionsBackup
-pom.xml.next
-release.properties
-dependency-reduced-pom.xml
-buildNumber.properties
-.mvn/timing.properties
-.mvn/wrapper/maven-wrapper.jar
-.gradle/
-build/
-
-# IntelliJ IDEA (JetBrains)
-.idea/
-*.iml
-*.iws
-*.ipr
-out/
-
-# Eclipse
-.classpath
-.project
-.settings/
-.metadata/
-bin/
-
-# VS Code
-.vscode/
-*.code-workspace
-
-# OS specific files
-.DS_Store
-.AppleDouble
-.LSOverride
-Icon
-._*
-.Spotlight-V100
-.Trashes
-Thumbs.db
-
-# Frontend / Node.js
-node_modules/
-dist/
+# =========================
+# React / Node.js (Frontend)
+# =========================
+# Logs
+logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+lerna-debug.log*
 
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# =========================
 # Environment variables
+# =========================
 .env
+.env.test
+.env.production
 .env.local
-.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
 
+# =========================
+# OS specific files
+# =========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
