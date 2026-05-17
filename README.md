@@ -1,3 +1,44 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/skmUAHf8)
-# Final-Project
-OOP ფინალური პროექტი
+# FreeRoom: Real-Time Campus Room Availability Tracker
+
+![Language](https://img.shields.io/badge/language-Java%2FTypeScript-blue.svg)
+![Framework](https://img.shields.io/badge/framework-Spring%20Boot-green.svg)
+![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)
+
+**FreeRoom** is a real-time, interactive campus map web application built to solve the universal problem of finding a free room to study or hold meetings. It aggregates official university lecture schedules and ad-hoc student check-ins to display room availability instantly.
+
+***
+
+## Key Features
+
+* **Interactive Live Map:** Users can zoom and pan across a campus floor plan to see real-time room statuses, with intuitive color-coded overlays (Green = Free, Red = Occupied).
+* **Official Schedule Sync:** A scheduled task periodically fetches official lecture times from Google Calendar and automatically blocks out officially occupied rooms.
+* **Ad-Hoc Check-in:** For rooms not officially booked, students can check-in directly through the website to claim the room and declare their expected departure time.
+* **Telegram Waitlists & Alerts:** Users link their web account to a Telegram bot using a secure sync code. If a room is full, they can join a waitlist, receive impending expiry warnings, and get notified immediately when the room frees up.
+* **Gamification & Honor System:** Users gain reputation points for accurately checking out early, and lose points if their time expires while another user reports the room as empty.
+
+***
+
+## Technical Architecture
+
+### 1. Backend & Data Management
+The core logic is driven by a **Java (Spring Boot)** backend, managing REST APIs, scheduled tasks, and database connections while strictly adhering to Object-Oriented Programming (OOP) principles. Data persistence is handled by **MySQL**, which stores user accounts, room metadata, schedule logs, waitlist requests, and gamification scores.
+
+### 2. Frontend & Interactive Mapping
+The user interface is built with **Vanilla TypeScript/JavaScript, HTML5, and CSS3**. The mapping component utilizes **Leaflet.js**, layering clickable, responsive room overlays on top of a static SVG or image base map of the campus floor plan. Live map updates are supported seamlessly through HTTP short polling (refreshing approximately every 30 seconds).
+
+### 3. External Integrations
+* **Google Calendar API:** Enables automated syncing of official university lecture schedules.
+* **Telegram Bot API:** Handles waitlist operations, expiry warnings, and availability alerts directly to users without requiring phone numbers.
+
+***
+
+## Usage Options
+
+* **Live Status:** Check the map before heading to campus to spot free areas.
+* **Reserve on the Go:** Check-in via the website when entering a room to mark it as occupied.
+* **Waitlist & Updates:** Connect to the Telegram bot to get in line for highly requested spaces.
+
+***
+
+## License
+MIT License. Free for educational and research use.
