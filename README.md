@@ -15,7 +15,7 @@
 * **Ad-Hoc Check-in:** For rooms not officially booked, students can check-in directly through the website to claim the room and declare their expected departure time.
 * **Telegram Waitlists & Alerts:** Users link their web account to a Telegram bot using a secure sync code. If a room is full, they can join a waitlist, receive impending expiry warnings, and get notified immediately when the room frees up.
 * **Gamification & Honor System:** Users gain reputation points for accurately checking out early, and lose points if their time expires while another user reports the room as empty.
-
+* **Missed lecture viewer:** Users can view when current week's lecture topic will be held again if there will be any. Useful if user missed their class and want to catch up.
 ***
 
 ## Technical Architecture
