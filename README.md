@@ -21,7 +21,7 @@
 ## Technical Architecture
 
 ### 1. Backend & Data Management
-The core logic is driven by a **Java (Spring Boot)** backend, managing REST APIs, scheduled tasks, and database connections while strictly adhering to Object-Oriented Programming (OOP) principles. Data persistence is handled by **MySQL**, which stores user accounts, room metadata, schedule logs, waitlist requests, and gamification scores.
+The core logic is driven by a **Java (Spring Boot)** backend, managing REST APIs, scheduled tasks, and database connections while strictly adhering to Object-Oriented Programming (OOP) principles. Data persistence is handled by **PostgreSQL**, which stores user accounts, room metadata, schedule logs, waitlist requests, and gamification scores.
 
 ### 2. Frontend & Interactive Mapping
 The user interface is built with **React, JavaScript, and Tailwind CSS**. 
@@ -50,7 +50,7 @@ MIT License. Free for educational and research use.
 ### Prerequisites
 - Node.js (for the frontend client)
 - Java 17+ (for the Spring Boot server)
-- MySQL Database
+- PostgreSQL Database
 
 ### Client (Frontend)
 Navigate to the `client` directory to install dependencies and start the Vite development server:
@@ -66,3 +66,11 @@ Navigate to the `server` directory. Make sure to configure your database setting
 cd server
 ./mvnw spring-boot:run
 ```
+
+### Database Connection & Credentials (PostgreSQL)
+
+The Spring Boot backend connects directly to a cloud-hosted PostgreSQL instance provisioned via Supabase in the EU (Frankfurt) region.
+
+* **Database Type:** PostgreSQL 15+
+* **API URL:** `https://lahucjwdhglaxwdkiroz.supabase.co`
+* **Client Anon Key:** (Shared privately via team chat)
