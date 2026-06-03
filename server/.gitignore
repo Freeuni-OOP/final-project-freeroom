@@ -1,2 +1,5 @@
 /target
 .idea
+# Firebase Service Account Key
+**/src/main/resources/serviceAccountKey.json
+serviceAccountKey.json
