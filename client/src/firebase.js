@@ -18,10 +18,12 @@ export const auth = getAuth(app);
 export const loginWithGoogle = async () => {
   const provider = new GoogleAuthProvider();
   const result = await signInWithPopup(auth, provider);
-  const email = result.user.email;
+  const email = result.user.email?.toLowerCase();
+  const allowedDomains = ["@freeuni.edu.ge", "@agruni.edu.ge"];
 
-  if (email && (email.endsWith('@freeuni.edu.ge') || email.endsWith('@agruni.edu.ge'))) {
+  if (email && allowedDomains.some((domain) => email.endsWith(domain))) {
     return result.user;
+  }
   } else {
     await signOut(auth);
     throw new Error('Access restricted: Please log in using a valid FreeUni or Agruni institutional email account.');
