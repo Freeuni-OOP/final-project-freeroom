@@ -1,2 +1,6 @@
 @import "tailwindcss";
+@import "alk-rounded-nusx-med/css/alk-rounded-nusx-med.min.css";
 
+* {
+  font-family: "ALK Rounded Nusx Med", sans-serif;
+}

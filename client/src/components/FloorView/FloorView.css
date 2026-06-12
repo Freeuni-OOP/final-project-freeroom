@@ -1,0 +1,47 @@
+.floor-view__svg-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.floor-view__svg-container svg {
+  display: block;
+  max-width: 100%;
+}
+
+.floor-view__svg-container g[id^="room-"] rect {
+  transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+.floor-view__svg-container g[id^="room-"]:hover rect {
+  opacity: 0.85;
+  filter: brightness(1.08);
+}
+
+.floor-view__tooltip {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  background: rgba(15, 15, 20, 0.88);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  animation: tooltip-in 0.18s ease;
+}
+
+@keyframes tooltip-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
