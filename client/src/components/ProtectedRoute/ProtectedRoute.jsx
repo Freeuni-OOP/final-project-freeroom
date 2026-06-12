@@ -1,7 +1,7 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import useProtectedRoute from './useProtectedRoute';
 
-export default function ProtectedRoute({ children }) {
+export default function ProtectedRoute() {
     const { status } = useProtectedRoute();
 
     if (status === 'loading') {
@@ -16,5 +16,5 @@ export default function ProtectedRoute({ children }) {
         return <Navigate to="/" replace />;
     }
 
-    return children;
+    return <Outlet />;
 }
