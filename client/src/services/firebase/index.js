@@ -1,2 +1,2 @@
 export { auth } from './firebaseConfig';
-export { loginWithGoogle } from './authService';
+export { loginWithGoogle, logout, isAllowedEmail } from './authService';
