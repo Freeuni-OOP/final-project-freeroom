@@ -4,3 +4,17 @@
 * {
   font-family: "ALK Rounded Nusx Med", sans-serif;
 }
+
+button,
+a,
+select,
+[role="button"] {
+  cursor: pointer;
+}
+
+button:disabled,
+a:disabled,
+select:disabled,
+[role="button"]:disabled {
+  cursor: not-allowed;
+}

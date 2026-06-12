@@ -14,6 +14,7 @@ export default function FloorView() {
     selectFloor,
     handleCloseModal,
     isOccupied,
+    initialScale,
   } = useFloorView();
 
   return (
@@ -37,7 +38,8 @@ export default function FloorView() {
 
       <div className="flex-1 overflow-hidden relative bg-gray-50">
         <TransformWrapper
-          initialScale={1.5}
+          key={initialScale}
+          initialScale={initialScale}
           minScale={0.3}
           maxScale={4}
           centerOnInit
