@@ -3,36 +3,39 @@ import useFloorView from './useFloorView';
 import { RoomModal } from '@/components';
 import './FloorView.css';
 
+const FLOORS = [1, 2, 3, 4];
+
 export default function FloorView() {
   const {
     selectedFloor,
     selectedRoomId,
+    tooltip,
     svgContainerRef,
-    handleFloorChange,
+    selectFloor,
     handleCloseModal,
     isOccupied,
   } = useFloorView();
 
   return (
-    <div className="floor-view">
-      <div className="floor-view__controls">
-        <label className="floor-view__label" htmlFor="floor-select">
-          Floor
-        </label>
-        <select
-          id="floor-select"
-          className="floor-view__select"
-          value={selectedFloor}
-          onChange={handleFloorChange}
-        >
-          <option value={1}>Floor 1</option>
-          <option value={2}>Floor 2</option>
-          <option value={3}>Floor 3</option>
-          <option value={4}>Floor 4</option>
-        </select>
+    <div className="flex flex-col w-full h-full min-h-[480px] bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 shrink-0">
+        <p className="text-sm font-semibold text-gray-500 mr-1">სართული:</p>
+        {FLOORS.map((floor) => (
+          <button
+            key={floor}
+            onClick={() => selectFloor(floor)}
+            className={`w-9 h-9 rounded-full border text-sm font-semibold cursor-pointer flex items-center justify-center transition-all duration-150
+              ${selectedFloor === floor
+                ? 'bg-yellow-400 border-yellow-400 text-yellow-900'
+                : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-yellow-400 hover:bg-yellow-50'
+              }`}
+          >
+            {floor}
+          </button>
+        ))}
       </div>
 
-      <div className="floor-view__canvas-wrapper">
+      <div className="flex-1 overflow-hidden relative bg-gray-50">
         <TransformWrapper
           initialScale={1.5}
           minScale={0.3}
@@ -44,8 +47,6 @@ export default function FloorView() {
             <div className="floor-view__svg-container" ref={svgContainerRef} />
           </TransformComponent>
         </TransformWrapper>
-
-        <div className="floor-view__zoom-hint">Scroll to zoom · Drag to pan</div>
       </div>
 
       {selectedRoomId && (
@@ -54,6 +55,15 @@ export default function FloorView() {
           isOccupied={isOccupied(selectedRoomId)}
           onClose={handleCloseModal}
         />
+      )}
+
+      {tooltip.visible && (
+        <div
+          className="floor-view__tooltip"
+          style={{ left: tooltip.x + 14, top: tooltip.y - 36 }}
+        >
+          {tooltip.text}
+        </div>
       )}
     </div>
   );
