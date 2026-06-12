@@ -1,0 +1,99 @@
+.floor-view {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 480px;
+  background-color: #ffffff;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  border-radius: 20px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+  overflow: hidden;
+}
+
+.floor-view__controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid #f3f4f6;
+  background: #ffffff;
+  flex-shrink: 0;
+}
+
+.floor-view__label {
+  color: #4b5563;
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.floor-view__select {
+  padding: 6px 28px 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background-color: #f9fafb;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+
+.floor-view__select:hover {
+  border-color: #facc15;
+}
+
+.floor-view__select:focus {
+  border-color: #facc15;
+  box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.15);
+}
+
+.floor-view__canvas-wrapper {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  background-color: #f8f9fa;
+}
+
+.floor-view__svg-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.floor-view__svg-container svg {
+  display: block;
+  max-width: 100%;
+}
+
+.floor-view__svg-container g[id^="room-"] rect {
+  transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+.floor-view__svg-container g[id^="room-"]:hover rect {
+  opacity: 0.85;
+  filter: brightness(1.08);
+}
+
+.floor-view__zoom-hint {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  color: #9ca3af;
+  font-size: 11px;
+  font-weight: 500;
+  pointer-events: none;
+  border: 1px solid #e5e7eb;
+}
