@@ -63,4 +63,21 @@ public class CalendarEvent {
             );
         }
     }
+
+    @Override
+    public String toString() {
+        return  "CalendarEvent [id=" + id +
+                ", title=" + title +
+                ", startTime=" + startTime +
+                ", endTime=" + endTime +
+                ", description=" + description +
+                ", location=" + location + "]";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        return id.equals(((CalendarEvent) o).id);
+    }
 }

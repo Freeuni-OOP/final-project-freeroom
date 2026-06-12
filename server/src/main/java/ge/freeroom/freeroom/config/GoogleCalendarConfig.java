@@ -23,9 +23,11 @@ public class GoogleCalendarConfig {
 
     @Bean
     public Calendar calendarClient() throws IOException, GeneralSecurityException {
+        System.out.println("---- Creating Google Calendar bean");
         GoogleCredentials credentials = GoogleCredentials
                 .fromStream(new ClassPathResource(credentialsPath).getInputStream())
                 .createScoped(Collections.singleton(CalendarScopes.CALENDAR_READONLY));
+//                .createDelegated("admin@university.edu"); // gotta get admin privileges to calendar
 
         HttpRequestInitializer reqInitializer = new HttpCredentialsAdapter(credentials);
 
