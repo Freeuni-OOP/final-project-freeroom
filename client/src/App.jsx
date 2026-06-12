@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
-import { LandingPage, ProfilePage, FloorsPage } from '@/pages';
+import { LandingPage, ProfilePage, FloorsPage, NotFoundPage } from '@/pages';
 import { ProtectedRoute } from '@/components';
 
 function App() {
@@ -10,6 +10,7 @@ function App() {
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/floors" element={<FloorsPage />} />
             </Route>
+            <Route path="*" element={<NotFoundPage />} />
         </Routes>
     );
 }
