@@ -12,6 +12,13 @@ const useFloorView = () => {
   const svgContainerRef = useRef(null);
   const tooltipTimerRef = useRef(null);
 
+  const [initialScale] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 768 ? 1.2 : 1.5;
+    }
+    return 1.5;
+  });
+
   useEffect(() => {
     const container = svgContainerRef.current;
     if (!container) return;
@@ -89,6 +96,7 @@ const useFloorView = () => {
     selectFloor,
     handleCloseModal,
     isOccupied,
+    initialScale,
   };
 };
 
