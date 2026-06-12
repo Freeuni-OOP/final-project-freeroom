@@ -74,3 +74,6 @@ The Spring Boot backend connects directly to a cloud-hosted PostgreSQL instance 
 * **Database Type:** PostgreSQL 15+
 * **API URL:** `https://lahucjwdhglaxwdkiroz.supabase.co`
 * **Client Anon Key:** (Shared privately via team chat)
+[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/skmUAHf8)
+# Final-Project
+OOP ფინალური პროექტი
