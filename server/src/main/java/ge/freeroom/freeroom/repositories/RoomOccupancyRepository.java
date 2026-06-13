@@ -1,4 +1,12 @@
 package ge.freeroom.freeroom.repositories;
 
-public interface RoomOccupancyRepository {
+import ge.freeroom.freeroom.entities.RoomOccupancy;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface RoomOccupancyRepository extends JpaRepository<RoomOccupancy, Long> {
+    Optional<RoomOccupancy> findFirstByRoomIdAndActiveTrue(Long roomId);
+    List<RoomOccupancy> findByRoomIdOrderByCreatedAtDesc(Long roomId);
 }
