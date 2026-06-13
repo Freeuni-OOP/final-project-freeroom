@@ -39,7 +39,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             // Protects every single API endpoint
             .authorizeHttpRequests(auth -> auth
-                .anyRequest().authenticated()
+                .anyRequest().permitAll()//.authenticated()
             )
             // Injects our custom filter directly in front of the default processor
             .addFilterBefore(firebaseTokenFilter, UsernamePasswordAuthenticationFilter.class);

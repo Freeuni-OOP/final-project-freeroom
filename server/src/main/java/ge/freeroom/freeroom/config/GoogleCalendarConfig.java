@@ -24,12 +24,6 @@ import java.util.Collections;
 
 @Configuration
 public class GoogleCalendarConfig {
-    @Value("${google.oauth.client-secret.path}")
-    private String clientSecretPath;
-
-    @Value("${google.oauth.tokens.path}")
-    private String tokensPath;
-
     @Bean
     public Calendar calendarClient() throws IOException, GeneralSecurityException {
         System.out.println("---- Creating Google Calendar bean");
@@ -38,7 +32,7 @@ public class GoogleCalendarConfig {
 
         GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(
                 GsonFactory.getDefaultInstance(),
-                new InputStreamReader(new ClassPathResource(clientSecretPath).getInputStream())
+                new InputStreamReader(new ClassPathResource("clientSecret.json").getInputStream())
         );
 
         GoogleAuthorizationCodeFlow authFlow = new GoogleAuthorizationCodeFlow.Builder(
@@ -46,7 +40,7 @@ public class GoogleCalendarConfig {
                 GsonFactory.getDefaultInstance(),
                 clientSecrets,
                 Collections.singleton(CalendarScopes.CALENDAR_READONLY))
-            .setDataStoreFactory(new FileDataStoreFactory(new File(tokensPath)))
+            .setDataStoreFactory(new FileDataStoreFactory(new File("tokens")))
             .setAccessType("offline")
             .build();
 
