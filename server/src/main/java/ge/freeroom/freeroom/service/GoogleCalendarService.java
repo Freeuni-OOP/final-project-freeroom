@@ -49,12 +49,6 @@ public class GoogleCalendarService {
                             CalendarListEntry::getId,
                             (existing, replacement) -> existing // on duplicate --> first one stays. ?? MARK:: ra vqnat aqq? anu 308-ze qvemot extract-ze orive tipis meilia da maset conflictze ravqnat.. an gavarkviot marto room308@freeuni.edu.ge tipis meilebi xoar davitovot vafshee is meore risia idkk
                     ));
-            for (CalendarListEntry entry : calendars) {
-                System.out.println("summary=" + entry.getSummary()
-                        + " | override=" + entry.getSummaryOverride()
-                        + " | id=" + entry.getId());
-            }
-            System.out.println("---- Loaded rooms: " + roomCalendars.keySet().toString());
         } catch (IOException e) {
             System.out.println("----- [ERROR] : Could not load room calendars!");
             e.printStackTrace();
@@ -95,7 +89,6 @@ public class GoogleCalendarService {
                 res.add(calendarEvent);
             }
 
-            System.out.println("---- Loaded rooms: " + res.toString());
             return res;
         }catch (IOException e) {
             e.printStackTrace();
