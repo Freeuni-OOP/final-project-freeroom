@@ -11,7 +11,11 @@ import java.util.List;
 @Setter
 @Builder
 @Entity
-@Table(name = "room")
+@Table(name = "room",
+        indexes = {
+                @Index(columnList = "floor_id"),
+                @Index(columnList = "room_number")
+        })
 public class Room {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,7 +26,7 @@ public class Room {
 
     private Integer capacity;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "floor_id")
     private Floor floor;
 

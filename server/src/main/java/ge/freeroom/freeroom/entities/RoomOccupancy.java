@@ -12,17 +12,20 @@ import java.time.LocalDateTime;
 @Builder
 @Entity
 @Table(name = "room_occupancy",
-        indexes = {@Index(columnList = "room_id, end_at")})
+        indexes = {
+                @Index(columnList = "room_id, end_at"),
+                @Index(columnList = "user_id")
+        })
 public class RoomOccupancy {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id")
     private Room room;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 

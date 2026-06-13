@@ -19,7 +19,7 @@ public class Floor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private int number; // 1-4
 
     @OneToMany(mappedBy = "floor")

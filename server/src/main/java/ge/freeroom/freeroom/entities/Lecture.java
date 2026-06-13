@@ -21,7 +21,7 @@ public class Lecture {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "event_external_id", unique = true)
+    @Column(name = "event_external_id", unique = true, nullable = false)
     private String eventExternalId; // Google Calendar event id
 
     private String title; // e.g. "OOP"
@@ -33,7 +33,7 @@ public class Lecture {
     @Column(name = "end_at", nullable = false)
     private LocalDateTime endAt;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id")
     private Room room;
 
