@@ -13,6 +13,8 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,12 +42,19 @@ public class GoogleCalendarService {
                     .getItems();
 
             roomCalendars = calendars.stream()
-                    .filter(c -> c.getSummary().startsWith("Room"))
+                    .filter(c -> c.getId().toLowerCase().contains("resource.calendar.google.com")
+                            || c.getId().toLowerCase().startsWith("room"))
                     .collect(Collectors.toMap(
-                            CalendarListEntry::getSummary,
-                            CalendarListEntry::getId
+                            c -> extractRoomName(c.getSummary(), c.getId()),
+                            CalendarListEntry::getId,
+                            (existing, replacement) -> existing // on duplicate --> first one stays. ?? MARK:: ra vqnat aqq? anu 308-ze qvemot extract-ze orive tipis meilia da maset conflictze ravqnat.. an gavarkviot marto room308@freeuni.edu.ge tipis meilebi xoar davitovot vafshee is meore risia idkk
                     ));
-            System.out.println("---- Loaded rooms: " + roomCalendars.keySet());
+            for (CalendarListEntry entry : calendars) {
+                System.out.println("summary=" + entry.getSummary()
+                        + " | override=" + entry.getSummaryOverride()
+                        + " | id=" + entry.getId());
+            }
+            System.out.println("---- Loaded rooms: " + roomCalendars.keySet().toString());
         } catch (IOException e) {
             System.out.println("----- [ERROR] : Could not load room calendars!");
             e.printStackTrace();
@@ -127,9 +136,38 @@ public class GoogleCalendarService {
         }
     }
 
+    // returns true if the specified room is empty in given timeframe
+    public boolean isRoomFree(String roomName, LocalDateTime start, LocalDateTime end) {
+        return getEventsForRoomRange(roomName, start, end).isEmpty();
+    }
+
+    public List<String> getFreeRooms(LocalDateTime start, LocalDateTime end) {
+        return roomCalendars.keySet().parallelStream()
+                .filter(room -> isRoomFree(room, start, end))
+                .collect(Collectors.toList());
+    }
+
     // casts LocalDateTime into Google's Calendar API requested type
     private DateTime toGoogleDateTime(LocalDateTime localDateTime) {
         Instant instant = localDateTime.atZone(ZoneId.systemDefault()).toInstant();
         return new DateTime(instant.toEpochMilli());
+    }
+
+    // gets "Room 423" from 2 different types of room getSummary mails
+    private String extractRoomName(String summary, String id) {
+        // type 1: extract digits from "room423@..." pattern --> matches id(also mail)
+        Matcher m = Pattern.compile("room(\\d+)@").matcher(id);
+        if (m.find()) {
+            return "Room " + m.group(1);
+        }
+
+        // type 2: "მთავარი კორპუსი-3-ოთახი #308 (20)" --> "Room 308"
+        m = Pattern.compile("#(\\d+(-\\d+)?)").matcher(summary);
+        if (m.find()) {
+            return "Room " + m.group(1);
+        }
+
+        // if nothin else then use summary as is (as usual those two types as a whole if nothing else comes up later)
+        return summary;
     }
 }
