@@ -14,7 +14,7 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
-@Table(name = "app_user") // "user" is reserved in some DBs
+@Table(name = "app_user")
 public class User {
     @Id
     private String id; // Firebase UID
