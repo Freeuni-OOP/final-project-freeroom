@@ -1,4 +1,4 @@
-package ge.freeroom.freeroom;
+package ge.freeroom.freeroom.controllers;
 
 import ge.freeroom.freeroom.service.LectureSyncService;
 import org.springframework.beans.factory.annotation.Autowired;
