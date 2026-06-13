@@ -74,3 +74,15 @@ The Spring Boot backend connects directly to a cloud-hosted PostgreSQL instance 
 * **Database Type:** PostgreSQL 15+
 * **API URL:** `https://lahucjwdhglaxwdkiroz.supabase.co`
 * **Client Anon Key:** (Shared privately via team chat)
+
+## Testing & CI
+
+CI runs automatically on every pull request (`.github/workflows/ci.yml`): backend build + tests, frontend lint + build.
+
+### Where to add backend tests
+Tests live in `server/src/test/java/ge/freeroom/freeroom/`, mirroring the main package. Any file ending in `Test` (or `Tests`) is picked up and run automatically, just add the file, CI runs it.
+
+- **Pure logic** (no database): plain JUnit. No Spring context, no annotations needed.
+- **Database-dependent** (repositories, queries): use `@DataJpaTest`. This automatically uses the in-memory H2 profile (`src/test/resources/application-test.properties`), never the real Supabase database. Tests run isolated and leave no trace.
+
+Do not write tests that depend on the real database or external credentials, CI runs on a clean machine with no Supabase access.
