@@ -134,6 +134,7 @@ public class GoogleCalendarService {
         return getEventsForRoomRange(roomName, start, end).isEmpty();
     }
 
+    //returns Unoccupied Rooms for the given time period
     public List<String> getFreeRooms(LocalDateTime start, LocalDateTime end) {
         return roomCalendars.keySet().parallelStream()
                 .filter(room -> isRoomFree(room, start, end))
