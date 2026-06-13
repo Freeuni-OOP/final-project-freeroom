@@ -9,6 +9,7 @@ import ge.freeroom.freeroom.repositories.RoomRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,8 +61,8 @@ public class LectureSyncService {
         }
 
         System.out.println("--- Starting concurrent fetch for " + roomNumbers.size() + " rooms...");
-        LocalDateTime start = LocalDateTime.of(2026, 6, 15, 0, 0);
-        LocalDateTime end = LocalDateTime.of(2026, 6, 15, 23, 59);
+        LocalDateTime start = LocalDate.now().atStartOfDay();
+        LocalDateTime end = LocalDate.now().atTime(23, 59, 59);
 
         List<Lecture> allFetchedLectures = roomNumbers.parallelStream()
                 .flatMap(roomNum -> {
