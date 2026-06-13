@@ -30,12 +30,15 @@ public class Room {
     @JoinColumn(name = "floor_id")
     private Floor floor;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToMany(mappedBy = "room")
     private List<Lecture> lectures;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToMany(mappedBy = "room")
     private List<RoomOccupancy> occupancies;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToMany(mappedBy = "room")
     private List<WaitlistEntry> waitlistEntries;
 }

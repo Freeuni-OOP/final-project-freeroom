@@ -22,6 +22,7 @@ public class Floor {
     @Column(nullable = false, unique = true)
     private int number; // 1-4
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToMany(mappedBy = "floor")
     private List<Room> rooms;
 }
