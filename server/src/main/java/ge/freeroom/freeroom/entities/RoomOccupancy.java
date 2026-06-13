@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Builder
 @Entity
 @Table(name = "room_occupancy",
-        indexes = {@Index(columnList = "room_id, active")})
+        indexes = {@Index(columnList = "room_id, end_at")})
 public class RoomOccupancy {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,9 +31,7 @@ public class RoomOccupancy {
     @Column(name = "expected_end_at", nullable = false)
     private LocalDateTime expectedEndAt;
     @Column(name = "end_at")
-    private LocalDateTime endAt; // actual checkout
-
-    private boolean active = endAt == null;
+    private LocalDateTime endAt; // actual checkout, use endAt == null to check active status
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
