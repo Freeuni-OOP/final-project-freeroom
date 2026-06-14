@@ -27,8 +27,8 @@ export default function FloorView() {
             onClick={() => selectFloor(floor)}
             className={`w-9 h-9 rounded-full border text-sm font-semibold cursor-pointer flex items-center justify-center transition-all duration-150
               ${selectedFloor === floor
-                ? 'bg-brand-gold border-brand-gold text-brand-ink'
-                : 'bg-gray-50 border-gray-200 text-brand-ink hover:border-brand-gold hover:bg-brand-gold/10'
+                ? 'bg-brand-accent border-brand-accent text-brand-accent-contrast'
+                : 'bg-gray-50 border-gray-200 text-brand-ink hover:border-brand-accent hover:bg-brand-accent/10'
               }`}
           >
             {floor}
@@ -40,14 +40,24 @@ export default function FloorView() {
         <TransformWrapper
           key={initialScale}
           initialScale={initialScale}
-          minScale={0.3}
+          minScale={0.8}
           maxScale={4}
           centerOnInit
-          limitToBounds={false}
+          limitToBounds={false} // set it true if you want to limit the view to the svg bounds but it was reallllyyy uncomfortable
         >
-          <TransformComponent wrapperStyle={{ width: '100%', height: '100%' }}>
-            <div className="floor-view__svg-container" ref={svgContainerRef} />
-          </TransformComponent>
+          {({ resetTransform }) => (
+            <>
+              <TransformComponent wrapperStyle={{ width: '100%', height: '100%' }}>
+                <div className="floor-view__svg-container" ref={svgContainerRef} />
+              </TransformComponent>
+              <button
+                onClick={() => resetTransform()}
+                className="absolute bottom-3 right-3 z-10 px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 bg-white/80 backdrop-blur-sm text-gray-600 shadow-sm hover:bg-white hover:border-brand-accent hover:text-brand-accent transition-all duration-150 cursor-pointer"
+              >
+                ცენტრი
+              </button>
+            </>
+          )}
         </TransformWrapper>
       </div>
 

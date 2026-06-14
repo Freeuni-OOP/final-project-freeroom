@@ -12,7 +12,7 @@ const useRoomModal = (roomId, isOccupied) => {
     : null;
 
   const handleReserve = () => {
-    alert(`Reserved room ${roomId}`);
+    alert(`ოთახი ${roomId} დაჯავშნილია`);
   };
 
   return {
