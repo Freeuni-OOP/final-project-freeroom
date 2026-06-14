@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @import "alk-rounded-nusx-med/css/alk-rounded-nusx-med.min.css";
 
+@theme {
+  --color-brand-bg: #FAFAF7;
+  --color-brand-green: #1A7A4C;
+  --color-brand-green-dark: #15633D;
+  --color-brand-gold: #E8B400;
+  --color-brand-ink: #0F2E1F;
+}
+
 * {
   font-family: "ALK Rounded Nusx Med", sans-serif;
 }
