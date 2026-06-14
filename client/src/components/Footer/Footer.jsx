@@ -9,7 +9,7 @@ export default function Footer() {
             <div className="mx-auto flex max-w-5xl flex-col items-center gap-4 px-4 py-8 text-center sm:px-6">
                 <div className="flex flex-col items-center gap-2">
                     <span className="text-xs font-semibold uppercase tracking-widest text-brand-ink/40">
-                        შექმნილია
+                        Made by
                     </span>
                     <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
                         {developers.map((dev) => (

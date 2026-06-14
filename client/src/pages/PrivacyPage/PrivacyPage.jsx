@@ -8,7 +8,7 @@ export default function PrivacyPage() {
       <section className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-black/5 sm:p-10">
         <h1 className="text-2xl font-bold text-brand-ink">კონფიდენციალურობა</h1>
         <p className="mt-3 text-sm leading-relaxed text-brand-ink/60">
-          FreeRoom არის სათათბირო ოთახების საძიებო პლატფორმა თბილისის თავისუფალი უნივერსიტეტისა და საქართველოს აგრარული უნივერსიტეტის სტუდენტებისთვის.
+          FreeRoom არის კამპუსის ოთახების საძიებო პლატფორმა თბილისის თავისუფალი და აგრარული უნივერსიტეტის სტუდენტებისთვის.
         </p>
 
         <div className="mt-8 space-y-6">
