@@ -40,10 +40,10 @@ export default function FloorView() {
         <TransformWrapper
           key={initialScale}
           initialScale={initialScale}
-          minScale={0.3}
+          minScale={0.8}
           maxScale={4}
           centerOnInit
-          limitToBounds={false}
+          limitToBounds={true}
         >
           <TransformComponent wrapperStyle={{ width: '100%', height: '100%' }}>
             <div className="floor-view__svg-container" ref={svgContainerRef} />
