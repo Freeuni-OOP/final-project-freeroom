@@ -1,4 +1,5 @@
 import useFooter from './useFooter';
+import { Link } from 'react-router-dom';
 
 export default function Footer() {
     const { developers, contactEmail, year } = useFooter();
@@ -31,6 +32,10 @@ export default function Footer() {
                 >
                     {contactEmail}
                 </a>
+
+                <Link to="/privacy" className="text-xs text-brand-ink/50 transition-colors hover:text-brand-green">
+                    Privacy
+                </Link>
 
                 <p className="text-xs text-brand-ink/40">{'\u00A9'} {year} FreeRoom</p>
             </div>

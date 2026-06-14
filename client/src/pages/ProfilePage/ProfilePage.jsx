@@ -39,7 +39,7 @@ export default function ProfilePage() {
                 <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-black/10 py-10 text-center">
                     <p className="text-sm font-medium text-brand-ink/60">No friends yet</p>
                     <p className="mt-1 text-xs text-brand-ink/40">
-                        Connect with classmates to see who's studying nearby.
+                        Connect with classmates to see who is studying nearby.
                     </p>
                 </div>
             </section>
