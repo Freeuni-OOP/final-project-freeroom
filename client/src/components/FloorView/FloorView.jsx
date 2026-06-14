@@ -13,7 +13,7 @@ export default function FloorView() {
     svgContainerRef,
     selectFloor,
     handleCloseModal,
-    isOccupied,
+    getRoomData,
     initialScale,
   } = useFloorView();
 
@@ -51,13 +51,24 @@ export default function FloorView() {
         </TransformWrapper>
       </div>
 
-      {selectedRoomId && (
-        <RoomModal
-          roomId={selectedRoomId}
-          isOccupied={isOccupied(selectedRoomId)}
-          onClose={handleCloseModal}
-        />
-      )}
+      {selectedRoomId && (() => {
+        console.log('selectedRoomId:', selectedRoomId, 'roomData:', getRoomData(selectedRoomId));
+        return (
+            <RoomModal
+                roomId={selectedRoomId}
+                roomData={getRoomData(selectedRoomId)}
+                onClose={handleCloseModal}
+            />
+        );
+      })()}
+
+      {/*{selectedRoomId && (*/}
+      {/*  <RoomModal*/}
+      {/*    roomId={selectedRoomId}*/}
+      {/*    isOccupied={getRoomData(selectedRoomId)}*/}
+      {/*    onClose={handleCloseModal}*/}
+      {/*  />*/}
+      {/*)}*/}
 
       {tooltip.visible && (
         <div
