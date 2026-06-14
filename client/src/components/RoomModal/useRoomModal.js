@@ -16,10 +16,9 @@ const useRoomModal = (roomId, roomData) => {
             capacity: roomData?.capacity ?? null,
         }
         : null;
-
-
+  
     const handleReserve = () => {
-        alert(`Reserved room ${roomId}`);
+      alert(`ოთახი ${roomId} დაჯავშნილია`);
     };
 
     return {

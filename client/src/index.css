@@ -5,8 +5,42 @@
   --color-brand-bg: #FAFAF7;
   --color-brand-green: #1A7A4C;
   --color-brand-green-dark: #15633D;
-  --color-brand-gold: #E8B400;
+  --color-brand-gold: #FFD101;
+  --color-brand-gold-dark: #E5BC00;
   --color-brand-ink: #0F2E1F;
+
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-accent-dark: var(--brand-accent-dark);
+  --color-brand-accent-light: var(--brand-accent-light);
+  --color-brand-accent-text: var(--brand-accent-text);
+  --color-brand-accent-contrast: var(--brand-accent-contrast);
+}
+
+:root {
+  --brand-accent: var(--color-brand-gold);
+  --brand-accent-dark: var(--color-brand-gold-dark);
+  --brand-accent-light: rgba(255, 209, 1, 0.15);
+  --brand-accent-text: #dca600;
+  --brand-accent-contrast: #ffffff;
+  --brand-accent-glow: rgba(255, 209, 1, 0.25);
+}
+
+.theme-agruni {
+  --brand-accent: var(--color-brand-green);
+  --brand-accent-dark: var(--color-brand-green-dark);
+  --brand-accent-light: rgba(26, 122, 76, 0.15);
+  --brand-accent-text: var(--color-brand-green);
+  --brand-accent-contrast: #ffffff;
+  --brand-accent-glow: rgba(26, 122, 76, 0.25);
+}
+
+.theme-freeuni {
+  --brand-accent: var(--color-brand-gold);
+  --brand-accent-dark: var(--color-brand-gold-dark);
+  --brand-accent-light: rgba(255, 209, 1, 0.15);
+  --brand-accent-text: #dca600;
+  --brand-accent-contrast: #ffffff;
+  --brand-accent-glow: rgba(255, 209, 1, 0.25);
 }
 
 * {
@@ -25,4 +59,9 @@ a:disabled,
 select:disabled,
 [role="button"]:disabled {
   cursor: not-allowed;
+}
+
+.footer-dev:hover {
+  filter: brightness(1.05);
+  text-shadow: 0 0 4px var(--brand-accent-glow);
 }
