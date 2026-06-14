@@ -14,6 +14,6 @@ public class RoomMapDto {
     private Integer roomNumber;
     private Integer capacity;
     private Integer floorNumber;
-    private boolean status; // free/occupied
+    private String status; // "free"/"occupied"
     private LectureSummaryDto currentLecture; // null if free
 }
