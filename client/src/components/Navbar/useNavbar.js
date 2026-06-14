@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { logout } from '@/services/firebase';
 
@@ -9,15 +10,31 @@ const NAV_LINKS = [
 const useNavbar = () => {
     const navigate = useNavigate();
     const { pathname } = useLocation();
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-    const goTo = (path) => navigate(path);
+    const goTo = (path) => {
+        setIsMenuOpen(false);
+        navigate(path);
+    };
 
     const handleLogout = async () => {
         await logout().catch(() => {});
+        setIsMenuOpen(false);
         navigate('/');
     };
 
-    return { navLinks: NAV_LINKS, currentPath: pathname, goTo, handleLogout };
+    const toggleMenu = () => setIsMenuOpen((prev) => !prev);
+    const closeMenu = () => setIsMenuOpen(false);
+
+    return { 
+        navLinks: NAV_LINKS, 
+        currentPath: pathname, 
+        goTo, 
+        handleLogout, 
+        isMenuOpen, 
+        toggleMenu, 
+        closeMenu 
+    };
 };
 
 export default useNavbar;

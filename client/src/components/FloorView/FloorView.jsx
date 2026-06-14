@@ -43,11 +43,21 @@ export default function FloorView() {
           minScale={0.8}
           maxScale={4}
           centerOnInit
-          limitToBounds={true}
+          limitToBounds={false} // set it true if you want to limit the view to the svg bounds but it was reallllyyy uncomfortable
         >
-          <TransformComponent wrapperStyle={{ width: '100%', height: '100%' }}>
-            <div className="floor-view__svg-container" ref={svgContainerRef} />
-          </TransformComponent>
+          {({ resetTransform }) => (
+            <>
+              <TransformComponent wrapperStyle={{ width: '100%', height: '100%' }}>
+                <div className="floor-view__svg-container" ref={svgContainerRef} />
+              </TransformComponent>
+              <button
+                onClick={() => resetTransform()}
+                className="absolute bottom-3 right-3 z-10 px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 bg-white/80 backdrop-blur-sm text-gray-600 shadow-sm hover:bg-white hover:border-brand-accent hover:text-brand-accent transition-all duration-150 cursor-pointer"
+              >
+                ცენტრი
+              </button>
+            </>
+          )}
         </TransformWrapper>
       </div>
 
