@@ -13,7 +13,7 @@ const useLandingPage = () => {
       setIsLoading(true);
       const user = await loginWithGoogle();
       console.log('Logged in as:', user.email);
-      navigate('/profile');
+      navigate('/floors');
     } catch (error) {
       console.error('Login failed:', error);
       setErrorMsg(error.message);
