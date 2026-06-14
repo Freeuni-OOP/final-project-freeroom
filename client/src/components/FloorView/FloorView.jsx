@@ -13,7 +13,7 @@ export default function FloorView() {
     svgContainerRef,
     selectFloor,
     handleCloseModal,
-    isOccupied,
+    getRoomData,
     initialScale,
   } = useFloorView();
 
@@ -64,7 +64,7 @@ export default function FloorView() {
       {selectedRoomId && (
         <RoomModal
           roomId={selectedRoomId}
-          isOccupied={isOccupied(selectedRoomId)}
+          roomData={getRoomData(selectedRoomId)}
           onClose={handleCloseModal}
         />
       )}

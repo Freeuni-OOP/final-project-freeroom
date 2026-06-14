@@ -1,6 +1,8 @@
 package ge.freeroom.freeroom.controllers;
 
+import ge.freeroom.freeroom.dto.RoomMapDto;
 import ge.freeroom.freeroom.service.LectureSyncService;
+import ge.freeroom.freeroom.service.RoomAvailabilityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +20,8 @@ public class RoomController {
     private JdbcTemplate jdbcTemplate;
 
     private final LectureSyncService syncService;
+    @Autowired
+    private RoomAvailabilityService roomAvailabilityService;
 
     public RoomController(LectureSyncService syncService) {
         this.syncService = syncService;
@@ -34,5 +38,10 @@ public class RoomController {
         String sql = "SELECT * FROM rooms";
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql);
         return rows;
+    }
+
+    @GetMapping("/rooms/map")
+    public List<RoomMapDto> getRoomMap(){
+        return roomAvailabilityService.getAllRoomsMap();
     }
 }

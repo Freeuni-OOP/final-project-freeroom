@@ -1,0 +1,19 @@
+package ge.freeroom.freeroom.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+public class RoomMapDto {
+    private Long id;
+    private Integer roomNumber;
+    private Integer capacity;
+    private Integer floorNumber;
+    private String status; // "free"/"occupied"
+    private LectureSummaryDto currentLecture; // null if free
+}

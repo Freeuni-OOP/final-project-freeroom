@@ -1,9 +1,9 @@
 import useRoomModal from './useRoomModal';
 
-export default function RoomModal({ roomId, isOccupied, onClose }) {
-  const { roomData, handleReserve } = useRoomModal(roomId, isOccupied);
+export default function RoomModal({ roomId, roomData, onClose }) {
+  const { roomData: modalData, handleReserve } = useRoomModal(roomId, roomData);
 
-  if (!roomId || !roomData) return null;
+  if (!roomId || !modalData) return null;
 
   return (
     <div
@@ -25,27 +25,27 @@ export default function RoomModal({ roomId, isOccupied, onClose }) {
           <div className="flex items-center gap-3 mb-6">
             <h2 className="text-2xl font-bold text-gray-900">ოთახი {roomId}</h2>
             <span className={`px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase ${
-              roomData.isFree ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+              modalData.isFree ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
             }`}>
-              {roomData.isFree ? 'თავისუფალი' : 'დაკავებული'}
+              {modalData.isFree ? 'თავისუფალი' : 'დაკავებული'}
             </span>
           </div>
 
           <div className="space-y-6">
-            {!roomData.isFree ? (
+            {!modalData.isFree ? (
               <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
                 <div className="mb-4">
                   <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">მიმდინარე ლექცია</p>
-                  <p className="text-lg font-semibold text-gray-900">{roomData.lectureName}</p>
+                  <p className="text-lg font-semibold text-gray-900">{modalData.lectureName}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">ლექტორი</p>
-                    <p className="font-medium text-gray-900">{roomData.lecturer}</p>
+                    <p className="font-medium text-gray-900">{modalData.lecturer}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">დრო</p>
-                    <p className="font-medium text-gray-900">{roomData.startTime} - {roomData.endTime}</p>
+                    <p className="font-medium text-gray-900">{modalData.startTime} - {modalData.endTime}</p>
                   </div>
                 </div>
               </div>
@@ -56,10 +56,10 @@ export default function RoomModal({ roomId, isOccupied, onClose }) {
               </div>
             )}
 
-            {roomData.isFree && (
+            {modalData.isFree && (
               <button
                 onClick={() => { handleReserve(); onClose(); }}
-                className="w-full bg-brand-accent hover:bg-brand-accent-dark text-brand-accent-contrast font-semibold py-3 px-6 rounded-xl transition-colors shadow-sm cursor-pointer"
+                className="w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-semibold py-3 px-6 rounded-xl transition-colors shadow-sm cursor-pointer"
               >
                 დაჯავშნა
               </button>

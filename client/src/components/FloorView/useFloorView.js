@@ -1,16 +1,16 @@
-import { useState, useEffect, useRef } from 'react';
+import {useEffect, useRef, useState} from 'react';
 import FLOORS from './floorLayout';
-
-const OCCUPIED_ROOMS = new Set([101, 104, 107, 110, 113, 116, 119, 201, 204, 207, 210, 213, 216, 219, 301, 304, 307, 310, 313, 316, 319, 401, 404, 407, 410]);
-
-const MOCK_LECTURE = 'Object Oriented Programming';
+import {getRoomsMap} from '@/services/index.js';
 
 const useFloorView = () => {
   const [selectedFloor, setSelectedFloor] = useState(1);
   const [selectedRoomId, setSelectedRoomId] = useState(null);
   const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, text: '' });
+  const [roomsData, setRoomsData] = useState({});
+  const [loading, setLoading] = useState(true);
   const svgContainerRef = useRef(null);
   const tooltipTimerRef = useRef(null);
+  const roomsDataRef = useRef({});
 
   const [initialScale] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -20,13 +20,52 @@ const useFloorView = () => {
   });
 
   useEffect(() => {
+    roomsDataRef.current = roomsData;
+  }, [roomsData]);
+
+  useEffect(() => {
+    const loadRoomsMap = async () => {
+      try {
+        const res = await getRoomsMap();
+        const grouped = {};
+        res.data.forEach((room) => {
+          if (!grouped[room.floorNumber]) grouped[room.floorNumber] = {};
+          grouped[room.floorNumber][room.roomNumber] = room;
+        });
+        setRoomsData(grouped);
+      } catch (err) {
+        console.error('Failed to load rooms map', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadRoomsMap();
+  }, []);
+
+  const applyRoomColors = (floor) => {
     const container = svgContainerRef.current;
     if (!container) return;
 
-    fetch(FLOORS[selectedFloor])
-      .then((r) => r.text())
-      .then((svgText) => {
-        container.innerHTML = svgText;
+    container.querySelectorAll('g[id^="room-"]').forEach((group) => {
+      const roomId = parseInt(group.id.replace('room-', ''), 10);
+      const rect = group.querySelector('rect');
+      if (!rect) return;
+
+      const roomData = roomsDataRef.current[floor]?.[roomId];
+      const occupied = roomData?.status === 'occupied';
+      rect.style.fill = occupied ? '#ef4444' : '';
+    });
+  };
+
+  useEffect(() => {
+    const container = svgContainerRef.current;
+    if (!container) return;
+
+    const loadFloorSvg = async () => {
+      try {
+        const r = await fetch(FLOORS[selectedFloor]);
+        container.innerHTML = await r.text();
 
         const svgEl = container.querySelector('svg');
         if (!svgEl) return;
@@ -39,15 +78,8 @@ const useFloorView = () => {
 
         svgEl.querySelectorAll('g[id^="room-"]').forEach((group) => {
           const roomId = parseInt(group.id.replace('room-', ''), 10);
-          const occupied = OCCUPIED_ROOMS.has(roomId);
-          const rect = group.querySelector('rect');
-
-          if (occupied) {
-            if (rect) rect.style.fill = '#ef4444';
-          }
 
           group.style.cursor = 'pointer';
-
           group.addEventListener('click', () => setSelectedRoomId(roomId));
 
           const cursorPos = { x: 0, y: 0 };
@@ -55,7 +87,8 @@ const useFloorView = () => {
           group.addEventListener('mouseenter', (e) => {
             cursorPos.x = e.clientX;
             cursorPos.y = e.clientY;
-            const text = occupied ? MOCK_LECTURE : 'თავისუფალი';
+            const roomData = roomsDataRef.current[selectedFloor]?.[roomId];
+            const text = roomData?.currentLecture?.title ?? 'თავისუფალი';
             tooltipTimerRef.current = setTimeout(() => {
               setTooltip({ visible: true, x: cursorPos.x, y: cursorPos.y, text });
             }, 500);
@@ -72,10 +105,21 @@ const useFloorView = () => {
             setTooltip({ visible: false, x: 0, y: 0, text: '' });
           });
         });
-      });
+
+        applyRoomColors(selectedFloor);
+      } catch (err) {
+        console.error('Failed to load floor SVG', err);
+      }
+    };
+
+    loadFloorSvg();
 
     return () => clearTimeout(tooltipTimerRef.current);
   }, [selectedFloor]);
+
+  useEffect(() => {
+    applyRoomColors(selectedFloor);
+  }, [roomsData, selectedFloor]);
 
   const selectFloor = (floor) => {
     setSelectedFloor(floor);
@@ -86,7 +130,12 @@ const useFloorView = () => {
     setSelectedRoomId(null);
   };
 
-  const isOccupied = (roomId) => OCCUPIED_ROOMS.has(roomId);
+  const isOccupied = (roomId) =>
+      roomsData[selectedFloor]?.[roomId]?.status === 'occupied';
+
+  const getRoomData = (roomId) => {
+    return roomsData[selectedFloor]?.[roomId] ?? null;
+  }
 
   return {
     selectedFloor,
@@ -96,6 +145,8 @@ const useFloorView = () => {
     selectFloor,
     handleCloseModal,
     isOccupied,
+    getRoomData,
+    loading,
     initialScale,
   };
 };

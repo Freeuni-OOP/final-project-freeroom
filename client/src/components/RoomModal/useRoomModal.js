@@ -1,13 +1,18 @@
+const useRoomModal = (roomId, roomData) => {
+  const formatTime = (iso) => {
+    if (!iso) return null;
+    return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  };
 
-const useRoomModal = (roomId, isOccupied) => {
-  const roomData = roomId
+  const modalData = roomId
     ? {
         id: roomId,
-        isFree: !isOccupied,
-        lectureName: isOccupied ? 'Object Oriented Programming' : null,
-        lecturer: isOccupied ? 'Lekva' : null,
-        startTime: isOccupied ? '10:00' : null,
-        endTime: isOccupied ? '12:00' : null,
+        isFree: roomData?.status !== 'occupied',
+        lectureName: roomData?.currentLecture?.title ?? null,
+        lecturer: roomData?.currentLecture?.organizer ?? null,
+        startTime: formatTime(roomData?.currentLecture?.startAt),
+        endTime: formatTime(roomData?.currentLecture?.endAt),
+        capacity: roomData?.capacity ?? null,
       }
     : null;
 
@@ -16,7 +21,7 @@ const useRoomModal = (roomId, isOccupied) => {
   };
 
   return {
-    roomData,
+    roomData: modalData,
     handleReserve,
   };
 };
