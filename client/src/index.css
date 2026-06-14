@@ -26,3 +26,8 @@ select:disabled,
 [role="button"]:disabled {
   cursor: not-allowed;
 }
+
+.footer-dev:hover {
+  filter: brightness(1.15);
+  text-shadow: 0 0 8px rgba(232, 180, 0, 0.5);
+}
