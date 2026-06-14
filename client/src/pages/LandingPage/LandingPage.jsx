@@ -1,32 +1,65 @@
+import freeuniLogo from '@/assets/freeuni-logo.png';
+import agruniLogo from '@/assets/agruni-logo.png';
 import useLandingPage from './useLandingPage';
 
 export default function LandingPage() {
-  const { errorMsg, isLoading, handleGoogleLogin } = useLandingPage();
+    const { errorMsg, isLoading, handleGoogleLogin } = useLandingPage();
 
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white p-10 rounded-xl shadow-lg flex flex-col items-center max-w-md w-full">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">FreeRoom</h1>
-        <p className="text-gray-500 mb-8 text-center">Sign in to book and manage your university study rooms.</p>
+    return (
+        <div className="relative flex min-h-screen flex-col bg-brand-bg">
+            <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0"
+                style={{
+                    background:
+                        'radial-gradient(60% 55% at 50% 30%, rgba(26,122,76,0.10) 0%, rgba(26,122,76,0) 70%)',
+                }}
+            />
 
-        {errorMsg && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6 w-full text-sm text-center">
-            {errorMsg}
-          </div>
-        )}
+            <header className="relative z-10 flex items-center justify-between px-6 py-5 sm:px-10">
+                <span className="text-lg font-bold tracking-tight text-brand-ink">FreeRoom</span>
+                <div className="flex items-center gap-2.5">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-black/5">
+                        <img src={freeuniLogo} alt="Free University of Tbilisi" className="h-7 w-7 object-contain" />
+                    </div>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-black/5">
+                        <img src={agruniLogo} alt="Agricultural University of Georgia" className="h-7 w-7 object-contain" />
+                    </div>
+                </div>
+            </header>
 
-        <button
-          onClick={handleGoogleLogin}
-          disabled={isLoading}
-          className="flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg w-full transition-colors disabled:bg-blue-400"
-        >
-          {isLoading ? 'Signing in...' : 'Sign in with Google'}
-        </button>
+            <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-5 pb-16">
+        <span className="mb-5 inline-flex items-center rounded-full bg-brand-gold/15 px-3.5 py-1.5 text-xs font-semibold tracking-wide text-[#8a6d00]">
+          Campus study rooms
+        </span>
 
-        <p className="text-xs text-gray-400 mt-6 text-center">
-          *Requires a valid @freeuni.edu.ge or @agruni.edu.ge email address.
-        </p>
-      </div>
-    </div>
-  );
+                <h1 className="mb-4 text-center text-6xl font-bold tracking-tight text-brand-ink sm:text-7xl">
+                    FreeRoom
+                </h1>
+                <p className="mb-10 max-w-md text-center text-lg leading-relaxed text-brand-ink/60">
+                    Find a free room and claim it.
+                </p>
+
+                <div className="w-full max-w-sm">
+                    {errorMsg && (
+                        <div className="mb-5 w-full rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-700">
+                            {errorMsg}
+                        </div>
+                    )}
+
+                    <button
+                        onClick={handleGoogleLogin}
+                        disabled={isLoading}
+                        className="flex w-full items-center justify-center rounded-xl bg-brand-green py-4 text-base font-semibold text-white shadow-sm transition-colors hover:bg-brand-green-dark focus:outline-none focus:ring-2 focus:ring-brand-green focus:ring-offset-2 focus:ring-offset-brand-bg disabled:opacity-60"
+                    >
+                        {isLoading ? 'Signing in…' : 'Continue with Google'}
+                    </button>
+
+                    <p className="mt-4 text-center text-xs text-brand-ink/45">
+                        Use your @freeuni.edu.ge or @agruni.edu.ge email.
+                    </p>
+                </div>
+            </main>
+        </div>
+    );
 }
