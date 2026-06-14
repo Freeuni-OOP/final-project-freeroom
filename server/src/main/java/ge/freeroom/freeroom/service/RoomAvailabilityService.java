@@ -32,7 +32,8 @@ public class RoomAvailabilityService {
                 .map(Room::getId)
                 .collect(Collectors.toList());
 
-        LocalDateTime now = LocalDateTime.now();
+//        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.of(2026, 6, 15, 16, 0);
         List<Lecture> activeLectures = roomIds.isEmpty() ? List.of() : lectureRepository.findActiveLecturesByRoomIds(roomIds, now);
 
         Map<Long, Lecture> activeLectureByRoomId = activeLectures.stream()
