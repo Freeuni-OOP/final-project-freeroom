@@ -1,15 +1,15 @@
 const SECTIONS = [
   {
-    title: 'What we use',
-    body: 'When you sign in with your university Google account, we receive your name, email address, and profile photo from Google. We use these to sign you in, confirm you have a valid university email, and show your profile inside the app.',
+    title: 'რას ვიყენებთ',
+    body: 'როდესაც თქვენი საუნივერსიტეტო Google ანგარიშით შედიხართ სისტემაში, ჩვენ ვიღებთ თქვენს სახელს, ელ.ფოსტის მისამართსა და პროფილის ფოტოს Google-ისგან. ჩვენ მათ ვიყენებთ ავტორიზაციისთვის, თქვენი საუნივერსიტეტო ელ.ფოსტის ნამდვილობის დასადასტურებლად და აპლიკაციაში თქვენი პროფილის საჩვენებლად.',
   },
   {
-    title: 'Access',
-    body: 'Only people with a freeuni.edu.ge or agruni.edu.ge email address can sign in.',
+    title: 'წვდომა',
+    body: 'სისტემაში შესვლა შეუძლიათ მხოლოდ იმ პირებს, რომლებსაც აქვთ freeuni.edu.ge ან agruni.edu.ge ელ.ფოსტის მისამართი.',
   },
   {
-    title: 'What we do not do',
-    body: 'We do not sell your information or share it with advertisers.',
+    title: 'რას არ ვაკეთებთ',
+    body: 'ჩვენ არ ვყიდით თქვენს ინფორმაციას და არ ვუზიარებთ მას რეკლამის განმთავსებლებს.',
   },
 ];
 

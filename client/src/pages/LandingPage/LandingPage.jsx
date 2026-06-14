@@ -29,21 +29,21 @@ export default function LandingPage() {
             </header>
 
             <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-5 pb-16">
-        <span className="mb-5 inline-flex items-center rounded-full bg-brand-accent/15 px-3.5 py-1.5 text-xs font-semibold tracking-wide text-brand-accent-text">
-          Campus study rooms
-        </span>
+                <span className="mb-5 inline-flex items-center rounded-full bg-brand-accent/15 px-3.5 py-1.5 text-xs font-semibold tracking-wide text-brand-accent-text">
+                    კამპუსის ოთახები
+                </span>
 
                 <h1 className="mb-4 text-center text-6xl font-bold tracking-tight text-brand-ink sm:text-7xl">
                     FreeRoom
                 </h1>
                 <p className="mb-10 max-w-md text-center text-lg leading-relaxed text-brand-ink/60">
-                    Find a free room and claim it.
+                    იპოვე თავისუფალი ოთახი და დაჯავშნე
                 </p>
 
                 <div className="w-full max-w-sm">
                     {errorMsg && (
                         <div className="mb-5 w-full rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-700">
-                             {errorMsg}
+                            {errorMsg}
                         </div>
                     )}
 
@@ -52,11 +52,11 @@ export default function LandingPage() {
                         disabled={isLoading}
                         className="flex w-full items-center justify-center rounded-xl bg-brand-accent py-4 text-base font-semibold text-brand-accent-contrast shadow-sm transition-colors hover:bg-brand-accent-dark focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 focus:ring-offset-brand-bg disabled:opacity-60"
                     >
-                        {isLoading ? 'Signing in…' : 'Continue with Google'}
+                        {isLoading ? 'სისტემაში შესვლა…' : 'Google-ით გაგრძელება'}
                     </button>
 
                     <p className="mt-4 text-center text-xs text-brand-ink/45">
-                        Use your @freeuni.edu.ge or @agruni.edu.ge email.
+                        გამოიყენეთ თქვენი @freeuni.edu.ge ან @agruni.edu.ge ელ.ფოსტა.
                     </p>
                 </div>
             </main>

@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useAuth } from '@/context';
 
 const UNIVERSITY_BY_DOMAIN = {
-  '@freeuni.edu.ge': 'FreeUni',
-  '@agruni.edu.ge': 'Agruni',
+  '@freeuni.edu.ge': 'თავისუფალი',
+  '@agruni.edu.ge': 'აგრარული',
 };
 
 const getUniversity = (email) => {
@@ -23,7 +23,7 @@ const useProfilePage = () => {
 
   const email = user?.email || '';
   const university = getUniversity(email);
-  const fallbackName = university ? `${university} Student` : 'Student';
+  const fallbackName = university ? `${university}-ს სტუდენტი` : 'სტუდენტი';
   const displayName = user?.displayName?.trim() || fallbackName;
 
   const photoUrl = user?.photoURL || '';

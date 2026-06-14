@@ -9,7 +9,7 @@ export default function Footer() {
             <div className="mx-auto flex max-w-5xl flex-col items-center gap-4 px-4 py-8 text-center sm:px-6">
                 <div className="flex flex-col items-center gap-2">
                     <span className="text-xs font-semibold uppercase tracking-widest text-brand-ink/40">
-                        Made by
+                        შექმნილია
                     </span>
                     <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
                         {developers.map((dev) => (
@@ -34,7 +34,7 @@ export default function Footer() {
                 </a>
 
                 <Link to="/privacy" className="text-xs text-brand-ink/50 transition-colors hover:text-brand-accent-text">
-                    Privacy
+                    კონფიდენციალურობა
                 </Link>
 
                 <p className="text-xs text-brand-ink/40">{'\u00A9'} {year} FreeRoom</p>

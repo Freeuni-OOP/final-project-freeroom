@@ -2,8 +2,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { logout } from '@/services/firebase';
 
 const NAV_LINKS = [
-    { label: 'Floors', path: '/floors' },
-    { label: 'Profile', path: '/profile' },
+    { label: 'სართულები', path: '/floors' },
+    { label: 'პროფილი', path: '/profile' },
 ];
 
 const useNavbar = () => {

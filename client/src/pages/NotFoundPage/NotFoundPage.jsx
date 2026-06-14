@@ -21,17 +21,17 @@ function NotFoundPage() {
                     </div>
                 </div>
 
-                <p className="mb-2 text-sm font-medium tracking-wide text-brand-green">Page not found</p>
-                <h1 className="mb-3 text-2xl font-bold text-brand-ink">This room is not on the map</h1>
+                <p className="mb-2 text-sm font-medium tracking-wide text-brand-accent-text">გვერდი ვერ მოიძებნა</p>
+                <h1 className="mb-3 text-2xl font-bold text-brand-ink">ეს ოთახი რუკაზე არ არის</h1>
                 <p className="mb-8 leading-relaxed text-brand-ink/55">
-                    The page you want does not exist or may have moved. Let us get you back to familiar ground.
+                    გვერდი, რომელსაც ეძებთ, არ არსებობს ან გადაადგილდა. მოდით, დაგაბრუნებთ ნაცნობ ადგილას.
                 </p>
 
                 <button
                     onClick={goHome}
-                    className="w-full rounded-xl bg-brand-green py-3 px-8 font-semibold text-white transition-colors hover:bg-brand-green-dark focus:outline-none focus:ring-2 focus:ring-brand-green focus:ring-offset-2"
+                    className="w-full rounded-xl bg-brand-accent py-3 px-8 font-semibold text-brand-accent-contrast transition-colors hover:bg-brand-accent-dark focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2"
                 >
-                    Back to FreeRoom
+                    მთავარ გვერდზე დაბრუნება
                 </button>
             </div>
         </div>

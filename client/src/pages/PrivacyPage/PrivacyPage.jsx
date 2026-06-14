@@ -6,10 +6,9 @@ export default function PrivacyPage() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
       <section className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-black/5 sm:p-10">
-        <h1 className="text-2xl font-bold text-brand-ink">Privacy</h1>
+        <h1 className="text-2xl font-bold text-brand-ink">კონფიდენციალურობა</h1>
         <p className="mt-3 text-sm leading-relaxed text-brand-ink/60">
-          FreeRoom is a study room finder for students of Free University of Tbilisi and the
-          Agricultural University of Georgia.
+          FreeRoom არის სათათბირო ოთახების საძიებო პლატფორმა თბილისის თავისუფალი უნივერსიტეტისა და საქართველოს აგრარული უნივერსიტეტის სტუდენტებისთვის.
         </p>
 
         <div className="mt-8 space-y-6">
@@ -24,7 +23,7 @@ export default function PrivacyPage() {
         </div>
 
         <p className="mt-8 border-t border-black/5 pt-6 text-sm leading-relaxed text-brand-ink/55">
-          FreeRoom is a student project built for a university course. For questions, contact us at{' '}
+          FreeRoom არის საუნივერსიტეტო კურსისთვის შექმნილი სტუდენტური პროექტი. კითხვების შემთხვევაში, დაგვიკავშირდით ელ.ფოსტაზე:{' '}
           <a
             href={`mailto:${contactEmail}`}
             className="font-semibold text-brand-accent-text transition-colors hover:text-brand-accent-dark"

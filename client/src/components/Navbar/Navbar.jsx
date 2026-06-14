@@ -38,7 +38,7 @@ export default function Navbar() {
                         onClick={handleLogout}
                         className="ml-1 rounded-lg px-3 py-2 text-sm font-semibold text-brand-ink/70 transition-colors hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
                     >
-                        Log out
+                        გამოსვლა
                     </button>
                 </div>
             </nav>
