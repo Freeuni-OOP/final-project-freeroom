@@ -3,3 +3,7 @@
 # Firebase Service Account Key
 **/src/main/resources/serviceAccountKey.json
 serviceAccountKey.json
+# Google OAuth2 client credentials & tokens
+tokens/
+**/src/main/resources/clientSecret.json
+clientSecret.json

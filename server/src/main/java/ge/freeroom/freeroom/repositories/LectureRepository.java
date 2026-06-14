@@ -11,4 +11,6 @@ public interface LectureRepository extends JpaRepository<Lecture, Long> {
     Optional<Lecture> findByEventExternalId(String eventExternalId);
     List<Lecture> findByRoomIdOrderByStartAtAsc(Long roomId);
     List<Lecture> findByStartAtBetween(LocalDateTime start, LocalDateTime end);
+    List<Lecture> findByRoomFloorNumberOrderByStartAtAsc(int floorNumber);
+    List<Lecture> findByRoomRoomNumberOrderByStartAtAsc(Integer roomNumber);
 }

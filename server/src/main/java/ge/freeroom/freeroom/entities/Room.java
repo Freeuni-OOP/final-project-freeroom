@@ -3,8 +3,10 @@ package ge.freeroom.freeroom.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -30,12 +32,15 @@ public class Room {
     @JoinColumn(name = "floor_id")
     private Floor floor;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToMany(mappedBy = "room")
     private List<Lecture> lectures;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToMany(mappedBy = "room")
     private List<RoomOccupancy> occupancies;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToMany(mappedBy = "room")
     private List<WaitlistEntry> waitlistEntries;
 }
