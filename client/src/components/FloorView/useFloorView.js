@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import {useEffect, useRef, useState} from 'react';
 import FLOORS from './floorLayout';
-import { getRoomsMap } from '@/services/index.js';
+import {getRoomsMap} from '@/services/index.js';
 
 const useFloorView = () => {
   const [selectedFloor, setSelectedFloor] = useState(1);
@@ -24,21 +24,23 @@ const useFloorView = () => {
   }, [roomsData]);
 
   useEffect(() => {
-    getRoomsMap()
-        .then((res) => {
-          console.log('typeof res.data:', typeof res.data);
-          console.log('res.data:', res.data);
-          const grouped = {};
-          res.data.forEach((room) => {
-            if (!grouped[room.floorNumber]) grouped[room.floorNumber] = {};
-            grouped[room.floorNumber][room.roomNumber] = room;
-          });
-          setRoomsData(grouped);
-        })
-        .catch((err) => {
-          console.error('Failed to load rooms map', err);
-        })
-        .finally(() => setLoading(false));
+    const loadRoomsMap = async () => {
+      try {
+        const res = await getRoomsMap();
+        const grouped = {};
+        res.data.forEach((room) => {
+          if (!grouped[room.floorNumber]) grouped[room.floorNumber] = {};
+          grouped[room.floorNumber][room.roomNumber] = room;
+        });
+        setRoomsData(grouped);
+      } catch (err) {
+        console.error('Failed to load rooms map', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadRoomsMap();
   }, []);
 
   const applyRoomColors = (floor) => {
@@ -60,52 +62,57 @@ const useFloorView = () => {
     const container = svgContainerRef.current;
     if (!container) return;
 
-    fetch(FLOORS[selectedFloor])
-        .then((r) => r.text())
-        .then((svgText) => {
-          container.innerHTML = svgText;
+    const loadFloorSvg = async () => {
+      try {
+        const r = await fetch(FLOORS[selectedFloor]);
+        container.innerHTML = await r.text();
 
-          const svgEl = container.querySelector('svg');
-          if (!svgEl) return;
+        const svgEl = container.querySelector('svg');
+        if (!svgEl) return;
 
-          svgEl.setAttribute('width', '100%');
-          svgEl.setAttribute('height', '100%');
+        svgEl.setAttribute('width', '100%');
+        svgEl.setAttribute('height', '100%');
 
-          const bgRect = svgEl.querySelector('rect:first-child');
-          if (bgRect) bgRect.remove();
+        const bgRect = svgEl.querySelector('rect:first-child');
+        if (bgRect) bgRect.remove();
 
-          svgEl.querySelectorAll('g[id^="room-"]').forEach((group) => {
-            const roomId = parseInt(group.id.replace('room-', ''), 10);
+        svgEl.querySelectorAll('g[id^="room-"]').forEach((group) => {
+          const roomId = parseInt(group.id.replace('room-', ''), 10);
 
-            group.style.cursor = 'pointer';
-            group.addEventListener('click', () => setSelectedRoomId(roomId));
+          group.style.cursor = 'pointer';
+          group.addEventListener('click', () => setSelectedRoomId(roomId));
 
-            const cursorPos = { x: 0, y: 0 };
+          const cursorPos = { x: 0, y: 0 };
 
-            group.addEventListener('mouseenter', (e) => {
-              cursorPos.x = e.clientX;
-              cursorPos.y = e.clientY;
-              const roomData = roomsDataRef.current[selectedFloor]?.[roomId];
-              const text = roomData?.currentLecture?.title ?? 'თავისუფალი';
-              tooltipTimerRef.current = setTimeout(() => {
-                setTooltip({ visible: true, x: cursorPos.x, y: cursorPos.y, text });
-              }, 500);
-            });
-
-            group.addEventListener('mousemove', (e) => {
-              cursorPos.x = e.clientX;
-              cursorPos.y = e.clientY;
-              setTooltip((prev) => prev.visible ? { ...prev, x: e.clientX, y: e.clientY } : prev);
-            });
-
-            group.addEventListener('mouseleave', () => {
-              clearTimeout(tooltipTimerRef.current);
-              setTooltip({ visible: false, x: 0, y: 0, text: '' });
-            });
+          group.addEventListener('mouseenter', (e) => {
+            cursorPos.x = e.clientX;
+            cursorPos.y = e.clientY;
+            const roomData = roomsDataRef.current[selectedFloor]?.[roomId];
+            const text = roomData?.currentLecture?.title ?? 'თავისუფალი';
+            tooltipTimerRef.current = setTimeout(() => {
+              setTooltip({ visible: true, x: cursorPos.x, y: cursorPos.y, text });
+            }, 500);
           });
 
-          applyRoomColors(selectedFloor);
+          group.addEventListener('mousemove', (e) => {
+            cursorPos.x = e.clientX;
+            cursorPos.y = e.clientY;
+            setTooltip((prev) => prev.visible ? { ...prev, x: e.clientX, y: e.clientY } : prev);
+          });
+
+          group.addEventListener('mouseleave', () => {
+            clearTimeout(tooltipTimerRef.current);
+            setTooltip({ visible: false, x: 0, y: 0, text: '' });
+          });
         });
+
+        applyRoomColors(selectedFloor);
+      } catch (err) {
+        console.error('Failed to load floor SVG', err);
+      }
+    };
+
+    loadFloorSvg();
 
     return () => clearTimeout(tooltipTimerRef.current);
   }, [selectedFloor]);
@@ -127,8 +134,7 @@ const useFloorView = () => {
       roomsData[selectedFloor]?.[roomId]?.status === 'occupied';
 
   const getRoomData = (roomId) => {
-    console.log('roomsData: ' + roomsData);
-    roomsData[selectedFloor]?.[roomId] ?? null;
+    return roomsData[selectedFloor]?.[roomId] ?? null;
   }
 
   return {

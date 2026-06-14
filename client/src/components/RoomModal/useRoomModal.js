@@ -5,8 +5,6 @@ const useRoomModal = (roomId, roomData) => {
         return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
     };
 
-    console.log(roomData);
-
     const modalData = roomId
         ? {
             id: roomId,

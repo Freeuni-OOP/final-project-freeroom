@@ -51,24 +51,13 @@ export default function FloorView() {
         </TransformWrapper>
       </div>
 
-      {selectedRoomId && (() => {
-        console.log('selectedRoomId:', selectedRoomId, 'roomData:', getRoomData(selectedRoomId));
-        return (
-            <RoomModal
-                roomId={selectedRoomId}
-                roomData={getRoomData(selectedRoomId)}
-                onClose={handleCloseModal}
-            />
-        );
-      })()}
-
-      {/*{selectedRoomId && (*/}
-      {/*  <RoomModal*/}
-      {/*    roomId={selectedRoomId}*/}
-      {/*    isOccupied={getRoomData(selectedRoomId)}*/}
-      {/*    onClose={handleCloseModal}*/}
-      {/*  />*/}
-      {/*)}*/}
+      {selectedRoomId && (
+        <RoomModal
+          roomId={selectedRoomId}
+          roomData={getRoomData(selectedRoomId)}
+          onClose={handleCloseModal}
+        />
+      )}
 
       {tooltip.visible && (
         <div
