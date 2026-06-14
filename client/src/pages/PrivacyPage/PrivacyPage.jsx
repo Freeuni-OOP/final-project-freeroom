@@ -15,7 +15,7 @@ export default function PrivacyPage() {
         <div className="mt-8 space-y-6">
           {sections.map((section) => (
             <div key={section.title}>
-              <h2 className="text-sm font-bold uppercase tracking-wide text-brand-green">
+              <h2 className="text-sm font-bold uppercase tracking-wide text-brand-accent-text">
                 {section.title}
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-brand-ink/70">{section.body}</p>
@@ -27,7 +27,7 @@ export default function PrivacyPage() {
           FreeRoom is a student project built for a university course. For questions, contact us at{' '}
           <a
             href={`mailto:${contactEmail}`}
-            className="font-semibold text-brand-green transition-colors hover:text-brand-green-dark"
+            className="font-semibold text-brand-accent-text transition-colors hover:text-brand-accent-dark"
           >
             {contactEmail}
           </a>

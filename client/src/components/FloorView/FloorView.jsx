@@ -27,8 +27,8 @@ export default function FloorView() {
             onClick={() => selectFloor(floor)}
             className={`w-9 h-9 rounded-full border text-sm font-semibold cursor-pointer flex items-center justify-center transition-all duration-150
               ${selectedFloor === floor
-                ? 'bg-brand-gold border-brand-gold text-brand-ink'
-                : 'bg-gray-50 border-gray-200 text-brand-ink hover:border-brand-gold hover:bg-brand-gold/10'
+                ? 'bg-brand-accent border-brand-accent text-brand-accent-contrast'
+                : 'bg-gray-50 border-gray-200 text-brand-ink hover:border-brand-accent hover:bg-brand-accent/10'
               }`}
           >
             {floor}

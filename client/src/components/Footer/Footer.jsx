@@ -18,7 +18,7 @@ export default function Footer() {
                                 href={dev.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="footer-dev text-sm font-semibold text-brand-gold transition-all"
+                                className="footer-dev text-sm font-semibold text-brand-accent transition-all"
                             >
                                 {dev.name}
                             </a>
@@ -28,12 +28,12 @@ export default function Footer() {
 
                 <a
                     href={`mailto:${contactEmail}`}
-                    className="text-sm text-brand-ink/60 transition-colors hover:text-brand-green"
+                    className="text-sm text-brand-ink/60 transition-colors hover:text-brand-accent-text"
                 >
                     {contactEmail}
                 </a>
 
-                <Link to="/privacy" className="text-xs text-brand-ink/50 transition-colors hover:text-brand-green">
+                <Link to="/privacy" className="text-xs text-brand-ink/50 transition-colors hover:text-brand-accent-text">
                     Privacy
                 </Link>
 

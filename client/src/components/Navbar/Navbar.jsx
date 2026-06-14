@@ -26,7 +26,7 @@ export default function Navbar() {
                             onClick={() => goTo(link.path)}
                             className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
                                 currentPath === link.path
-                                    ? 'bg-brand-green/10 text-brand-green'
+                                    ? 'bg-brand-accent/10 text-brand-accent-text'
                                     : 'text-brand-ink/70 hover:bg-black/5 hover:text-brand-ink'
                             }`}
                         >

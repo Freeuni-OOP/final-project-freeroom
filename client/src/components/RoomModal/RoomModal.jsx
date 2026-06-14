@@ -59,7 +59,7 @@ export default function RoomModal({ roomId, isOccupied, onClose }) {
             {roomData.isFree && (
               <button
                 onClick={() => { handleReserve(); onClose(); }}
-                className="w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-semibold py-3 px-6 rounded-xl transition-colors shadow-sm cursor-pointer"
+                className="w-full bg-brand-accent hover:bg-brand-accent-dark text-brand-accent-contrast font-semibold py-3 px-6 rounded-xl transition-colors shadow-sm cursor-pointer"
               >
                 დაჯავშნა
               </button>
