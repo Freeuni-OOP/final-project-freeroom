@@ -14,7 +14,7 @@ const useFloorView = () => {
 
   const [initialScale] = useState(() => {
     if (typeof window !== 'undefined') {
-      return window.innerWidth < 768 ? 0.9 : 1.2;
+      return window.innerWidth < 768 ? 0.9 : 1;
     }
     return 1.2;
   });

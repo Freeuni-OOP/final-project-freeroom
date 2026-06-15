@@ -1,17 +1,24 @@
 package ge.freeroom.freeroom.service;
 
 import ge.freeroom.freeroom.dto.LectureSummaryDto;
+import ge.freeroom.freeroom.dto.ReserveRoomResponse;
 import ge.freeroom.freeroom.dto.RoomMapDto;
 import ge.freeroom.freeroom.entities.Lecture;
 import ge.freeroom.freeroom.entities.Room;
+import ge.freeroom.freeroom.entities.RoomOccupancy;
+import ge.freeroom.freeroom.entities.User;
 import ge.freeroom.freeroom.repositories.LectureRepository;
+import ge.freeroom.freeroom.repositories.RoomOccupancyRepository;
 import ge.freeroom.freeroom.repositories.RoomRepository;
+import ge.freeroom.freeroom.repositories.UserRepository;
+import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,10 +26,15 @@ public class RoomAvailabilityService {
 
     private final RoomRepository roomRepository;
     private final LectureRepository lectureRepository;
+    private final UserRepository userRepository;
 
-    public RoomAvailabilityService(RoomRepository roomRepository, LectureRepository lectureRepository) {
+    @Autowired
+    private RoomOccupancyRepository roomOccupancyRepository;
+
+    public RoomAvailabilityService(RoomRepository roomRepository, LectureRepository lectureRepository, UserRepository userRepository) {
         this.roomRepository = roomRepository;
         this.lectureRepository = lectureRepository;
+        this.userRepository = userRepository;
     }
 
     public List<RoomMapDto> getAllRoomsMap(){
@@ -61,5 +73,46 @@ public class RoomAvailabilityService {
 
             return dto;
         }).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public ReserveRoomResponse reserveRoom(String userId, Long roomId) {
+        System.out.println("DEBUG: Attempting to reserve with userId=" + userId);
+        User user = userRepository.findById(userId)
+                                        .orElseGet(() -> {
+                                            User newUser = new User();
+                                            newUser.setId(userId);
+                                            // set email/name from the Firebase token claims if available
+
+                                            return userRepository.save(newUser);
+                                        });
+        System.out.println("DEBUG: Attempting to reserve with roomId=" + roomId);
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("Room not Found"));
+
+        Optional<RoomOccupancy> existing = roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(roomId);
+        if(existing.isPresent()) {
+            throw new RuntimeException("room is already occupied");
+        }
+
+        LocalDateTime nowTime = LocalDateTime.now();
+        RoomOccupancy occupancy = new RoomOccupancy();
+        occupancy.setRoom(room);
+        occupancy.setUser(user);
+        occupancy.setStartAt(nowTime);
+        occupancy.setExpectedEndAt(nowTime.plusHours(1));
+        occupancy.setEndAt(null); // marks that it is active
+
+        RoomOccupancy saved = roomOccupancyRepository.save(occupancy);
+
+        ReserveRoomResponse response = new ReserveRoomResponse();
+        response.setId(saved.getId());
+        response.setRoomId(saved.getRoom().getId());
+        response.setRoomNumber(saved.getRoom().getRoomNumber());
+        response.setStartTime(saved.getStartAt());
+        response.setExpectedEndTime(saved.getExpectedEndAt());
+
+        System.out.println("++DEBUG: reserved");
+        return response;
     }
 }

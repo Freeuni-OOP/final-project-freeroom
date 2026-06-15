@@ -1,3 +1,5 @@
+import {reserveRoom} from '@/services/api/endpoints.js'
+
 const useRoomModal = (roomId, roomData) => {
   const formatTime = (iso) => {
     if (!iso) return null;
@@ -16,8 +18,17 @@ const useRoomModal = (roomId, roomData) => {
       }
     : null;
 
-  const handleReserve = () => {
-    alert(`ოთახი ${roomId} დაჯავშნილია`);
+  const handleReserve = async () => {
+    if(!modalData?.isFree) {
+        alert('ოთახი დაკავებულია');
+        return;
+    }
+    try {
+        await reserveRoom(roomId);
+        alert(`ოთახი ${roomId} დაჯავშნილია`);
+    }catch (err) {
+        alert(err.response?.data?.error || 'დაჯავშნა ვერ მოხერხდა');
+    }
   };
 
   return {
