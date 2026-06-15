@@ -26,12 +26,6 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
             "@agruni.edu.ge"
     );
 
-    private final UserRepository userRepository;
-
-    public FirebaseTokenFilter(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
             throws ServletException, IOException {
@@ -59,17 +53,7 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
                 return;
             }
 
-            String uid = decodedToken.getUid();
-
-            // Auto-provision an app_user row on first authenticated request
-            if (!userRepository.existsById(uid)) {
-                User newUser = new User();
-                newUser.setId(uid);
-                newUser.setEmail(email);
-                newUser.setDisplayName(decodedToken.getName());
-                newUser.setPhotoUrl(decodedToken.getPicture());
-                userRepository.save(newUser);
-            }
+            request.setAttribute("firebaseToken", decodedToken);
 
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                     decodedToken.getUid(),

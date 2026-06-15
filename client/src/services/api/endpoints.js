@@ -5,3 +5,5 @@ export const getProfile = () => axiosInstance.get('/profile');
 export const getRoomsMap = () => axiosInstance.get('/rooms/map');
 
 export const reserveRoom = (roomDbId, durationMinutes) => axiosInstance.post('/reserve', { roomDbId, durationMinutes });
+
+export const syncUser = () => axiosInstance.post('/user/sync')

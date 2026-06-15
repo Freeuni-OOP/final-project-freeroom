@@ -78,13 +78,7 @@ public class RoomAvailabilityService {
     @Transactional
     public ReserveRoomResponse reserveRoom(String userId, Long roomId, Long durationMinutes) {
         User user = userRepository.findById(userId)
-                                        .orElseGet(() -> {
-                                            User newUser = new User();
-                                            newUser.setId(userId);
-                                            // set email/name from the Firebase token claims if available
-
-                                            return userRepository.save(newUser);
-                                        });
+                .orElseThrow(() -> new RuntimeException("User not found. Please sync your account first."));
 
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new RuntimeException("Room not Found"));
