@@ -24,8 +24,8 @@ const useRoomModal = (roomId, roomData) => {
         return;
     }
     try {
-        await reserveRoom(roomId);
-        alert(`ოთახი ${roomId} დაჯავშნილია`);
+        await reserveRoom(roomData.id);
+        alert(`ოთახი ${roomData.id} დაჯავშნილია`);
     }catch (err) {
         alert(err.response?.data?.error || 'დაჯავშნა ვერ მოხერხდა');
     }
