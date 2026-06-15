@@ -77,7 +77,6 @@ public class RoomAvailabilityService {
 
     @Transactional
     public ReserveRoomResponse reserveRoom(String userId, Long roomId, Long durationMinutes) {
-        System.out.println("DEBUG: Attempting to reserve with userId=" + userId);
         User user = userRepository.findById(userId)
                                         .orElseGet(() -> {
                                             User newUser = new User();
@@ -86,18 +85,24 @@ public class RoomAvailabilityService {
 
                                             return userRepository.save(newUser);
                                         });
-        System.out.println("DEBUG: Attempting to reserve with roomId=" + roomId);
+
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new RuntimeException("Room not Found"));
+
+        LocalDateTime nowTime = LocalDateTime.now();
+
+        List<Lecture> activeLectures = lectureRepository.findActiveLecturesByRoomIds(List.of(roomId), nowTime);
+        if (!activeLectures.isEmpty()) {
+            throw new RuntimeException("Room has an active lecture");
+        }
 
         Optional<RoomOccupancy> existing = roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(roomId);
         if(existing.isPresent()) {
             throw new RuntimeException("room is already occupied");
         }
 
-        Long minutes = (durationMinutes != null) ? durationMinutes : 60;
+        long minutes = (durationMinutes != null) ? durationMinutes : 60;
 
-        LocalDateTime nowTime = LocalDateTime.now();
         RoomOccupancy occupancy = new RoomOccupancy();
         occupancy.setRoom(room);
         occupancy.setUser(user);
@@ -114,7 +119,6 @@ public class RoomAvailabilityService {
         response.setStartTime(saved.getStartAt());
         response.setExpectedEndTime(saved.getExpectedEndAt());
 
-        System.out.println("++DEBUG: reserved");
         return response;
     }
 }
