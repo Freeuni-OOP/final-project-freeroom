@@ -57,12 +57,29 @@ export default function RoomModal({ roomId, roomData, onClose }) {
             )}
 
             {modalData.isFree && (
-              <button
-                onClick={() => { handleReserve(); onClose(); }}
-                className="w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-semibold py-3 px-6 rounded-xl transition-colors shadow-sm cursor-pointer"
-              >
-                დაჯავშნა
-              </button>
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-600 mb-1">დაჯავშნის ხანგრძლივობა:</p>
+                  <div className="flex gap-2">
+                    <button
+                        onClick={() => { handleReserve(30); onClose(); }}
+                        className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-semibold py-3 rounded-lg"
+                    >
+                      30 წუთი
+                    </button>
+                    <button
+                        onClick={() => { handleReserve(60); onClose(); }}
+                        className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-semibold py-3 rounded-lg"
+                    >
+                      1 საათი
+                    </button>
+                    <button
+                        onClick={() => { handleReserve(120); onClose(); }}
+                        className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-semibold py-3 rounded-lg"
+                    >
+                      2 საათი
+                    </button>
+                  </div>
+                </div>
             )}
           </div>
         </div>

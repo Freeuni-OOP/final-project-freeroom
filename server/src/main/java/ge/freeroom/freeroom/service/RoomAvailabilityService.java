@@ -76,7 +76,7 @@ public class RoomAvailabilityService {
     }
 
     @Transactional
-    public ReserveRoomResponse reserveRoom(String userId, Long roomId) {
+    public ReserveRoomResponse reserveRoom(String userId, Long roomId, Long durationMinutes) {
         System.out.println("DEBUG: Attempting to reserve with userId=" + userId);
         User user = userRepository.findById(userId)
                                         .orElseGet(() -> {
@@ -95,12 +95,14 @@ public class RoomAvailabilityService {
             throw new RuntimeException("room is already occupied");
         }
 
+        Long minutes = (durationMinutes != null) ? durationMinutes : 60;
+
         LocalDateTime nowTime = LocalDateTime.now();
         RoomOccupancy occupancy = new RoomOccupancy();
         occupancy.setRoom(room);
         occupancy.setUser(user);
         occupancy.setStartAt(nowTime);
-        occupancy.setExpectedEndAt(nowTime.plusHours(1));
+        occupancy.setExpectedEndAt(nowTime.plusMinutes(minutes));
         occupancy.setEndAt(null); // marks that it is active
 
         RoomOccupancy saved = roomOccupancyRepository.save(occupancy);

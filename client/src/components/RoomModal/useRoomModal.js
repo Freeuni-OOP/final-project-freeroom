@@ -18,14 +18,14 @@ const useRoomModal = (roomId, roomData) => {
       }
     : null;
 
-  const handleReserve = async () => {
+  const handleReserve = async (durationMinutes) => {
     if(!modalData?.isFree) {
         alert('ოთახი დაკავებულია');
         return;
     }
     try {
-        await reserveRoom(roomData.id);
-        alert(`ოთახი ${roomData.id} დაჯავშნილია`);
+        await reserveRoom(roomData.id, durationMinutes);
+        alert(`ოთახი ${roomData.id} დაჯავშნილია ${durationMinutes} wuTiT`);
     }catch (err) {
         alert(err.response?.data?.error || 'დაჯავშნა ვერ მოხერხდა');
     }

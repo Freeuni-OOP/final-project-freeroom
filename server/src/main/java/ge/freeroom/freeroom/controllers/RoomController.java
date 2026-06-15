@@ -53,8 +53,9 @@ public class RoomController {
         try {
             String userId = getCurrentUserId();
             Long roomId = request.get("roomId");
+            Long durationMinutes = request.get("durationMinutes");
 
-            ReserveRoomResponse response = roomAvailabilityService.reserveRoom(userId, roomId);
+            ReserveRoomResponse response = roomAvailabilityService.reserveRoom(userId, roomId, durationMinutes);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         }catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
