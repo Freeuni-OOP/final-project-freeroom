@@ -1,5 +1,6 @@
 package ge.freeroom.freeroom.controllers;
 
+import ge.freeroom.freeroom.dto.ReserveRoomRequest;
 import ge.freeroom.freeroom.dto.ReserveRoomResponse;
 import ge.freeroom.freeroom.dto.RoomMapDto;
 import ge.freeroom.freeroom.service.LectureSyncService;
@@ -11,6 +12,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
+
+import java.security.Principal;
 import java.util.Map;
 
 import java.util.List;
@@ -49,22 +52,12 @@ public class RoomController {
     }
 
     @PostMapping("/reserve")
-    public ResponseEntity<?> addRoom(@RequestBody Map<String, Long> request) {
-        try {
-            String userId = getCurrentUserId();
-            Long roomId = request.get("roomId");
-            Long durationMinutes = request.get("durationMinutes");
+    public ResponseEntity<ReserveRoomResponse> addRoom(@RequestBody ReserveRoomRequest request, Principal principal) {
+        String userId = principal.getName();
+        Long roomId = request.getRoomDbId();
+        Long durationMinutes = request.getDurationMinutes();
 
-            ReserveRoomResponse response = roomAvailabilityService.reserveRoom(userId, roomId, durationMinutes);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        }catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
-    }
-
-    private String getCurrentUserId() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        assert auth != null;
-        return auth.getName();
+        ReserveRoomResponse response = roomAvailabilityService.reserveRoom(userId, roomId, durationMinutes);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
