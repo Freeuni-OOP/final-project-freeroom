@@ -1,16 +1,20 @@
 package ge.freeroom.freeroom.controllers;
 
+import ge.freeroom.freeroom.dto.ReserveRoomRequestDto;
+import ge.freeroom.freeroom.dto.ReserveRoomResponseDto;
 import ge.freeroom.freeroom.dto.RoomMapDto;
 import ge.freeroom.freeroom.service.LectureSyncService;
 import ge.freeroom.freeroom.service.RoomAvailabilityService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
+import java.util.Map;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping(produces = "application/json")
@@ -43,5 +47,15 @@ public class RoomController {
     @GetMapping("/rooms/map")
     public List<RoomMapDto> getRoomMap(){
         return roomAvailabilityService.getAllRoomsMap();
+    }
+
+    @PostMapping("/reserve")
+    public ResponseEntity<ReserveRoomResponseDto> addRoom(@RequestBody ReserveRoomRequestDto request, Principal principal) {
+        String userId = principal.getName();
+        Long roomId = request.getRoomDbId();
+        Long durationMinutes = request.getDurationMinutes();
+
+        ReserveRoomResponseDto response = roomAvailabilityService.reserveRoom(userId, roomId, durationMinutes);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

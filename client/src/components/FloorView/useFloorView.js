@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from 'react';
+import {useEffect, useRef, useState, useCallback} from 'react';
 import FLOORS from './floorLayout';
 import {getRoomsMap} from '@/services/index.js';
 
@@ -14,7 +14,7 @@ const useFloorView = () => {
 
   const [initialScale] = useState(() => {
     if (typeof window !== 'undefined') {
-      return window.innerWidth < 768 ? 0.9 : 1.2;
+      return window.innerWidth < 768 ? 0.9 : 1;
     }
     return 1.2;
   });
@@ -23,25 +23,26 @@ const useFloorView = () => {
     roomsDataRef.current = roomsData;
   }, [roomsData]);
 
-  useEffect(() => {
-    const loadRoomsMap = async () => {
-      try {
-        const res = await getRoomsMap();
-        const grouped = {};
-        res.data.forEach((room) => {
-          if (!grouped[room.floorNumber]) grouped[room.floorNumber] = {};
-          grouped[room.floorNumber][room.roomNumber] = room;
-        });
-        setRoomsData(grouped);
-      } catch (err) {
-        console.error('Failed to load rooms map', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadRoomsMap();
+  const loadRoomsMap = useCallback(async () => {
+    try {
+      const res = await getRoomsMap();
+      const grouped = {};
+      res.data.forEach((room) => {
+        if (!grouped[room.floorNumber]) grouped[room.floorNumber] = {};
+        grouped[room.floorNumber][room.roomNumber] = room;
+      });
+      setRoomsData(grouped);
+    } catch (err) {
+      console.error('Failed to load rooms map', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+      loadRoomsMap();
+  }, [loadRoomsMap]);
 
   const applyRoomColors = (floor) => {
     const container = svgContainerRef.current;
@@ -148,6 +149,7 @@ const useFloorView = () => {
     getRoomData,
     loading,
     initialScale,
+    loadRoomsMap
   };
 };
 

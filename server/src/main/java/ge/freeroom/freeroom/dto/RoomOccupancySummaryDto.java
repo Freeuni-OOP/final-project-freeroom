@@ -1,0 +1,22 @@
+package ge.freeroom.freeroom.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.time.LocalDateTime;
+
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+public class RoomOccupancySummaryDto {
+    private LocalDateTime startAt;
+    private LocalDateTime expectedEndAt;
+
+
+    // (NOT SHOWING PUBLICLY FOR PRIVACY) :
+    private String reserverDisplayName; // for Friend invite or something in future
+}
+

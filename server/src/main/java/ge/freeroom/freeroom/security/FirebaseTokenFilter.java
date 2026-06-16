@@ -2,6 +2,8 @@ package ge.freeroom.freeroom.security;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
+import ge.freeroom.freeroom.entities.User;
+import ge.freeroom.freeroom.repositories.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -50,6 +52,8 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
                 response.getWriter().write("Access Denied: Must use a valid university email.");
                 return;
             }
+
+            request.setAttribute("firebaseToken", decodedToken);
 
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                     decodedToken.getUid(),
