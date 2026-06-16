@@ -49,6 +49,12 @@ public class RoomAvailabilityService {
         Map<Long, Lecture> activeLectureByRoomId = activeLectures.stream()
                 .collect(Collectors.toMap(l -> l.getRoom().getId(), l -> l, (a,b) -> a));
 
+        LocalDateTime endOfDay = now.toLocalDate().plusDays(1).atStartOfDay();
+        List<Lecture> upcomingLecturesToday = roomIds.isEmpty() ? List.of() : lectureRepository.findUpcomingLecturesTodayByRoomIds(roomIds, now, endOfDay);
+
+        Map<Long, Lecture> nextLectureByRoomId = upcomingLecturesToday.stream()
+                .collect(Collectors.toMap(l -> l.getRoom().getId(), l -> l, (a, b) -> a));
+
         List<RoomOccupancy> activeOccupancies = roomIds.isEmpty() ? List.of() :
                     roomOccupancyRepository.findByRoomIdInAndEndAtIsNull(roomIds);
 
@@ -89,6 +95,19 @@ public class RoomAvailabilityService {
                 dto.setStatus("free");
                 dto.setCurrentLecture(null);
                 dto.setCurrentOccupancy(null);
+            }
+
+            Lecture nextLecture = nextLectureByRoomId.get(room.getId());
+            if (nextLecture != null) {
+                LectureSummaryDto nextLsd = new LectureSummaryDto();
+                nextLsd.setTitle(nextLecture.getTitle());
+                nextLsd.setOrganizer(nextLecture.getOrganizer());
+                nextLsd.setStartAt(nextLecture.getStartAt());
+                nextLsd.setEndAt(nextLecture.getEndAt());
+
+                dto.setNextLecture(nextLsd);
+            } else {
+                dto.setNextLecture(null);
             }
 
             return dto;

@@ -89,7 +89,8 @@ const useFloorView = () => {
             cursorPos.x = e.clientX;
             cursorPos.y = e.clientY;
             const roomData = roomsDataRef.current[selectedFloor]?.[roomId];
-            const text = roomData?.currentLecture?.title ?? 'თავისუფალი';
+            const text = roomData?.currentLecture?.title
+                                      ?? (roomData?.currentOccupancy != null ? 'დაკავებული' : 'თავისუფალი');
             tooltipTimerRef.current = setTimeout(() => {
               setTooltip({ visible: true, x: cursorPos.x, y: cursorPos.y, text });
             }, 500);
