@@ -17,4 +17,5 @@ public class RoomMapDto {
     private String status; // "free"/"occupied"
     private LectureSummaryDto currentLecture; // null if free
     private RoomOccupancySummaryDto currentOccupancy; // null if free
+    private LectureSummaryDto nextLecture; // null if no upcoming lecture that day
 }
