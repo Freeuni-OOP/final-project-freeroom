@@ -1,7 +1,7 @@
 import freeuniLogo from '@/assets/freeuni-logo.png';
 import agruniLogo from '@/assets/agruni-logo.png';
 import useNavbar from './useNavbar';
-import LectureSearch from '../LectureSearch/index.jsx';
+import { LectureSearch } from '@/components/LectureSearch';
 import { useState } from 'react';
 
 export default function Navbar() {

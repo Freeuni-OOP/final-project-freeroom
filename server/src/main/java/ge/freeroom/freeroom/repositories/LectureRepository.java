@@ -19,6 +19,6 @@ public interface LectureRepository extends JpaRepository<Lecture, Long> {
     @Query("select l from Lecture l where l.room.id in :roomIds and l.startAt <= :now and l.endAt >= :now")
     List<Lecture> findActiveLecturesByRoomIds(@Param("roomIds") List<Long> roomIds, @Param("now") LocalDateTime now);
 
-    @Query("select l from Lecture l where lower(l.title) like lower(:searchTerm) order by l.startAt asc")
+    @Query("select l from Lecture l where lower(l.title) like lower(:searchTerm) order by l.startAt asc, l.room.roomNumber ASC")
     List<Lecture> searchLecturesChronologically(@Param("searchTerm") String searchTerm);
 }
