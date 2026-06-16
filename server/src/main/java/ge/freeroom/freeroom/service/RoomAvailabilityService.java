@@ -98,21 +98,21 @@ public class RoomAvailabilityService {
     @Transactional
     public ReserveRoomResponseDto reserveRoom(String userId, Long roomId, Long durationMinutes) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found. Please sync your account first."));
+                .orElseThrow(() -> new IllegalArgumentException("User not found. Please sync your account first."));
 
         Room room = roomRepository.findById(roomId)
-                .orElseThrow(() -> new RuntimeException("Room not Found"));
+                .orElseThrow(() -> new IllegalArgumentException("Room not Found"));
 
         LocalDateTime nowTime = LocalDateTime.now();
 
         List<Lecture> activeLectures = lectureRepository.findActiveLecturesByRoomIds(List.of(roomId), nowTime);
         if (!activeLectures.isEmpty()) {
-            throw new RuntimeException("Room has an active lecture");
+            throw new IllegalStateException("Room has an active lecture");
         }
 
         Optional<RoomOccupancy> existing = roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(roomId);
         if(existing.isPresent()) {
-            throw new RuntimeException("room is already occupied");
+            throw new IllegalStateException("room is already occupied");
         }
 
         long minutes = (durationMinutes != null) ? durationMinutes : 60;
