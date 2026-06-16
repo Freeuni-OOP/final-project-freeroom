@@ -1,7 +1,7 @@
 import useRoomModal from './useRoomModal';
 
-export default function RoomModal({ roomId, roomData, onClose }) {
-  const { roomData: modalData, handleReserve } = useRoomModal(roomId, roomData);
+export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess }) {
+  const { roomData: modalData, handleReserve } = useRoomModal(roomId, roomData, onClose, onReserveSuccess);
 
   if (!roomId || !modalData) return null;
 
@@ -79,19 +79,19 @@ export default function RoomModal({ roomId, roomData, onClose }) {
                   <p className="text-sm text-gray-600 mb-1">დაჯავშნის ხანგრძლივობა:</p>
                   <div className="flex gap-2">
                     <button
-                        onClick={() => { handleReserve(30); onClose(); }}
+                        onClick={() => { handleReserve(30); }}
                         className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-semibold py-3 rounded-lg"
                     >
                       30 წუთი
                     </button>
                     <button
-                        onClick={() => { handleReserve(60); onClose(); }}
+                        onClick={() => { handleReserve(60); }}
                         className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-semibold py-3 rounded-lg"
                     >
                       1 საათი
                     </button>
                     <button
-                        onClick={() => { handleReserve(120); onClose(); }}
+                        onClick={() => { handleReserve(120); }}
                         className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-semibold py-3 rounded-lg"
                     >
                       2 საათი

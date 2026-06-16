@@ -15,6 +15,7 @@ export default function FloorView() {
     handleCloseModal,
     getRoomData,
     initialScale,
+    loadRoomsMap
   } = useFloorView();
 
   return (
@@ -66,6 +67,7 @@ export default function FloorView() {
           roomId={selectedRoomId}
           roomData={getRoomData(selectedRoomId)}
           onClose={handleCloseModal}
+          onReserveSuccess={loadRoomsMap}
         />
       )}
 

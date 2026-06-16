@@ -1,6 +1,6 @@
 import {reserveRoom} from '@/services/api/endpoints.js'
 
-const useRoomModal = (roomId, roomData) => {
+const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
   const formatTime = (iso) => {
     if (!iso) return null;
     return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
@@ -31,6 +31,8 @@ const useRoomModal = (roomId, roomData) => {
     }
     try {
         await reserveRoom(roomData.id, durationMinutes);
+        onClose();
+        onReserveSuccess();
         alert(`ოთახი ${roomId} დაჯავშნილია ${durationMinutes} წუთით`);
     }catch (err) {
         alert(err.response?.data?.error || 'დაჯავშნა ვერ მოხერხდა');
