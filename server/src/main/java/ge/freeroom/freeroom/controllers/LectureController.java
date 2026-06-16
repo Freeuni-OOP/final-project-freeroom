@@ -5,6 +5,7 @@ import ge.freeroom.freeroom.repositories.LectureRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -32,5 +33,14 @@ public class LectureController {
     @GetMapping("/lectures/room/{roomNumber}")
     public List<Lecture> getLecturesByRoom(@PathVariable Integer roomNumber) {
         return lectureRepository.findByRoomRoomNumberOrderByStartAtAsc(roomNumber);
+    }
+
+    @GetMapping("/lectures/search")
+    public List<Lecture> searchLectures(@RequestParam("q") String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return List.of();
+        }
+        String safeSearchTerm = "%" + query.trim() + "%";
+        return lectureRepository.searchLecturesChronologically(safeSearchTerm);
     }
 }

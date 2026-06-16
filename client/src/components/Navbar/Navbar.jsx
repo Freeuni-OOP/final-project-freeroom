@@ -1,9 +1,12 @@
 import freeuniLogo from '@/assets/freeuni-logo.png';
 import agruniLogo from '@/assets/agruni-logo.png';
 import useNavbar from './useNavbar';
+import LectureSearch from '../LectureSearch/index.jsx';
+import { useState } from 'react';
 
 export default function Navbar() {
     const { navLinks, currentPath, goTo, handleLogout, isMenuOpen, toggleMenu, closeMenu } = useNavbar();
+    const [showFeatures, setShowFeatures] = useState(false);
 
     return (
         <>
@@ -21,7 +24,7 @@ export default function Navbar() {
                     </button>
 
                     {/* Desktop menu */}
-                    <div className="hidden sm:flex items-center gap-1 sm:gap-2">
+                    <div className="hidden sm:flex items-center gap-1 sm:gap-2 relative">
                         {navLinks.map((link) => (
                             <button
                                 key={link.path}
@@ -37,15 +40,32 @@ export default function Navbar() {
                         ))}
 
                         <button
+                            onClick={() => setShowFeatures(!showFeatures)}
+                            className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                                showFeatures
+                                    ? 'bg-brand-accent text-white'
+                                    : 'text-brand-ink/70 hover:bg-black/5 hover:text-brand-ink'
+                            }`}
+                        >
+                            ძებნა
+                        </button>
+
+                        <button
                             onClick={handleLogout}
                             className="ml-1 rounded-lg px-3 py-2 text-sm font-semibold text-brand-ink/70 transition-colors hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
                         >
                             გამოსვლა
                         </button>
+
+                        {showFeatures && (
+                            <div className="absolute right-24 top-12 w-80 z-50">
+                                <LectureSearch />
+                            </div>
+                        )}
                     </div>
 
                     {/* Mobile Burger Icon */}
-                    <button 
+                    <button
                         className="flex sm:hidden flex-col justify-center items-center w-8 h-8 space-y-1.5 focus:outline-none"
                         onClick={toggleMenu}
                         aria-label="Toggle Menu"
@@ -58,34 +78,34 @@ export default function Navbar() {
             </header>
 
             {/* Mobile Menu Overlay */}
-            <div 
+            <div
                 className={`sm:hidden fixed inset-0 z-50 ${
                     isMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'
                 }`}
             >
                 {/* Backdrop */}
-                <div 
+                <div
                     className={`absolute inset-0 cursor-pointer transition-all duration-300 ${
                         isMenuOpen ? 'bg-black/20 backdrop-blur-sm opacity-100' : 'bg-black/0 backdrop-blur-none opacity-0'
-                    }`} 
+                    }`}
                     onClick={closeMenu}
                 />
-                
+
                 {/* Sliding Menu */}
-                <div 
+                <div
                     className={`absolute top-0 right-0 h-full w-[60%] bg-brand-bg shadow-xl border-l border-black/5 p-4 flex flex-col gap-2 transform transition-transform duration-300 ${
                         isMenuOpen ? 'translate-x-0' : 'translate-x-full'
                     }`}
                     onClick={(e) => e.stopPropagation()}
                 >
                     <div className="flex justify-end mb-2">
-                        <button 
+                        <button
                             className="flex justify-center items-center w-8 h-8 focus:outline-none text-brand-ink"
                             onClick={closeMenu}
                             aria-label="Close Menu"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
                     </div>
@@ -103,6 +123,17 @@ export default function Navbar() {
                             {link.label}
                         </button>
                     ))}
+
+                    <button
+                        onClick={() => {
+                            setShowFeatures(!showFeatures);
+                            closeMenu();
+                        }}
+                        className="rounded-lg px-4 py-3 text-left text-base font-semibold text-brand-ink/70 hover:bg-black/5 hover:text-brand-ink"
+                    >
+                        ფუნქციები
+                    </button>
+
                     <div className="mt-auto pt-4 border-t border-black/5">
                         <button
                             onClick={handleLogout}
@@ -113,6 +144,20 @@ export default function Navbar() {
                     </div>
                 </div>
             </div>
+
+            {showFeatures && (
+                <div className="sm:hidden fixed bottom-4 left-4 right-4 z-50 max-h-[60vh] overflow-y-auto">
+                    <div className="flex justify-end mb-1">
+                        <button
+                            onClick={() => setShowFeatures(false)}
+                            className="bg-brand-bg text-brand-ink p-1 rounded-full shadow border border-black/5 font-bold px-3 text-xs"
+                        >
+                            ✕ დახურვა
+                        </button>
+                    </div>
+                    <LectureSearch />
+                </div>
+            )}
         </>
     );
 }
