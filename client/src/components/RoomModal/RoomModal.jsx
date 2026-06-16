@@ -74,6 +74,22 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
               </div>
             )}
 
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm px-1 border-t border-gray-100 pt-4">
+              <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold shrink-0">
+                შემდეგი ლექცია:
+              </span>
+              {modalData.nextLectureTitle ? (
+                <span className="text-gray-800 font-medium">
+                  {modalData.nextLectureTitle}
+                  <span className="text-gray-500 font-normal ml-2">
+                    {modalData.nextLectureStart} – {modalData.nextLectureEnd}
+                  </span>
+                </span>
+              ) : (
+                <span className="text-gray-400 italic">ოთახში დღეს მეტი ლექცია აღარ არის</span>
+              )}
+            </div>
+
             {modalData.isFree && (
                 <div className="space-y-2">
                   <p className="text-sm text-gray-600 mb-1">დაჯავშნის ხანგრძლივობა:</p>
