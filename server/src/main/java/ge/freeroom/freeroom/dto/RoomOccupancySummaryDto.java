@@ -17,6 +17,6 @@ public class RoomOccupancySummaryDto {
 
 
     // (NOT SHOWING PUBLICLY FOR PRIVACY) :
-    private String reserverUserName; // for Friend invite or something in future
+    private String reserverDisplayName; // for Friend invite or something in future
 }
 

@@ -82,7 +82,7 @@ public class RoomAvailabilityService {
                 RoomOccupancySummaryDto rosd = new RoomOccupancySummaryDto();
                 rosd.setStartAt(occupancy.getStartAt());
                 rosd.setExpectedEndAt(occupancy.getExpectedEndAt());
-                rosd.setReserverUserName(occupancy.getUser().getDisplayName());
+                rosd.setReserverDisplayName(occupancy.getUser().getDisplayName());
 
                 dto.setCurrentOccupancy(rosd);
             }else {
