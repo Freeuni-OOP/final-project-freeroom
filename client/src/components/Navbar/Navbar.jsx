@@ -2,11 +2,20 @@ import freeuniLogo from '@/assets/freeuni-logo.png';
 import agruniLogo from '@/assets/agruni-logo.png';
 import useNavbar from './useNavbar';
 import { LectureSearch } from '@/components/LectureSearch';
-import { useState } from 'react';
 
 export default function Navbar() {
-    const { navLinks, currentPath, goTo, handleLogout, isMenuOpen, toggleMenu, closeMenu } = useNavbar();
-    const [showFeatures, setShowFeatures] = useState(false);
+    const {
+        navLinks,
+        currentPath,
+        goTo,
+        handleLogout,
+        isMenuOpen,
+        toggleMenu,
+        closeMenu,
+        showFeatures,
+        toggleFeatures,
+        closeFeatures
+    } = useNavbar();
 
     return (
         <>
@@ -23,7 +32,6 @@ export default function Navbar() {
                         FreeRoom
                     </button>
 
-                    {/* Desktop menu */}
                     <div className="hidden sm:flex items-center gap-1 sm:gap-2 relative">
                         {navLinks.map((link) => (
                             <button
@@ -40,7 +48,7 @@ export default function Navbar() {
                         ))}
 
                         <button
-                            onClick={() => setShowFeatures(!showFeatures)}
+                            onClick={toggleFeatures}
                             className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
                                 showFeatures
                                     ? 'bg-brand-accent text-white'
@@ -64,7 +72,6 @@ export default function Navbar() {
                         )}
                     </div>
 
-                    {/* Mobile Burger Icon */}
                     <button
                         className="flex sm:hidden flex-col justify-center items-center w-8 h-8 space-y-1.5 focus:outline-none"
                         onClick={toggleMenu}
@@ -77,13 +84,11 @@ export default function Navbar() {
                 </nav>
             </header>
 
-            {/* Mobile Menu Overlay */}
             <div
                 className={`sm:hidden fixed inset-0 z-50 ${
                     isMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'
                 }`}
             >
-                {/* Backdrop */}
                 <div
                     className={`absolute inset-0 cursor-pointer transition-all duration-300 ${
                         isMenuOpen ? 'bg-black/20 backdrop-blur-sm opacity-100' : 'bg-black/0 backdrop-blur-none opacity-0'
@@ -91,7 +96,6 @@ export default function Navbar() {
                     onClick={closeMenu}
                 />
 
-                {/* Sliding Menu */}
                 <div
                     className={`absolute top-0 right-0 h-full w-[60%] bg-brand-bg shadow-xl border-l border-black/5 p-4 flex flex-col gap-2 transform transition-transform duration-300 ${
                         isMenuOpen ? 'translate-x-0' : 'translate-x-full'
@@ -126,7 +130,7 @@ export default function Navbar() {
 
                     <button
                         onClick={() => {
-                            setShowFeatures(!showFeatures);
+                            toggleFeatures();
                             closeMenu();
                         }}
                         className="rounded-lg px-4 py-3 text-left text-base font-semibold text-brand-ink/70 hover:bg-black/5 hover:text-brand-ink"
@@ -149,7 +153,7 @@ export default function Navbar() {
                 <div className="sm:hidden fixed bottom-4 left-4 right-4 z-50 max-h-[60vh] overflow-y-auto">
                     <div className="flex justify-end mb-1">
                         <button
-                            onClick={() => setShowFeatures(false)}
+                            onClick={closeFeatures}
                             className="bg-brand-bg text-brand-ink p-1 rounded-full shadow border border-black/5 font-bold px-3 text-xs"
                         >
                             ✕ დახურვა
