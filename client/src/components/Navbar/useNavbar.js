@@ -11,6 +11,7 @@ const useNavbar = () => {
     const navigate = useNavigate();
     const { pathname } = useLocation();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [showFeatures, setShowFeatures] = useState(false);
 
     const goTo = (path) => {
         setIsMenuOpen(false);
@@ -26,14 +27,20 @@ const useNavbar = () => {
     const toggleMenu = () => setIsMenuOpen((prev) => !prev);
     const closeMenu = () => setIsMenuOpen(false);
 
-    return { 
-        navLinks: NAV_LINKS, 
-        currentPath: pathname, 
-        goTo, 
-        handleLogout, 
-        isMenuOpen, 
-        toggleMenu, 
-        closeMenu 
+    const toggleFeatures = () => setShowFeatures((prev) => !prev);
+    const closeFeatures = () => setShowFeatures(false);
+
+    return {
+        navLinks: NAV_LINKS,
+        currentPath: pathname,
+        goTo,
+        handleLogout,
+        isMenuOpen,
+        toggleMenu,
+        closeMenu,
+        showFeatures,
+        toggleFeatures,
+        closeFeatures
     };
 };
 
