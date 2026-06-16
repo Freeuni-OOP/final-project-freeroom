@@ -1,7 +1,7 @@
 package ge.freeroom.freeroom.controllers;
 
-import ge.freeroom.freeroom.dto.ReserveRoomRequest;
-import ge.freeroom.freeroom.dto.ReserveRoomResponse;
+import ge.freeroom.freeroom.dto.ReserveRoomRequestDto;
+import ge.freeroom.freeroom.dto.ReserveRoomResponseDto;
 import ge.freeroom.freeroom.dto.RoomMapDto;
 import ge.freeroom.freeroom.service.LectureSyncService;
 import ge.freeroom.freeroom.service.RoomAvailabilityService;
@@ -50,12 +50,12 @@ public class RoomController {
     }
 
     @PostMapping("/reserve")
-    public ResponseEntity<ReserveRoomResponse> addRoom(@RequestBody ReserveRoomRequest request, Principal principal) {
+    public ResponseEntity<ReserveRoomResponseDto> addRoom(@RequestBody ReserveRoomRequestDto request, Principal principal) {
         String userId = principal.getName();
         Long roomId = request.getRoomDbId();
         Long durationMinutes = request.getDurationMinutes();
 
-        ReserveRoomResponse response = roomAvailabilityService.reserveRoom(userId, roomId, durationMinutes);
+        ReserveRoomResponseDto response = roomAvailabilityService.reserveRoom(userId, roomId, durationMinutes);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

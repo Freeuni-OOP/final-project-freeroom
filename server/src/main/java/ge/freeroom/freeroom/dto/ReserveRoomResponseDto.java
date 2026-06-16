@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ReserveRoomResponse {
+public class ReserveRoomResponseDto {
     private Long id;
     private Long roomId;
     private Integer roomNumber;

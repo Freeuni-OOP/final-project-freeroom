@@ -5,13 +5,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ReserveRoomRequest {
+public class ReserveRoomRequestDto {
     private Long roomDbId;
     private Integer roomNumber;
     private Long durationMinutes;

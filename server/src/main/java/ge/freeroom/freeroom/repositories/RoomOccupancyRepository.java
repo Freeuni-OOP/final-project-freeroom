@@ -9,4 +9,5 @@ import java.util.Optional;
 public interface RoomOccupancyRepository extends JpaRepository<RoomOccupancy, Long> {
     Optional<RoomOccupancy> findFirstByRoomIdAndEndAtIsNull(Long roomId);
     List<RoomOccupancy> findByRoomIdOrderByCreatedAtDesc(Long roomId);
+    List<RoomOccupancy> findByRoomIdInAndEndAtIsNull(List<Long> roomIds);
 }
