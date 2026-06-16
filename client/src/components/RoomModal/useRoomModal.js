@@ -19,6 +19,10 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         // occupancy fields :
         reservedBy: "Not Your Friend", // [future | for friends possibly show reserver] reservedBy: roomData?.currentOccupancy?.reserverUserName ?? null,
         reservedUntil: formatTime(roomData?.currentOccupancy?.expectedEndAt),
+        //next lecture fields:
+        nextLectureTitle: roomData?.nextLecture?.title ?? null,
+        nextLectureStart: formatTime(roomData?.nextLecture?.startAt),
+        nextLectureEnd:   formatTime(roomData?.nextLecture?.endAt),
 
         capacity: roomData?.capacity ?? null,
       }
