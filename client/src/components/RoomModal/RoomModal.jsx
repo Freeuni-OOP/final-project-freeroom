@@ -33,22 +33,40 @@ export default function RoomModal({ roomId, roomData, onClose }) {
 
           <div className="space-y-6">
             {!modalData.isFree ? (
-              <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
-                <div className="mb-4">
-                  <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">მიმდინარე ლექცია</p>
-                  <p className="text-lg font-semibold text-gray-900">{modalData.lectureName}</p>
+                <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+                  {modalData.isReserved ? (
+                      <>
+                        <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-3">დაჯავშნილია</p>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">დაჯავშნა</p>
+                            <p className="font-medium text-gray-900">{modalData.reservedBy ?? '—'}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">თავისუფლდება</p>
+                            <p className="font-medium text-gray-900">{modalData.reservedUntil ?? '—'}</p>
+                          </div>
+                        </div>
+                      </>
+                  ) : (
+                      <>
+                        <div className="mb-4">
+                          <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">მიმდინარე ლექცია</p>
+                          <p className="text-lg font-semibold text-gray-900">{modalData.lectureName}</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">ლექტორი</p>
+                            <p className="font-medium text-gray-900">{modalData.lecturer}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">დრო</p>
+                            <p className="font-medium text-gray-900">{modalData.startTime} - {modalData.endTime}</p>
+                          </div>
+                        </div>
+                      </>
+                  )}
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">ლექტორი</p>
-                    <p className="font-medium text-gray-900">{modalData.lecturer}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">დრო</p>
-                    <p className="font-medium text-gray-900">{modalData.startTime} - {modalData.endTime}</p>
-                  </div>
-                </div>
-              </div>
             ) : (
               <div className="bg-green-50 rounded-xl p-5 border border-green-100 text-center">
                 <p className="text-green-800 font-medium mb-2 text-lg">ოთახი ამჟამად თავისუფალია.</p>

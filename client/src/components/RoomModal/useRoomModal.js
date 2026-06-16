@@ -10,10 +10,16 @@ const useRoomModal = (roomId, roomData) => {
     ? {
         id: roomId,
         isFree: roomData?.status !== 'occupied',
+        isReserved: roomData?.currentOccupancy != null,
+        // lecture fields :
         lectureName: roomData?.currentLecture?.title ?? null,
         lecturer: roomData?.currentLecture?.organizer ?? null,
         startTime: formatTime(roomData?.currentLecture?.startAt),
         endTime: formatTime(roomData?.currentLecture?.endAt),
+        // occupancy fields :
+        reservedBy: "Not Your Friend", // [future | for friends possibly show reserver] reservedBy: roomData?.currentOccupancy?.reserverUserName ?? null,
+        reservedUntil: formatTime(roomData?.currentOccupancy?.expectedEndAt),
+
         capacity: roomData?.capacity ?? null,
       }
     : null;
