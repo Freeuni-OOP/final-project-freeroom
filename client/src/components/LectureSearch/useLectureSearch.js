@@ -7,33 +7,48 @@ export default function useLectureSearch() {
     const [loading, setLoading] = useState(false);
 
     const latestQueryRef = useRef('');
+    const lastSentQueryRef = useRef('');
+    const debounceTimeoutRef = useRef(null);
 
-    const handleSearch = async (userInput) => {
+    const handleSearch = (userInput) => {
         setQuery(userInput);
         latestQueryRef.current = userInput;
 
+        if (debounceTimeoutRef.current) {
+            clearTimeout(debounceTimeoutRef.current);
+        }
+
         if (!userInput.trim()) {
             setSearchResults([]);
+            setLoading(false);
             return;
         }
 
-        setLoading(true);
-        try {
-            const secureQuery = encodeURIComponent(userInput);
-            const response = await searchLectures(secureQuery);
+        debounceTimeoutRef.current = setTimeout(async () => {
+            if (userInput === lastSentQueryRef.current) {
+                return;
+            }
 
-            if (userInput === latestQueryRef.current) {
-                setSearchResults(response.data);
+            setLoading(true);
+            lastSentQueryRef.current = userInput;
+
+            try {
+                const secureQuery = encodeURIComponent(userInput);
+                const response = await searchLectures(secureQuery);
+
+                if (userInput === latestQueryRef.current) {
+                    setSearchResults(response.data);
+                }
+            } catch (error) {
+                if (userInput === latestQueryRef.current) {
+                    console.error("Error fetching lectures:", error);
+                }
+            } finally {
+                if (userInput === latestQueryRef.current) {
+                    setLoading(false);
+                }
             }
-        } catch (error) {
-            if (userInput === latestQueryRef.current) {
-                console.error("Error fetching lectures:", error);
-            }
-        } finally {
-            if (userInput === latestQueryRef.current) {
-                setLoading(false);
-            }
-        }
+        }, 300);
     };
 
     const formatTime = (timeString) => {
