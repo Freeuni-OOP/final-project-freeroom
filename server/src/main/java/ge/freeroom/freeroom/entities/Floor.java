@@ -18,7 +18,6 @@ import java.util.List;
 @Table(name = "floor")
 public class Floor {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, unique = true)
