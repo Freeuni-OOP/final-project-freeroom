@@ -5,15 +5,11 @@ import ge.freeroom.freeroom.dto.UserUpdateDto;
 import ge.freeroom.freeroom.entities.User;
 import ge.freeroom.freeroom.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.Map;
 
 @RestController
@@ -22,9 +18,6 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
-
-    @Value("${supabase.service.key}")
-    private String supabaseServiceKey;
 
     public UserController(UserService userService) {
         this.userService = userService;
@@ -49,50 +42,21 @@ public class UserController {
             HttpServletRequest request,
             @RequestParam(value = "file", required = true) MultipartFile file) {
 
+        if (request.getAttribute("firebaseToken") == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
         try {
-            if (request.getAttribute("firebaseToken") == null) {
-                return ResponseEntity.status(401).build();
-            }
-
-            if (file.isEmpty()) {
-                System.err.println("Upload attempted with an empty multipart file payload.");
-                return ResponseEntity.badRequest().build();
-            }
-
-            String projectRef = "lahucjwdhglaxwdkiroz";
-            String originalName = file.getOriginalFilename();
-            String fileExt = originalName != null && originalName.contains(".")
-                    ? originalName.substring(originalName.lastIndexOf(".")) : ".jpg";
-            String fileName = System.currentTimeMillis() + fileExt;
-
-            String targetUrl = "https://" + projectRef + ".supabase.co/storage/v1/object/avatars/" + fileName;
-
-            URL url = new URL(targetUrl);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setDoOutput(true);
-            connection.setRequestMethod("POST");
-
-            connection.setRequestProperty("Authorization", "Bearer " + supabaseServiceKey);
-            connection.setRequestProperty("apikey", supabaseServiceKey);
-            connection.setRequestProperty("Content-Type", file.getContentType());
-            connection.setRequestProperty("Content-Length", String.valueOf(file.getSize()));
-
-            try (OutputStream os = connection.getOutputStream()) {
-                os.write(file.getBytes());
-                os.flush();
-            }
-
-            int responseCode = connection.getResponseCode();
-            if (responseCode >= 200 && responseCode < 300) {
-                String publicUrl = "https://" + projectRef + ".supabase.co/storage/v1/object/public/avatars/" + fileName;
-                return ResponseEntity.ok(Map.of("publicUrl", publicUrl));
-            } else {
-                System.err.println("Supabase Storage rejected stream with status code: " + responseCode);
-                return ResponseEntity.status(responseCode).build();
-            }
-
+            String publicUrl = userService.uploadAvatarToStorage(file);
+            return ResponseEntity.ok(Map.of("publicUrl", publicUrl));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
         } catch (Exception e) {
-            System.err.println("Avatar stream transmission failed: " + e.getMessage());
+            System.err.println("Avatar upload sequence aborted: " + e.getMessage());
             return ResponseEntity.status(500).build();
         }
     }
