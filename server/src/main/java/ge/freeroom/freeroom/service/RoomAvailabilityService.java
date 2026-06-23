@@ -36,7 +36,7 @@ public class RoomAvailabilityService {
         this.roomOccupancyRepository = roomOccupancyRepository;
     }
 
-    public List<RoomMapDto> getAllRoomsMap(){
+    public List<RoomMapDto> getAllRoomsMap(String currentUserId){
         List<Room> rooms = roomRepository.findAllWithFloor();
 
         List<Long> roomIds = rooms.stream()
@@ -89,6 +89,7 @@ public class RoomAvailabilityService {
                 rosd.setStartAt(occupancy.getStartAt());
                 rosd.setExpectedEndAt(occupancy.getExpectedEndAt());
                 rosd.setReserverDisplayName(occupancy.getUser().getDisplayName());
+                rosd.setIsMyOccupancy(occupancy.getUser().getId().equals(currentUserId));
 
                 dto.setCurrentOccupancy(rosd);
             }else {
