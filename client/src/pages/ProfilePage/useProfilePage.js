@@ -26,8 +26,9 @@ const useProfilePage = () => {
   const [displayName, setDisplayName] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
 
+  const [selectedFile, setSelectedFile] = useState(null);
+
   const [isSaving, setIsSaving] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const hasFetched = useRef(false);
 
@@ -65,7 +66,7 @@ const useProfilePage = () => {
     fetchBackendProfile();
   }, [user]);
 
-  const handleFileUpload = async (file) => {
+  const handleFileChange = (file) => {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
@@ -77,35 +78,34 @@ const useProfilePage = () => {
       return;
     }
 
-    setIsUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
+    setSelectedFile(file);
+    setPhotoFailed(false);
 
-      const response = await axiosInstance.post('/user/upload-avatar', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-
-      if (response && response.data && response.data.publicUrl) {
-        setPhotoUrl(response.data.publicUrl);
-        setPhotoFailed(false);
-      }
-    } catch (error) {
-      console.error('File delivery sequence interrupted:', error);
-      alert('ფაილის ატვირთვა ვერ მოხერხდა.');
-    } finally {
-      setIsUploading(false);
-    }
+    setPhotoUrl(URL.createObjectURL(file));
   };
 
   const handleSaveProfile = async () => {
     if (!user) return;
     setIsSaving(true);
+
     try {
-      const response = await axiosInstance.patch('/user', { bio, displayName, photoUrl });
+      const formData = new FormData();
+
+      if (bio) formData.append('bio', bio);
+      if (displayName) formData.append('displayName', displayName);
+      if (selectedFile) formData.append('file', selectedFile);
+
+      const response = await axiosInstance.patch('/user', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
       if (response && response.data) {
+        setBio(response.data.bio || '');
+        setDisplayName(response.data.displayName || '');
+        setPhotoUrl(response.data.photoUrl || '');
+        setSelectedFile(null);
         alert('პროფილი წარმატებით განახლდა!');
       }
     } catch (error) {
@@ -130,9 +130,9 @@ const useProfilePage = () => {
     bio,
     setBio,
     isSaving,
-    isUploading,
+    isUploading: isSaving && !!selectedFile,
     isLoading,
-    handleFileUpload,
+    handleFileUpload: handleFileChange,
     handleSaveProfile
   };
 };

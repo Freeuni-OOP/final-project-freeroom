@@ -1,7 +1,6 @@
 package ge.freeroom.freeroom.controllers;
 
 import com.google.firebase.auth.FirebaseToken;
-import ge.freeroom.freeroom.dto.UserUpdateDto;
 import ge.freeroom.freeroom.entities.User;
 import ge.freeroom.freeroom.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,8 +8,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/user")
@@ -24,39 +21,29 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<User> getUserProfile(HttpServletRequest request) {
+    public ResponseEntity<User> getUser(HttpServletRequest request) {
         FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
         User user = userService.getOrCreateUser(token);
         return ResponseEntity.ok(user);
     }
 
-    @PatchMapping
-    public ResponseEntity<User> updateProfile(HttpServletRequest request, @RequestBody UserUpdateDto updateDto) {
-        FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
-        User updatedUser = userService.updateUser(token.getUid(), updateDto);
-        return ResponseEntity.ok(updatedUser);
-    }
-
-    @PostMapping(value = "/upload-avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Map<String, String>> uploadAvatar(
+    @PatchMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<User> updateUser(
             HttpServletRequest request,
-            @RequestParam(value = "file", required = true) MultipartFile file) {
+            @RequestParam(value = "displayName", required = false) String displayName,
+            @RequestParam(value = "bio", required = false) String bio,
+            @RequestParam(value = "file", required = false) MultipartFile file) {
 
-        if (request.getAttribute("firebaseToken") == null) {
+        FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
+        if (token == null) {
             return ResponseEntity.status(401).build();
         }
 
-        if (file.isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
-
         try {
-            String publicUrl = userService.uploadAvatarToStorage(file);
-            return ResponseEntity.ok(Map.of("publicUrl", publicUrl));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            User updatedUser = userService.updateUserProfile(token.getUid(), displayName, bio, file);
+            return ResponseEntity.ok(updatedUser);
         } catch (Exception e) {
-            System.err.println("Avatar upload sequence aborted: " + e.getMessage());
+            System.err.println("Failed to update user profile: " + e.getMessage());
             return ResponseEntity.status(500).build();
         }
     }

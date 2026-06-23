@@ -1,7 +1,6 @@
 package ge.freeroom.freeroom.service;
 
 import com.google.firebase.auth.FirebaseToken;
-import ge.freeroom.freeroom.dto.UserUpdateDto;
 import ge.freeroom.freeroom.entities.User;
 import ge.freeroom.freeroom.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,7 +27,6 @@ public class UserService {
     @Transactional
     public User getOrCreateUser(FirebaseToken token) {
         String uid = token.getUid();
-
         return userRepository.findById(uid).orElseGet(() -> {
             User newUser = new User();
             newUser.setId(uid);
@@ -41,24 +39,26 @@ public class UserService {
     }
 
     @Transactional
-    public User updateUser(String uid, UserUpdateDto updateDto) {
+    public User updateUserProfile(String uid, String displayName, String bio, MultipartFile file) throws Exception {
         User user = userRepository.findById(uid)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (updateDto.getDisplayName() != null) {
-            user.setDisplayName(updateDto.getDisplayName());
+        if (file != null && !file.isEmpty()) {
+            String photoUrl = uploadAvatarToStorage(file);
+            user.setPhotoUrl(photoUrl);
         }
-        if (updateDto.getPhotoUrl() != null) {
-            user.setPhotoUrl(updateDto.getPhotoUrl());
+
+        if (displayName != null) {
+            user.setDisplayName(displayName);
         }
-        if (updateDto.getBio() != null) {
-            user.setBio(updateDto.getBio());
+        if (bio != null) {
+            user.setBio(bio);
         }
 
         return userRepository.save(user);
     }
 
-    public String uploadAvatarToStorage(MultipartFile file) throws Exception {
+    private String uploadAvatarToStorage(MultipartFile file) throws Exception {
         String projectRef = "lahucjwdhglaxwdkiroz";
         String originalName = file.getOriginalFilename();
         String fileExt = originalName != null && originalName.contains(".")
