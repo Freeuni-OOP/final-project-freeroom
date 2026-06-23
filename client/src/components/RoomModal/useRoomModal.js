@@ -6,6 +6,8 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
     return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
   };
 
+  const isMyOccupancy = roomData?.currentOccupancy?.isMyOccupancy ?? false;
+
   const modalData = roomId
     ? {
         id: roomId,
@@ -17,7 +19,9 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         startTime: formatTime(roomData?.currentLecture?.startAt),
         endTime: formatTime(roomData?.currentLecture?.endAt),
         // occupancy fields :
-        reservedBy: "Not Your Friend", // [future | for friends possibly show reserver] reservedBy: roomData?.currentOccupancy?.reserverUserName ?? null,
+        reservedBy: isMyOccupancy
+            ? (roomData?.currentOccupancy?.reserverDisplayName ?? 'თქვენ')
+            : "Not Your Friend", // [future | for friends possibly show reserver] reservedBy: roomData?.currentOccupancy?.reserverUserName ?? null,
         reservedUntil: formatTime(roomData?.currentOccupancy?.expectedEndAt),
         //next lecture fields:
         nextLectureTitle: roomData?.nextLecture?.title ?? null,
