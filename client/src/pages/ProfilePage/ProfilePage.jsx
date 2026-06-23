@@ -90,11 +90,11 @@ export default function ProfilePage() {
                         </div>
 
                         <div className="flex flex-col gap-2 w-full">
-                            <label className="text-sm font-semibold text-brand-ink/70">ჩემ შესახებ</label>
+                            <label className="text-sm font-semibold text-brand-ink/70">ჩემს შესახებ</label>
                             <textarea
                                 value={bio}
                                 onChange={(e) => setBio(e.target.value)}
-                                placeholder="მოყევი რამეს შენს შესახებ..."
+                                placeholder="მოყევი რამე შენს შესახებ..."
                                 maxLength={300}
                                 rows={3}
                                 className="w-full rounded-xl border border-black/10 p-3 text-sm text-brand-ink focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent resize-none"
