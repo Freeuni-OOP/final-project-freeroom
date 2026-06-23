@@ -36,8 +36,8 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                 <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
                   {modalData.isReserved && modalData.isMyOccupancy ? (
                       <>
-                        <div className="bg-yellow-50 rounded-xl p-5 border border-yellow-200">
-                          <p className="text-sm font-bold text-yellow-700 mb-3">🔑 თქვენი ოთახი</p>
+                        <div className="bg-brand-accent-light rounded-xl p-5 border border-brand-accent">
+                          <p className="text-sm font-bold text-brand-accent-text mb-3">🔑 თქვენი ოთახი</p>
                           <div className="grid grid-cols-2 gap-4 mb-4">
                             <div>
                               <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">დაჯავშნა</p>
