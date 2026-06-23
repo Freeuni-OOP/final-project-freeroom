@@ -13,7 +13,8 @@ import java.util.Optional;
 
 public interface RoomOccupancyRepository extends JpaRepository<RoomOccupancy, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    Optional<RoomOccupancy> findFirstByRoomIdAndEndAtIsNull(Long roomId);
+    @Query("SELECT o FROM RoomOccupancy o WHERE o.room.id = :roomId AND o.endAt IS NULL AND o.expectedEndAt > :now")
+    Optional<RoomOccupancy> findFirstByRoomIdAndEndAtIsNull(@Param("roomId") Long roomId, @Param("now") LocalDateTime now);
     List<RoomOccupancy> findByRoomIdOrderByCreatedAtDesc(Long roomId);
     List<RoomOccupancy> findByRoomIdInAndEndAtIsNull(List<Long> roomIds);
 

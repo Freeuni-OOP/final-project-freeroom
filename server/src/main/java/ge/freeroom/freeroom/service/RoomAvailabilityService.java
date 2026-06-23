@@ -56,7 +56,7 @@ public class RoomAvailabilityService {
                 .collect(Collectors.toMap(l -> l.getRoom().getId(), l -> l, (a, b) -> a));
 
         List<RoomOccupancy> activeOccupancies = roomIds.isEmpty() ? List.of() :
-                    roomOccupancyRepository.findByRoomIdInAndEndAtIsNull(roomIds);
+                    roomOccupancyRepository.findActiveNonExpiredByRoomIds(roomIds, now);
 
         Map<Long, RoomOccupancy> activeOccupancyByRoomId = activeOccupancies.stream()
                 .collect(Collectors.toMap(o -> o.getRoom().getId(), o -> o, (a, b) -> a));
@@ -129,7 +129,7 @@ public class RoomAvailabilityService {
             throw new IllegalStateException("Room has an active lecture");
         }
 
-        Optional<RoomOccupancy> existing = roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(roomId);
+        Optional<RoomOccupancy> existing = roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(roomId, nowTime);
         if(existing.isPresent()) {
             throw new IllegalStateException("room is already occupied");
         }
