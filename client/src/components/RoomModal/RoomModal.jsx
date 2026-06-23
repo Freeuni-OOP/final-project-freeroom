@@ -34,7 +34,23 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
           <div className="space-y-6">
             {!modalData.isFree ? (
                 <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
-                  {modalData.isReserved ? (
+                  {modalData.isReserved && modalData.isMyOccupancy ? (
+                      <>
+                        <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-3">
+                          თქვენ მიერ დაჯავშნილია
+                        </p>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">დაჯავშნა</p>
+                            <p className="font-medium text-gray-900">{modalData.reservedBy ?? '—'}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">თავისუფლდება</p>
+                            <p className="font-medium text-gray-900">{modalData.reservedUntil ?? '—'}</p>
+                          </div>
+                        </div>
+                      </>
+                  ) : modalData.isReserved ? (
                       <>
                         <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-3">დაჯავშნილია</p>
                         <div className="grid grid-cols-2 gap-4">

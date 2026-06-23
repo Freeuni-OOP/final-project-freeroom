@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class RoomOccupancySummaryDto {
     private LocalDateTime startAt;
     private LocalDateTime expectedEndAt;
-
+    private Boolean isMyOccupancy;
 
     // (NOT SHOWING PUBLICLY FOR PRIVACY) :
     private String reserverDisplayName; // for Friend invite or something in future

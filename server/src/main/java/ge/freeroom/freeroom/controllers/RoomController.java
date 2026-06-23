@@ -45,8 +45,9 @@ public class RoomController {
     }
 
     @GetMapping("/rooms/map")
-    public List<RoomMapDto> getRoomMap(){
-        return roomAvailabilityService.getAllRoomsMap();
+    public List<RoomMapDto> getRoomMap(Principal principal){
+        String userId = principal.getName();
+        return roomAvailabilityService.getAllRoomsMap(userId);
     }
 
     @PostMapping("/reserve")
