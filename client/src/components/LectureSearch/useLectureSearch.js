@@ -8,6 +8,7 @@ export default function useLectureSearch() {
 
     const latestQueryRef = useRef('');
     const lastSentQueryRef = useRef('');
+    const lastFetchedResultsRef = useRef([]);
     const debounceTimeoutRef = useRef(null);
 
     const handleSearch = (userInput) => {
@@ -24,12 +25,16 @@ export default function useLectureSearch() {
             return;
         }
 
+        setLoading(true);
+
         debounceTimeoutRef.current = setTimeout(async () => {
+
             if (userInput === lastSentQueryRef.current) {
+                setSearchResults(lastFetchedResultsRef.current);
+                setLoading(false);
                 return;
             }
 
-            setLoading(true);
             lastSentQueryRef.current = userInput;
 
             try {
@@ -37,6 +42,7 @@ export default function useLectureSearch() {
                 const response = await searchLectures(secureQuery);
 
                 if (userInput === latestQueryRef.current) {
+                    lastFetchedResultsRef.current = response.data;
                     setSearchResults(response.data);
                 }
             } catch (error) {
