@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context';
+import { getProfile, updateProfile } from '@/services';
 
 const UNIVERSITY_BY_DOMAIN = {
   '@freeuni.edu.ge': 'თავისუფალი',
@@ -21,18 +22,77 @@ const useProfilePage = () => {
   const { user } = useAuth();
   const [photoFailed, setPhotoFailed] = useState(false);
 
+  const [bio, setBio] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [photoUrl, setPhotoUrl] = useState('');
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const hasFetched = useRef(false);
+
   const email = user?.email || '';
   const university = getUniversity(email);
   const fallbackName = university ? `${university}-ს სტუდენტი` : 'სტუდენტი';
-  const displayName = user?.displayName?.trim() || fallbackName;
 
-  const photoUrl = user?.photoURL || '';
-  const showPhoto = Boolean(photoUrl) && !photoFailed;
-  const initial = getInitial(user?.displayName, email);
+  const currentDisplayName = isLoading ? fallbackName : (displayName || fallbackName);
+  const currentPhotoUrl = isLoading ? '' : photoUrl;
+  const showPhoto = Boolean(currentPhotoUrl) && !photoFailed;
+  const initial = getInitial(currentDisplayName, email);
 
   const handlePhotoError = () => setPhotoFailed(true);
 
-  return { displayName, email, university, showPhoto, photoUrl, initial, handlePhotoError };
+  useEffect(() => {
+    const fetchBackendProfile = async () => {
+      if (!user || hasFetched.current) return;
+      try {
+        const response = await getProfile();
+        if (response && response.data) {
+          setBio(response.data.bio || '');
+          setDisplayName(response.data.displayName || '');
+          setPhotoUrl(response.data.photoUrl || '');
+          hasFetched.current = true;
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchBackendProfile();
+  }, [user]);
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    setIsSaving(true);
+    try {
+      const response = await updateProfile({ bio, displayName, photoUrl });
+      if (response && response.data) {
+        alert('პროფილი წარმატებით განახლდა!');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('პროფილის განახლება ვერ მოხერხდა.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return {
+    displayName: currentDisplayName,
+    setDisplayName,
+    photoUrl: currentPhotoUrl,
+    setPhotoUrl,
+    email,
+    university,
+    showPhoto,
+    initial,
+    handlePhotoError,
+    bio,
+    setBio,
+    isSaving,
+    isLoading,
+    handleSaveProfile
+  };
 };
 
 export default useProfilePage;
