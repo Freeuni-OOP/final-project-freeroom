@@ -3,85 +3,97 @@ package ge.freeroom.freeroom.controllers;
 import com.google.firebase.auth.FirebaseToken;
 import ge.freeroom.freeroom.dto.UserUpdateDto;
 import ge.freeroom.freeroom.entities.User;
-import ge.freeroom.freeroom.repositories.UserRepository;
-import ge.freeroom.freeroom.security.FirebaseTokenFilter;
+import ge.freeroom.freeroom.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.security.Principal;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/user")
+@CrossOrigin(origins = "http://localhost:5173")
 public class UserController {
-    private final UserRepository userRepository;
 
-    public UserController(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    private final UserService userService;
+
+    @Value("${supabase.service.key}")
+    private String supabaseServiceKey;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
-    @PostMapping("/sync")
-    public ResponseEntity<User> syncUser(HttpServletRequest request, Principal principal) {
-        FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
-        String uid = token.getUid();
-
-        User user = userRepository.findById(uid).orElseGet(() -> {
-            User newUser = new User();
-            newUser.setId(uid);
-            newUser.setEmail(token.getEmail());
-            newUser.setDisplayName(token.getName());
-            newUser.setPhotoUrl(token.getPicture());
-            return userRepository.save(newUser);
-        });
-
-        return ResponseEntity.ok(user);
-    }
-
-    @PostMapping("/update")
-    public ResponseEntity<User> updateProfile(HttpServletRequest request, @RequestBody UserUpdateDto updateDto) {
-        FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
-        String uid = token.getUid();
-
-        User user = userRepository.findById(uid)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        if (updateDto.getDisplayName() != null) {
-            user.setDisplayName(updateDto.getDisplayName());
-        }
-        if (updateDto.getPhotoUrl() != null) {
-            user.setPhotoUrl(updateDto.getPhotoUrl());
-        }
-        if (updateDto.getBio() != null) {
-            user.setBio(updateDto.getBio());
-        }
-
-        User savedUser = userRepository.save(user);
-
-        return ResponseEntity.ok(savedUser);
-    }
-
-    @GetMapping("/profile")
+    @GetMapping
     public ResponseEntity<User> getUserProfile(HttpServletRequest request) {
         FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
-        String uid = token.getUid();
-
-        User user = userRepository.findById(uid).orElseGet(() -> {
-            User newUser = new User();
-            newUser.setId(uid);
-            newUser.setEmail(token.getEmail());
-            newUser.setDisplayName(token.getName());
-            newUser.setPhotoUrl(token.getPicture());
-            newUser.setBio("");
-            return userRepository.save(newUser);
-        });
-
-        System.out.println("====== BACKEND PROFILE FETCH LOG ======");
-        System.out.println("User ID: " + user.getId());
-        System.out.println("User Bio directly from DB: '" + user.getBio() + "'");
-        System.out.println("=======================================");
-
+        User user = userService.getOrCreateUser(token);
         return ResponseEntity.ok(user);
     }
 
+    @PatchMapping
+    public ResponseEntity<User> updateProfile(HttpServletRequest request, @RequestBody UserUpdateDto updateDto) {
+        FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
+        User updatedUser = userService.updateUser(token.getUid(), updateDto);
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    @PostMapping(value = "/upload-avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Map<String, String>> uploadAvatar(
+            HttpServletRequest request,
+            @RequestParam(value = "file", required = true) MultipartFile file) {
+
+        try {
+            if (request.getAttribute("firebaseToken") == null) {
+                return ResponseEntity.status(401).build();
+            }
+
+            if (file.isEmpty()) {
+                System.err.println("Upload attempted with an empty multipart file payload.");
+                return ResponseEntity.badRequest().build();
+            }
+
+            String projectRef = "lahucjwdhglaxwdkiroz";
+            String originalName = file.getOriginalFilename();
+            String fileExt = originalName != null && originalName.contains(".")
+                    ? originalName.substring(originalName.lastIndexOf(".")) : ".jpg";
+            String fileName = System.currentTimeMillis() + fileExt;
+
+            String targetUrl = "https://" + projectRef + ".supabase.co/storage/v1/object/avatars/" + fileName;
+
+            URL url = new URL(targetUrl);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setDoOutput(true);
+            connection.setRequestMethod("POST");
+
+            connection.setRequestProperty("Authorization", "Bearer " + supabaseServiceKey);
+            connection.setRequestProperty("apikey", supabaseServiceKey);
+            connection.setRequestProperty("Content-Type", file.getContentType());
+            connection.setRequestProperty("Content-Length", String.valueOf(file.getSize()));
+
+            try (OutputStream os = connection.getOutputStream()) {
+                os.write(file.getBytes());
+                os.flush();
+            }
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode >= 200 && responseCode < 300) {
+                String publicUrl = "https://" + projectRef + ".supabase.co/storage/v1/object/public/avatars/" + fileName;
+                return ResponseEntity.ok(Map.of("publicUrl", publicUrl));
+            } else {
+                System.err.println("Supabase Storage rejected stream with status code: " + responseCode);
+                return ResponseEntity.status(responseCode).build();
+            }
+
+        } catch (Exception e) {
+            System.err.println("Avatar stream transmission failed: " + e.getMessage());
+            return ResponseEntity.status(500).build();
+        }
+    }
 }

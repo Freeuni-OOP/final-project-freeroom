@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context';
-import { getProfile, updateProfile } from '@/services';
+import axiosInstance from '@/services/api/axiosInstance';
 
 const UNIVERSITY_BY_DOMAIN = {
   '@freeuni.edu.ge': 'თავისუფალი',
@@ -27,6 +27,7 @@ const useProfilePage = () => {
   const [photoUrl, setPhotoUrl] = useState('');
 
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const hasFetched = useRef(false);
 
@@ -34,18 +35,21 @@ const useProfilePage = () => {
   const university = getUniversity(email);
   const fallbackName = university ? `${university}-ს სტუდენტი` : 'სტუდენტი';
 
-  const currentDisplayName = isLoading ? fallbackName : (displayName || fallbackName);
-  const currentPhotoUrl = isLoading ? '' : photoUrl;
-  const showPhoto = Boolean(currentPhotoUrl) && !photoFailed;
-  const initial = getInitial(currentDisplayName, email);
+  const resolvedDisplayName = displayName || fallbackName;
+  const showPhoto = Boolean(photoUrl) && !photoFailed;
+  const initial = getInitial(resolvedDisplayName, email);
 
   const handlePhotoError = () => setPhotoFailed(true);
 
   useEffect(() => {
     const fetchBackendProfile = async () => {
-      if (!user || hasFetched.current) return;
+      if (!user) return;
+      if (hasFetched.current) {
+        setIsLoading(false);
+        return;
+      }
       try {
-        const response = await getProfile();
+        const response = await axiosInstance.get('/user');
         if (response && response.data) {
           setBio(response.data.bio || '');
           setDisplayName(response.data.displayName || '');
@@ -53,7 +57,7 @@ const useProfilePage = () => {
           hasFetched.current = true;
         }
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching profile:", err);
       } finally {
         setIsLoading(false);
       }
@@ -61,16 +65,51 @@ const useProfilePage = () => {
     fetchBackendProfile();
   }, [user]);
 
+  const handleFileUpload = async (file) => {
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('გთხოვთ აირჩიოთ მხოლოდ სურათის ფაილები!');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('სურათის ზომა არ უნდა აღემატებოდეს 5 MB-ს.');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await axiosInstance.post('/user/upload-avatar', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response && response.data && response.data.publicUrl) {
+        setPhotoUrl(response.data.publicUrl);
+        setPhotoFailed(false);
+      }
+    } catch (error) {
+      console.error('File delivery sequence interrupted:', error);
+      alert('ფაილის ატვირთვა ვერ მოხერხდა.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleSaveProfile = async () => {
     if (!user) return;
     setIsSaving(true);
     try {
-      const response = await updateProfile({ bio, displayName, photoUrl });
+      const response = await axiosInstance.patch('/user', { bio, displayName, photoUrl });
       if (response && response.data) {
         alert('პროფილი წარმატებით განახლდა!');
       }
     } catch (error) {
-      console.error(error);
+      console.error("Error updating profile:", error);
       alert('პროფილის განახლება ვერ მოხერხდა.');
     } finally {
       setIsSaving(false);
@@ -78,10 +117,11 @@ const useProfilePage = () => {
   };
 
   return {
-    displayName: currentDisplayName,
+    displayName,
     setDisplayName,
-    photoUrl: currentPhotoUrl,
+    photoUrl,
     setPhotoUrl,
+    resolvedDisplayName,
     email,
     university,
     showPhoto,
@@ -90,7 +130,9 @@ const useProfilePage = () => {
     bio,
     setBio,
     isSaving,
+    isUploading,
     isLoading,
+    handleFileUpload,
     handleSaveProfile
   };
 };

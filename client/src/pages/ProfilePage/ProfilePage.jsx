@@ -6,6 +6,7 @@ export default function ProfilePage() {
         setDisplayName,
         photoUrl,
         setPhotoUrl,
+        resolvedDisplayName,
         email,
         university,
         showPhoto,
@@ -14,7 +15,9 @@ export default function ProfilePage() {
         bio,
         setBio,
         isSaving,
+        isUploading,
         isLoading,
+        handleFileUpload,
         handleSaveProfile
     } = useProfilePage();
 
@@ -27,7 +30,7 @@ export default function ProfilePage() {
                 ) : showPhoto ? (
                     <img
                         src={photoUrl}
-                        alt={displayName}
+                        alt={resolvedDisplayName}
                         onError={handlePhotoError}
                         referrerPolicy="no-referrer"
                         className="h-24 w-24 rounded-full object-cover ring-4 ring-brand-accent/15"
@@ -46,7 +49,7 @@ export default function ProfilePage() {
                     </div>
                 ) : (
                     <>
-                        <h1 className="mt-5 text-2xl font-bold text-brand-ink">{displayName}</h1>
+                        <h1 className="mt-5 text-2xl font-bold text-brand-ink">{resolvedDisplayName}</h1>
                         {email && <p className="mt-1 text-sm text-brand-ink/55">{email}</p>}
                         {university && (
                             <span className="mt-3 inline-flex items-center rounded-full bg-brand-accent/10 px-3 py-1 text-xs font-semibold text-brand-accent-text">
@@ -78,14 +81,53 @@ export default function ProfilePage() {
                             />
                         </div>
 
+                        {/* Drag and Drop Profile Image Zone */}
                         <div className="flex flex-col gap-2 w-full">
-                            <label className="text-sm font-semibold text-brand-ink/70">პროფილის სურათის URL</label>
+                            <label className="text-sm font-semibold text-brand-ink/70">პროფილის სურათი</label>
+
+                            <div
+                                onDragOver={(e) => e.preventDefault()}
+                                onDrop={(e) => {
+                                    e.preventDefault();
+                                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                                        handleFileUpload(e.dataTransfer.files[0]);
+                                    }
+                                }}
+                                onClick={() => document.getElementById('avatar-file-input').click()}
+                                className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-black/10 p-6 text-center cursor-pointer transition hover:border-brand-accent/50 hover:bg-black/[0.01]"
+                            >
+                                {isUploading ? (
+                                    <p className="text-sm font-medium text-brand-ink/50 animate-pulse">სურათი იტვირთება...</p>
+                                ) : (
+                                    <>
+                                        <p className="text-sm font-medium text-brand-ink/70">
+                                            ჩააგდეთ ფაილი აქ ან <span className="text-brand-accent font-semibold underline">აირჩიეთ გალერეიდან</span>
+                                        </p>
+                                        <p className="text-xs text-brand-ink/40">PNG, JPG, ან WEBP (მაქს. 5MB)</p>
+                                    </>
+                                )}
+                            </div>
+
+                            {/* Hidden Hidden File Input Element */}
+                            <input
+                                id="avatar-file-input"
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                    if (e.target.files && e.target.files[0]) {
+                                        handleFileUpload(e.target.files[0]);
+                                    }
+                                }}
+                                className="hidden"
+                            />
+
+                            {/* Manual Text Backup URL Field */}
                             <input
                                 type="text"
                                 value={photoUrl}
                                 onChange={(e) => setPhotoUrl(e.target.value)}
-                                className="w-full rounded-xl border border-black/10 p-3 text-sm text-brand-ink focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
-                                placeholder="https://example.com/image.png"
+                                className="mt-2 w-full rounded-xl border border-black/10 p-3 text-xs text-brand-ink/50 bg-black/[0.01] focus:outline-none"
+                                placeholder="ან ჩასვით სურათის პირდაპირი ბმული (URL) ხელით"
                             />
                         </div>
 
@@ -104,7 +146,7 @@ export default function ProfilePage() {
                         <div className="flex justify-end mt-2">
                             <button
                                 onClick={handleSaveProfile}
-                                disabled={isSaving}
+                                disabled={isSaving || isUploading}
                                 className="rounded-xl bg-brand-ink px-6 py-2 text-sm font-semibold text-white transition hover:bg-brand-ink/90 disabled:opacity-50"
                             >
                                 {isSaving ? 'ინახება...' : 'ცვლილებების შენახვა'}
