@@ -125,6 +125,19 @@ public class RoomAvailabilityService {
 
         LocalDateTime nowTime = LocalDateTime.now();
 
+        // only one occupancy oer user at a time
+        Optional<RoomOccupancy> existingUserOccupancy = roomOccupancyRepository
+                .findActiveOccupancyByUserId(userId, nowTime);
+        if (existingUserOccupancy.isPresent()) {
+            RoomOccupancy existing = existingUserOccupancy.get();
+            String formattedTime = existing.getExpectedEndAt().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+            throw new IllegalStateException(
+                    "თქვენ უკვე დაჯავშნილი გაქვთ ოთახი " +
+                            existing.getRoom().getRoomNumber() + " " +
+                            formattedTime + "-მდე"
+            );
+        }
+
         List<Lecture> activeLectures = lectureRepository.findActiveLecturesByRoomIds(List.of(roomId), nowTime);
         if (!activeLectures.isEmpty()) {
             throw new IllegalStateException("Room has an active lecture");

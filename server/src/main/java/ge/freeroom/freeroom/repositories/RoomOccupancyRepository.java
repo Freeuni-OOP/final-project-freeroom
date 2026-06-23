@@ -22,4 +22,7 @@ public interface RoomOccupancyRepository extends JpaRepository<RoomOccupancy, Lo
     // this one also checks if expected time is not expired, so we don't return occupancies that are already expired
     @Query("SELECT o FROM RoomOccupancy o WHERE o.room.id IN :roomIds AND o.endAt IS NULL AND o.expectedEndAt > :now")
     List<RoomOccupancy> findActiveNonExpiredByRoomIds(@Param("roomIds") List<Long> roomIds, @Param("now") LocalDateTime now);
+
+    @Query("SELECT o FROM RoomOccupancy o WHERE o.user.id = :userId AND o.endAt IS NULL AND o.expectedEndAt > :now")
+    Optional<RoomOccupancy> findActiveOccupancyByUserId(@Param("userId") String userId, @Param("now") LocalDateTime now);
 }
