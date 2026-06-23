@@ -1,4 +1,4 @@
-import {reserveRoom} from '@/services/api/endpoints.js'
+import { reserveRoom, cancelOccupancy } from '@/services/api/endpoints.js'
 
 const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
   const formatTime = (iso) => {
@@ -27,6 +27,7 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         nextLectureTitle: roomData?.nextLecture?.title ?? null,
         nextLectureStart: formatTime(roomData?.nextLecture?.startAt),
         nextLectureEnd:   formatTime(roomData?.nextLecture?.endAt),
+        isMyOccupancy,
 
         capacity: roomData?.capacity ?? null,
       }
@@ -47,9 +48,25 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
     }
   };
 
+  const handleCancel = async () => {
+      if (!modalData?.isMyOccupancy) {
+          alert('მხოლოდ საკუთარი ჯავშნის გაუქმება შეგიძლიათ');
+          return;
+      }
+      try {
+          await cancelOccupancy(roomData.id);
+          onClose();
+          onReserveSuccess();
+          alert(`ოთახი ${roomId} გათავისუფლდა`);
+      } catch (err) {
+          alert(err.response?.data?.message || 'გაუქმება ვერ მოხერხდა');
+      }
+  };
+
   return {
     roomData: modalData,
     handleReserve,
+    handleCancel
   };
 };
 

@@ -1,9 +1,6 @@
 package ge.freeroom.freeroom.service;
 
-import ge.freeroom.freeroom.dto.LectureSummaryDto;
-import ge.freeroom.freeroom.dto.ReserveRoomResponseDto;
-import ge.freeroom.freeroom.dto.RoomMapDto;
-import ge.freeroom.freeroom.dto.RoomOccupancySummaryDto;
+import ge.freeroom.freeroom.dto.*;
 import ge.freeroom.freeroom.entities.Lecture;
 import ge.freeroom.freeroom.entities.Room;
 import ge.freeroom.freeroom.entities.RoomOccupancy;
@@ -165,6 +162,36 @@ public class RoomAvailabilityService {
         response.setRoomNumber(saved.getRoom().getRoomNumber());
         response.setStartTime(saved.getStartAt());
         response.setExpectedEndTime(saved.getExpectedEndAt());
+
+        return response;
+    }
+
+    @Transactional
+    public CancelOccupancyResponseDto cancelOccupancy(String userId, Long roomId) {
+        LocalDateTime now = LocalDateTime.now();
+
+        Optional<RoomOccupancy> occupancyOpt = roomOccupancyRepository
+                .findFirstByRoomIdAndEndAtIsNull(roomId, now);
+
+        if (occupancyOpt.isEmpty()) {
+            throw new IllegalStateException("No active occupancy for this room");
+        }
+
+        RoomOccupancy occ = occupancyOpt.get();
+
+        if (!occ.getUser().getId().equals(userId)) {
+            throw new org.springframework.security.access.AccessDeniedException("You can only cancel your own occupancy");
+        }
+
+        occ.setEndAt(LocalDateTime.now());
+        roomOccupancyRepository.save(occ);
+
+        CancelOccupancyResponseDto response = new CancelOccupancyResponseDto();
+        response.setOccupancyId(occ.getId());
+        response.setRoomId(occ.getRoom().getId());
+        response.setRoomNumber(occ.getRoom().getRoomNumber());
+        response.setCancelledAt(occ.getEndAt());
+        response.setMessage("Occupancy cancelled successfully");
 
         return response;
     }
