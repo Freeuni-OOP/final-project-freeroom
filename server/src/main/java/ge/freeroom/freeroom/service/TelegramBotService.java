@@ -73,6 +73,19 @@ public class TelegramBotService implements SpringLongPollingBot, LongPollingSing
         sendMessage(chatId, "დაკავშირება დასრულდა. აქ მიიღებთ შეტყობინებებს ოთახის ჯავშნის შესახებ.");
     }
 
+    public boolean sendNotification(Long chatId, String text) {
+        SendMessage message = SendMessage.builder()
+                .chatId(chatId)
+                .text(text)
+                .build();
+        try {
+            telegramClient.execute(message);
+            return true;
+        } catch (TelegramApiException e) {
+            return false;
+        }
+    }
+
     private void sendMessage(long chatId, String text) {
         SendMessage message = SendMessage.builder()
                 .chatId(chatId)
