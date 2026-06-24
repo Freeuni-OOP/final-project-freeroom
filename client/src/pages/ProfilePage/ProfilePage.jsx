@@ -60,7 +60,7 @@ export default function ProfilePage() {
                                 <p className="mb-3 text-sm font-semibold text-brand-ink">Telegram-ის დაყენება</p>
                                 <ol className="flex flex-col gap-2 text-sm text-brand-ink/70">
                                     <li>1. დააჭირეთ ღილაკს და გახსენით ჩვენი ბოტი</li>
-                                    <li>2. დააჭირეთ Start Telegram-ში</li>
+                                    <li>2. Telegram-ში დააჭირეთ ღილაკს Start</li>
                                     <li>3. დაბრუნდით და გვერდი განახლდება</li>
                                 </ol>
                                 <div className="mt-3 flex items-center gap-3">
