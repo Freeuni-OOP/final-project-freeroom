@@ -22,7 +22,7 @@ public class FriendDto {
     @Setter
     @NoArgsConstructor
     public static class OccupancyInfo {
-        private String roomNumber;
+        private Integer roomNumber;
         private int floorNumber;
         private LocalDateTime startAt;
         private LocalDateTime expectedEndAt;
