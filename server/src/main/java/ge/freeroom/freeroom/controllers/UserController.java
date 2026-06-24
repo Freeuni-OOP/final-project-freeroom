@@ -60,4 +60,16 @@ public class UserController {
         response.setTelegramLinked(user.getTelegramChatId() != null);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/notification-preference")
+    public ResponseEntity<NotificationPreferenceResponseDto> getNotificationPreference(Principal principal) {
+        String uid = principal.getName();
+        User user = userRepository.findById(uid)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        NotificationPreferenceResponseDto response = new NotificationPreferenceResponseDto();
+        response.setPreference(user.getNotificationPreference());
+        response.setTelegramLinked(user.getTelegramChatId() != null);
+        return ResponseEntity.ok(response);
+    }
 }
