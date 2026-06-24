@@ -1,15 +1,14 @@
 package ge.freeroom.freeroom.controllers;
 
 import com.google.firebase.auth.FirebaseToken;
+import ge.freeroom.freeroom.dto.NotificationPreferenceResponseDto;
+import ge.freeroom.freeroom.dto.UpdateNotificationPreferenceRequest;
+import ge.freeroom.freeroom.entities.NotificationPreference;
 import ge.freeroom.freeroom.entities.User;
 import ge.freeroom.freeroom.repositories.UserRepository;
-import ge.freeroom.freeroom.security.FirebaseTokenFilter;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 
@@ -37,5 +36,28 @@ public class UserController {
         }
 
         return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/notification-preference")
+    public ResponseEntity<NotificationPreferenceResponseDto> updateNotificationPreference(
+            @RequestBody UpdateNotificationPreferenceRequest request,
+            Principal principal) {
+        String uid = principal.getName();
+        User user = userRepository.findById(uid)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        user.setNotificationPreference(request.getPreference());
+
+        if (request.getPreference() != NotificationPreference.TELEGRAM) {
+            user.setTelegramChatId(null);
+            user.setTelegramLinkToken(null);
+        }
+
+        userRepository.save(user);
+
+        NotificationPreferenceResponseDto response = new NotificationPreferenceResponseDto();
+        response.setPreference(user.getNotificationPreference());
+        response.setTelegramLinked(user.getTelegramChatId() != null);
+        return ResponseEntity.ok(response);
     }
 }
