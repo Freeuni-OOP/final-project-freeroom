@@ -36,10 +36,20 @@ const useProfilePage = () => {
   }, []);
 
   const handlePreferenceChange = (newPreference) => {
+    const previousPreference = preference;
+    const previousTelegramLinked = telegramLinked;
+    setPreference(newPreference);
+    if (newPreference !== 'TELEGRAM') {
+      setTelegramLinked(false);
+    }
     updateNotificationPreference(newPreference)
       .then(res => {
         setPreference(res.data.preference);
         setTelegramLinked(res.data.telegramLinked);
+      })
+      .catch(() => {
+        setPreference(previousPreference);
+        setTelegramLinked(previousTelegramLinked);
       });
   };
 
