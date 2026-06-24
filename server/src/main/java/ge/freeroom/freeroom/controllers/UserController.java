@@ -2,6 +2,7 @@ package ge.freeroom.freeroom.controllers;
 
 import com.google.firebase.auth.FirebaseToken;
 import ge.freeroom.freeroom.dto.NotificationPreferenceResponseDto;
+import ge.freeroom.freeroom.dto.TelegramLinkResponseDto;
 import ge.freeroom.freeroom.dto.UpdateNotificationPreferenceRequest;
 import ge.freeroom.freeroom.entities.NotificationPreference;
 import ge.freeroom.freeroom.entities.User;
@@ -70,6 +71,19 @@ public class UserController {
         NotificationPreferenceResponseDto response = new NotificationPreferenceResponseDto();
         response.setPreference(user.getNotificationPreference());
         response.setTelegramLinked(user.getTelegramChatId() != null);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/telegram-link")
+    public ResponseEntity<TelegramLinkResponseDto> generateTelegramLink(Principal principal) {
+        String uid = principal.getName();
+        User user = userRepository.findById(uid)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        String token = java.util.UUID.randomUUID().toString();
+        user.setTelegramLinkToken(token);
+        userRepository.save(user);
+        TelegramLinkResponseDto response = new TelegramLinkResponseDto();
+        response.setDeepLink("https://t.me/FreeRoom_Notifier_bot?start=" + token);
         return ResponseEntity.ok(response);
     }
 }
