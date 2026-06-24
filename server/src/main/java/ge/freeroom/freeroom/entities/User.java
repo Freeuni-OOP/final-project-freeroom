@@ -36,7 +36,7 @@ public class User {
     private LocalDateTime updatedAt;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "varchar(255) default 'NONE'")
     private NotificationPreference notificationPreference = NotificationPreference.NONE;
 
     @Column(nullable = true)
