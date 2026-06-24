@@ -83,7 +83,7 @@ public class UserController {
         user.setTelegramLinkToken(token);
         userRepository.save(user);
         TelegramLinkResponseDto response = new TelegramLinkResponseDto();
-        response.setDeepLink("https://t.me/FreeRoom_Notifier_bot?start=" + token);
+        response.setDeepLink("https://t.me/FreeRoom_Notify_bot?start=" + token);
         return ResponseEntity.ok(response);
     }
 }

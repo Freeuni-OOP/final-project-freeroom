@@ -16,3 +16,4 @@ export const searchLectures = (query) => {
 
 export const getNotificationPreference = () => axiosInstance.get('/user/notification-preference');
 export const updateNotificationPreference = (preference) => axiosInstance.patch('/user/notification-preference', { preference });
+export const generateTelegramLink = () => axiosInstance.post('/user/telegram-link');

@@ -1,7 +1,7 @@
 import useProfilePage from './useProfilePage';
 
 export default function ProfilePage() {
-    const { displayName, email, university, showPhoto, photoUrl, initial, handlePhotoError, preference, telegramLinked, preferenceLoading, handlePreferenceChange } = useProfilePage();
+    const { displayName, email, university, showPhoto, photoUrl, initial, handlePhotoError, preference, telegramLinked, preferenceLoading, handlePreferenceChange, handleTelegramLink } = useProfilePage();
 
     return (
         <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
@@ -65,10 +65,10 @@ export default function ProfilePage() {
                                 </ol>
                                 <div className="mt-3 flex items-center gap-3">
                                     <button
-                                        disabled
-                                        className="rounded-xl bg-brand-accent/30 px-4 py-2 text-sm font-semibold text-brand-accent-text/50 cursor-not-allowed"
+                                        onClick={handleTelegramLink}
+                                        className="rounded-xl bg-brand-accent px-4 py-2 text-sm font-semibold text-brand-ink transition-colors hover:bg-brand-accent-dark"
                                     >
-                                        მალე
+                                        ბოტის გახსნა
                                     </button>
                                     {telegramLinked && (
                                         <span className="text-sm font-semibold text-brand-green">დაკავშირებულია</span>

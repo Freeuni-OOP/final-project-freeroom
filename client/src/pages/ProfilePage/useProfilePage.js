@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context';
-import { getNotificationPreference, updateNotificationPreference } from '@/services/api/endpoints';
+import { getNotificationPreference, updateNotificationPreference, generateTelegramLink } from '@/services/api/endpoints';
 
 const UNIVERSITY_BY_DOMAIN = {
   '@freeuni.edu.ge': 'თავისუფალი',
@@ -53,6 +53,13 @@ const useProfilePage = () => {
       });
   };
 
+  const handleTelegramLink = () => {
+    generateTelegramLink()
+      .then(res => {
+        window.open(res.data.deepLink, '_blank', 'noopener,noreferrer');
+      });
+  };
+
   const email = user?.email || '';
   const university = getUniversity(email);
   const fallbackName = university ? `${university}-ს სტუდენტი` : 'სტუდენტი';
@@ -64,7 +71,7 @@ const useProfilePage = () => {
 
   const handlePhotoError = () => setPhotoFailed(true);
 
-  return { displayName, email, university, showPhoto, photoUrl, initial, handlePhotoError, preference, telegramLinked, preferenceLoading, handlePreferenceChange };
+  return { displayName, email, university, showPhoto, photoUrl, initial, handlePhotoError, preference, telegramLinked, preferenceLoading, handlePreferenceChange, handleTelegramLink };
 };
 
 export default useProfilePage;
