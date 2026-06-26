@@ -4,13 +4,12 @@ import com.google.firebase.auth.FirebaseToken;
 import ge.freeroom.freeroom.entities.User;
 import ge.freeroom.freeroom.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 @Service
 public class UserService {
@@ -19,6 +18,11 @@ public class UserService {
 
     @Value("${supabase.service.key}")
     private String supabaseServiceKey;
+
+    @Value("${supabase.project.ref}")
+    private String projectRef;
+
+    private final RestClient restClient = RestClient.create();
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -59,7 +63,6 @@ public class UserService {
     }
 
     private String uploadAvatarToStorage(MultipartFile file) throws Exception {
-        String projectRef = "lahucjwdhglaxwdkiroz";
         String originalName = file.getOriginalFilename();
         String fileExt = originalName != null && originalName.contains(".")
                 ? originalName.substring(originalName.lastIndexOf(".")) : ".jpg";
@@ -67,26 +70,19 @@ public class UserService {
 
         String targetUrl = "https://" + projectRef + ".supabase.co/storage/v1/object/avatars/" + fileName;
 
-        URL url = new URL(targetUrl);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setDoOutput(true);
-        connection.setRequestMethod("POST");
+        ResponseEntity<Void> response = restClient.post()
+                .uri(targetUrl)
+                .header("Authorization", "Bearer " + supabaseServiceKey)
+                .header("apikey", supabaseServiceKey)
+                .contentType(MediaType.parseMediaType(file.getContentType()))
+                .body(file.getBytes()) // RestClient handles Content-Length automatically
+                .retrieve()
+                .toBodilessEntity();
 
-        connection.setRequestProperty("Authorization", "Bearer " + supabaseServiceKey);
-        connection.setRequestProperty("apikey", supabaseServiceKey);
-        connection.setRequestProperty("Content-Type", file.getContentType());
-        connection.setRequestProperty("Content-Length", String.valueOf(file.getSize()));
-
-        try (OutputStream os = connection.getOutputStream()) {
-            os.write(file.getBytes());
-            os.flush();
-        }
-
-        int responseCode = connection.getResponseCode();
-        if (responseCode >= 200 && responseCode < 300) {
+        if (response.getStatusCode().is2xxSuccessful()) {
             return "https://" + projectRef + ".supabase.co/storage/v1/object/public/avatars/" + fileName;
         } else {
-            throw new RuntimeException("Supabase Storage rejected upload with status code: " + responseCode);
+            throw new RuntimeException("Supabase Storage rejected upload with status code: " + response.getStatusCode());
         }
     }
 }

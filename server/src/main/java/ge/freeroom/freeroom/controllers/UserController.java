@@ -11,7 +11,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = "http://localhost:5173")
 public class UserController {
 
     private final UserService userService;
@@ -32,19 +31,11 @@ public class UserController {
             HttpServletRequest request,
             @RequestParam(value = "displayName", required = false) String displayName,
             @RequestParam(value = "bio", required = false) String bio,
-            @RequestParam(value = "file", required = false) MultipartFile file) {
+            @RequestParam(value = "file", required = false) MultipartFile file) throws Exception {
 
         FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
-        if (token == null) {
-            return ResponseEntity.status(401).build();
-        }
 
-        try {
-            User updatedUser = userService.updateUserProfile(token.getUid(), displayName, bio, file);
-            return ResponseEntity.ok(updatedUser);
-        } catch (Exception e) {
-            System.err.println("Failed to update user profile: " + e.getMessage());
-            return ResponseEntity.status(500).build();
-        }
+        User updatedUser = userService.updateUserProfile(token.getUid(), displayName, bio, file);
+        return ResponseEntity.ok(updatedUser);
     }
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context';
-import axiosInstance from '@/services/api/axiosInstance';
+import { fetchProfile, updateProfile } from '@/services/api/userService';
 
 const UNIVERSITY_BY_DOMAIN = {
   '@freeuni.edu.ge': 'თავისუფალი',
@@ -43,18 +43,18 @@ const useProfilePage = () => {
   const handlePhotoError = () => setPhotoFailed(true);
 
   useEffect(() => {
-    const fetchBackendProfile = async () => {
+    const getBackendProfile = async () => {
       if (!user) return;
       if (hasFetched.current) {
         setIsLoading(false);
         return;
       }
       try {
-        const response = await axiosInstance.get('/user');
-        if (response && response.data) {
-          setBio(response.data.bio || '');
-          setDisplayName(response.data.displayName || '');
-          setPhotoUrl(response.data.photoUrl || '');
+        const data = await fetchProfile(); // Cleaner call
+        if (data) {
+          setBio(data.bio || '');
+          setDisplayName(data.displayName || '');
+          setPhotoUrl(data.photoUrl || '');
           hasFetched.current = true;
         }
       } catch (err) {
@@ -63,8 +63,35 @@ const useProfilePage = () => {
         setIsLoading(false);
       }
     };
-    fetchBackendProfile();
+    getBackendProfile();
   }, [user]);
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    setIsSaving(true);
+
+    try {
+      const formData = new FormData();
+      if (bio) formData.append('bio', bio);
+      if (displayName) formData.append('displayName', displayName);
+      if (selectedFile) formData.append('file', selectedFile);
+
+      const data = await updateProfile(formData); // Cleaner call
+
+      if (data) {
+        setBio(data.bio || '');
+        setDisplayName(data.displayName || '');
+        setPhotoUrl(data.photoUrl || '');
+        setSelectedFile(null);
+        alert('პროფილი წარმატებით განახლდა!');
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert('პროფილის განახლება ვერ მოხერხდა.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleFileChange = (file) => {
     if (!file) return;
@@ -82,38 +109,6 @@ const useProfilePage = () => {
     setPhotoFailed(false);
 
     setPhotoUrl(URL.createObjectURL(file));
-  };
-
-  const handleSaveProfile = async () => {
-    if (!user) return;
-    setIsSaving(true);
-
-    try {
-      const formData = new FormData();
-
-      if (bio) formData.append('bio', bio);
-      if (displayName) formData.append('displayName', displayName);
-      if (selectedFile) formData.append('file', selectedFile);
-
-      const response = await axiosInstance.patch('/user', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-
-      if (response && response.data) {
-        setBio(response.data.bio || '');
-        setDisplayName(response.data.displayName || '');
-        setPhotoUrl(response.data.photoUrl || '');
-        setSelectedFile(null);
-        alert('პროფილი წარმატებით განახლდა!');
-      }
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      alert('პროფილის განახლება ვერ მოხერხდა.');
-    } finally {
-      setIsSaving(false);
-    }
   };
 
   return {
