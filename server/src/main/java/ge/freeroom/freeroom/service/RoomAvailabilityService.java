@@ -1,9 +1,6 @@
 package ge.freeroom.freeroom.service;
 
-import ge.freeroom.freeroom.dto.LectureSummaryDto;
-import ge.freeroom.freeroom.dto.ReserveRoomResponseDto;
-import ge.freeroom.freeroom.dto.RoomMapDto;
-import ge.freeroom.freeroom.dto.RoomOccupancySummaryDto;
+import ge.freeroom.freeroom.dto.*;
 import ge.freeroom.freeroom.entities.Lecture;
 import ge.freeroom.freeroom.entities.Room;
 import ge.freeroom.freeroom.entities.RoomOccupancy;
@@ -36,7 +33,7 @@ public class RoomAvailabilityService {
         this.roomOccupancyRepository = roomOccupancyRepository;
     }
 
-    public List<RoomMapDto> getAllRoomsMap(){
+    public List<RoomMapDto> getAllRoomsMap(String currentUserId){
         List<Room> rooms = roomRepository.findAllWithFloor();
 
         List<Long> roomIds = rooms.stream()
@@ -56,7 +53,7 @@ public class RoomAvailabilityService {
                 .collect(Collectors.toMap(l -> l.getRoom().getId(), l -> l, (a, b) -> a));
 
         List<RoomOccupancy> activeOccupancies = roomIds.isEmpty() ? List.of() :
-                    roomOccupancyRepository.findByRoomIdInAndEndAtIsNull(roomIds);
+                    roomOccupancyRepository.findActiveNonExpiredByRoomIds(roomIds, now);
 
         Map<Long, RoomOccupancy> activeOccupancyByRoomId = activeOccupancies.stream()
                 .collect(Collectors.toMap(o -> o.getRoom().getId(), o -> o, (a, b) -> a));
@@ -89,6 +86,7 @@ public class RoomAvailabilityService {
                 rosd.setStartAt(occupancy.getStartAt());
                 rosd.setExpectedEndAt(occupancy.getExpectedEndAt());
                 rosd.setReserverDisplayName(occupancy.getUser().getDisplayName());
+                rosd.setIsMyOccupancy(occupancy.getUser().getId().equals(currentUserId));
 
                 dto.setCurrentOccupancy(rosd);
             }else {
@@ -124,12 +122,25 @@ public class RoomAvailabilityService {
 
         LocalDateTime nowTime = LocalDateTime.now();
 
+        // only one occupancy oer user at a time
+        Optional<RoomOccupancy> existingUserOccupancy = roomOccupancyRepository
+                .findActiveOccupancyByUserId(userId, nowTime);
+        if (existingUserOccupancy.isPresent()) {
+            RoomOccupancy existing = existingUserOccupancy.get();
+            String formattedTime = existing.getExpectedEndAt().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+            throw new IllegalStateException(
+                    "თქვენ უკვე დაჯავშნილი გაქვთ ოთახი " +
+                            existing.getRoom().getRoomNumber() + " " +
+                            formattedTime + "-მდე"
+            );
+        }
+
         List<Lecture> activeLectures = lectureRepository.findActiveLecturesByRoomIds(List.of(roomId), nowTime);
         if (!activeLectures.isEmpty()) {
             throw new IllegalStateException("Room has an active lecture");
         }
 
-        Optional<RoomOccupancy> existing = roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(roomId);
+        Optional<RoomOccupancy> existing = roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(roomId, nowTime);
         if(existing.isPresent()) {
             throw new IllegalStateException("room is already occupied");
         }
@@ -151,6 +162,36 @@ public class RoomAvailabilityService {
         response.setRoomNumber(saved.getRoom().getRoomNumber());
         response.setStartTime(saved.getStartAt());
         response.setExpectedEndTime(saved.getExpectedEndAt());
+
+        return response;
+    }
+
+    @Transactional
+    public CancelOccupancyResponseDto cancelOccupancy(String userId, Long roomId) {
+        LocalDateTime now = LocalDateTime.now();
+
+        Optional<RoomOccupancy> occupancyOpt = roomOccupancyRepository
+                .findFirstByRoomIdAndEndAtIsNull(roomId, now);
+
+        if (occupancyOpt.isEmpty()) {
+            throw new IllegalStateException("No active occupancy for this room");
+        }
+
+        RoomOccupancy occ = occupancyOpt.get();
+
+        if (!occ.getUser().getId().equals(userId)) {
+            throw new org.springframework.security.access.AccessDeniedException("You can only cancel your own occupancy");
+        }
+
+        occ.setEndAt(LocalDateTime.now());
+        roomOccupancyRepository.save(occ);
+
+        CancelOccupancyResponseDto response = new CancelOccupancyResponseDto();
+        response.setOccupancyId(occ.getId());
+        response.setRoomId(occ.getRoom().getId());
+        response.setRoomNumber(occ.getRoom().getRoomNumber());
+        response.setCancelledAt(occ.getEndAt());
+        response.setMessage("Occupancy cancelled successfully");
 
         return response;
     }

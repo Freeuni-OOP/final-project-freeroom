@@ -1,5 +1,6 @@
 package ge.freeroom.freeroom.controllers;
 
+import ge.freeroom.freeroom.dto.CancelOccupancyResponseDto;
 import ge.freeroom.freeroom.dto.ReserveRoomRequestDto;
 import ge.freeroom.freeroom.dto.ReserveRoomResponseDto;
 import ge.freeroom.freeroom.dto.RoomMapDto;
@@ -45,8 +46,9 @@ public class RoomController {
     }
 
     @GetMapping("/rooms/map")
-    public List<RoomMapDto> getRoomMap(){
-        return roomAvailabilityService.getAllRoomsMap();
+    public List<RoomMapDto> getRoomMap(Principal principal){
+        String userId = principal.getName();
+        return roomAvailabilityService.getAllRoomsMap(userId);
     }
 
     @PostMapping("/reserve")
@@ -65,5 +67,14 @@ public class RoomController {
 
         ReserveRoomResponseDto response = roomAvailabilityService.reserveRoom(userId, roomId, durationMinutes);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/rooms/{roomId}/cancel")
+    public ResponseEntity<CancelOccupancyResponseDto> cancelOccupancy(
+            @PathVariable Long roomId,
+            Principal principal) {
+        String userId = principal.getName();
+        CancelOccupancyResponseDto response = roomAvailabilityService.cancelOccupancy(userId, roomId);
+        return ResponseEntity.ok(response);
     }
 }

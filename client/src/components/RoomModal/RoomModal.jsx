@@ -1,7 +1,7 @@
 import useRoomModal from './useRoomModal';
 
 export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess }) {
-  const { roomData: modalData, handleReserve } = useRoomModal(roomId, roomData, onClose, onReserveSuccess);
+  const { roomData: modalData, handleReserve, handleCancel } = useRoomModal(roomId, roomData, onClose, onReserveSuccess);
 
   if (!roomId || !modalData) return null;
 
@@ -34,7 +34,29 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
           <div className="space-y-6">
             {!modalData.isFree ? (
                 <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
-                  {modalData.isReserved ? (
+                  {modalData.isReserved && modalData.isMyOccupancy ? (
+                      <>
+                        <div className="bg-brand-accent-light rounded-xl p-5 border border-brand-accent">
+                          <p className="text-sm font-bold text-brand-accent-text mb-3">🔑 თქვენი ოთახი</p>
+                          <div className="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                              <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">დაჯავშნა</p>
+                              <p className="font-medium text-gray-900">{modalData.reservedBy ?? '—'}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">თავისუფლდება</p>
+                              <p className="font-medium text-gray-900">{modalData.reservedUntil ?? '—'}</p>
+                            </div>
+                          </div>
+                          <button
+                              onClick={handleCancel}
+                              className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-lg transition-colors"
+                          >
+                            გაუქმება
+                          </button>
+                        </div>
+                      </>
+                  ) : modalData.isReserved ? (
                       <>
                         <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-3">დაჯავშნილია</p>
                         <div className="grid grid-cols-2 gap-4">

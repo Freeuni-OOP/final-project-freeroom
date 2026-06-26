@@ -1,10 +1,12 @@
-import {reserveRoom} from '@/services/api/endpoints.js'
+import { reserveRoom, cancelOccupancy } from '@/services/api/endpoints.js'
 
 const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
   const formatTime = (iso) => {
     if (!iso) return null;
     return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
   };
+
+  const isMyOccupancy = roomData?.currentOccupancy?.isMyOccupancy ?? false;
 
   const modalData = roomId
     ? {
@@ -17,12 +19,15 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         startTime: formatTime(roomData?.currentLecture?.startAt),
         endTime: formatTime(roomData?.currentLecture?.endAt),
         // occupancy fields :
-        reservedBy: "Not Your Friend", // [future | for friends possibly show reserver] reservedBy: roomData?.currentOccupancy?.reserverUserName ?? null,
+        reservedBy: isMyOccupancy
+            ? (roomData?.currentOccupancy?.reserverDisplayName ?? 'თქვენ')
+            : "Not Your Friend", // [future | for friends possibly show reserver] reservedBy: roomData?.currentOccupancy?.reserverUserName ?? null,
         reservedUntil: formatTime(roomData?.currentOccupancy?.expectedEndAt),
         //next lecture fields:
         nextLectureTitle: roomData?.nextLecture?.title ?? null,
         nextLectureStart: formatTime(roomData?.nextLecture?.startAt),
         nextLectureEnd:   formatTime(roomData?.nextLecture?.endAt),
+        isMyOccupancy,
 
         capacity: roomData?.capacity ?? null,
       }
@@ -43,9 +48,25 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
     }
   };
 
+  const handleCancel = async () => {
+      if (!modalData?.isMyOccupancy) {
+          alert('მხოლოდ საკუთარი ჯავშნის გაუქმება შეგიძლიათ');
+          return;
+      }
+      try {
+          await cancelOccupancy(roomData.id);
+          onClose();
+          onReserveSuccess();
+          alert(`ოთახი ${roomId} გათავისუფლდა`);
+      } catch (err) {
+          alert(err.response?.data?.message || 'გაუქმება ვერ მოხერხდა');
+      }
+  };
+
   return {
     roomData: modalData,
     handleReserve,
+    handleCancel
   };
 };
 
