@@ -2,6 +2,7 @@ package ge.freeroom.freeroom.service;
 
 import ge.freeroom.freeroom.dto.*;
 import ge.freeroom.freeroom.entities.Lecture;
+import ge.freeroom.freeroom.entities.NotificationPreference;
 import ge.freeroom.freeroom.entities.Room;
 import ge.freeroom.freeroom.entities.RoomOccupancy;
 import ge.freeroom.freeroom.entities.User;
@@ -116,6 +117,13 @@ public class RoomAvailabilityService {
     public ReserveRoomResponseDto reserveRoom(String userId, Long roomId, Long durationMinutes) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found. Please sync your account first."));
+
+        if (user.getNotificationPreference() == NotificationPreference.NONE) {
+            throw new IllegalStateException("შეტყობინების მეთოდი არ არის არჩეული. პროფილზე აირჩიეთ Email ან Telegram.");
+        }
+        if (user.getNotificationPreference() == NotificationPreference.TELEGRAM && user.getTelegramChatId() == null) {
+            throw new IllegalStateException("Telegram არ არის დაკავშირებული. პროფილზე დაასრულეთ Telegram-ის დაყენება.");
+        }
 
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Room not Found"));
