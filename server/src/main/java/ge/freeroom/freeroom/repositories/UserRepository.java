@@ -22,4 +22,5 @@ public interface UserRepository extends JpaRepository<User, String> {
             @Param("excludeId") String excludeId,
             Pageable pageable
     );
+    Optional<User> findByTelegramLinkToken(String telegramLinkToken);
 }

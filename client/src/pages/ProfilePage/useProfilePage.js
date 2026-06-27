@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context';
+import { getNotificationPreference, updateNotificationPreference, generateTelegramLink } from '@/services/api/endpoints';
 
 const UNIVERSITY_BY_DOMAIN = {
   '@freeuni.edu.ge': 'თავისუფალი',
@@ -20,6 +21,44 @@ const getInitial = (name, email) => {
 const useProfilePage = () => {
   const { user } = useAuth();
   const [photoFailed, setPhotoFailed] = useState(false);
+  const [preference, setPreference] = useState('NONE');
+  const [telegramLinked, setTelegramLinked] = useState(false);
+  const [preferenceLoading, setPreferenceLoading] = useState(true);
+
+  useEffect(() => {
+    getNotificationPreference()
+      .then(res => {
+        setPreference(res.data.preference);
+        setTelegramLinked(res.data.telegramLinked);
+      })
+      .finally(() => setPreferenceLoading(false))
+      .catch(() => setPreferenceLoading(false));
+  }, []);
+
+  const handlePreferenceChange = (newPreference) => {
+    const previousPreference = preference;
+    const previousTelegramLinked = telegramLinked;
+    setPreference(newPreference);
+    if (newPreference !== 'TELEGRAM') {
+      setTelegramLinked(false);
+    }
+    updateNotificationPreference(newPreference)
+      .then(res => {
+        setPreference(res.data.preference);
+        setTelegramLinked(res.data.telegramLinked);
+      })
+      .catch(() => {
+        setPreference(previousPreference);
+        setTelegramLinked(previousTelegramLinked);
+      });
+  };
+
+  const handleTelegramLink = () => {
+    generateTelegramLink()
+      .then(res => {
+        window.open(res.data.deepLink, '_blank', 'noopener,noreferrer');
+      });
+  };
 
   const email = user?.email || '';
   const university = getUniversity(email);
@@ -32,7 +71,7 @@ const useProfilePage = () => {
 
   const handlePhotoError = () => setPhotoFailed(true);
 
-  return { displayName, email, university, showPhoto, photoUrl, initial, handlePhotoError };
+  return { displayName, email, university, showPhoto, photoUrl, initial, handlePhotoError, preference, telegramLinked, preferenceLoading, handlePreferenceChange, handleTelegramLink };
 };
 
 export default useProfilePage;

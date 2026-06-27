@@ -35,4 +35,6 @@ public interface RoomOccupancyRepository extends JpaRepository<RoomOccupancy, Lo
     AND o.expectedEndAt > :now
     """)
     List<RoomOccupancy> findActiveNonExpiredByUserIds(@Param("userIds") List<String> userIds, @Param("now") LocalDateTime now);
+    @Query("SELECT o FROM RoomOccupancy o WHERE o.endAt IS NULL AND o.notifiedTenMin = false AND o.expectedEndAt BETWEEN :now AND :windowEnd")
+    List<RoomOccupancy> findReservationsNeedingNotification(@Param("now") LocalDateTime now, @Param("windowEnd") LocalDateTime windowEnd);
 }
