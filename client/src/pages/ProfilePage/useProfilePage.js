@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context';
 import { fetchProfile, updateProfile } from '@/services/api/userService';
+import { getNotificationPreference, updateNotificationPreference, generateTelegramLink } from '@/services/api/endpoints';
 
 const UNIVERSITY_BY_DOMAIN = {
   '@freeuni.edu.ge': 'თავისუფალი',
@@ -21,6 +22,44 @@ const getInitial = (name, email) => {
 const useProfilePage = () => {
   const { user } = useAuth();
   const [photoFailed, setPhotoFailed] = useState(false);
+  const [preference, setPreference] = useState('NONE');
+  const [telegramLinked, setTelegramLinked] = useState(false);
+  const [preferenceLoading, setPreferenceLoading] = useState(true);
+
+  useEffect(() => {
+    getNotificationPreference()
+      .then(res => {
+        setPreference(res.data.preference);
+        setTelegramLinked(res.data.telegramLinked);
+      })
+      .finally(() => setPreferenceLoading(false))
+      .catch(() => setPreferenceLoading(false));
+  }, []);
+
+  const handlePreferenceChange = (newPreference) => {
+    const previousPreference = preference;
+    const previousTelegramLinked = telegramLinked;
+    setPreference(newPreference);
+    if (newPreference !== 'TELEGRAM') {
+      setTelegramLinked(false);
+    }
+    updateNotificationPreference(newPreference)
+      .then(res => {
+        setPreference(res.data.preference);
+        setTelegramLinked(res.data.telegramLinked);
+      })
+      .catch(() => {
+        setPreference(previousPreference);
+        setTelegramLinked(previousTelegramLinked);
+      });
+  };
+
+  const handleTelegramLink = () => {
+    generateTelegramLink()
+      .then(res => {
+        window.open(res.data.deepLink, '_blank', 'noopener,noreferrer');
+      });
+  };
 
   const [bio, setBio] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -117,18 +156,23 @@ const useProfilePage = () => {
     photoUrl,
     setPhotoUrl,
     resolvedDisplayName,
-    email,
-    university,
-    showPhoto,
-    initial,
-    handlePhotoError,
     bio,
     setBio,
     isSaving,
     isUploading: isSaving && !!selectedFile,
     isLoading,
     handleFileUpload: handleFileChange,
-    handleSaveProfile
+    handleSaveProfile,
+    email,
+    university,
+    showPhoto,
+    initial,
+    handlePhotoError,
+    preference,
+    telegramLinked,
+    preferenceLoading,
+    handlePreferenceChange,
+    handleTelegramLink
   };
 };
 

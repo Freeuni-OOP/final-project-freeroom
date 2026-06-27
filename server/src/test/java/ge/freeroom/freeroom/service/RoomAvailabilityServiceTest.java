@@ -1,18 +1,25 @@
 package ge.freeroom.freeroom.service;
 
 import ge.freeroom.freeroom.dto.CancelOccupancyResponseDto;
+import ge.freeroom.freeroom.dto.ReserveRoomResponseDto;
+import ge.freeroom.freeroom.entities.NotificationPreference;
 import ge.freeroom.freeroom.entities.Room;
 import ge.freeroom.freeroom.entities.RoomOccupancy;
 import ge.freeroom.freeroom.entities.User;
+import ge.freeroom.freeroom.repositories.LectureRepository;
 import ge.freeroom.freeroom.repositories.RoomOccupancyRepository;
+import ge.freeroom.freeroom.repositories.RoomRepository;
+import ge.freeroom.freeroom.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,16 +33,22 @@ public class RoomAvailabilityServiceTest {
     @Mock
     private RoomOccupancyRepository roomOccupancyRepository;
 
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private RoomRepository roomRepository;
+
+    @Mock
+    private LectureRepository lectureRepository;
+
+    @InjectMocks
     private RoomAvailabilityService roomAvailabilityService;
 
     private RoomOccupancy validOccupancy;
 
     @BeforeEach
     void setUp() {
-        roomAvailabilityService = new RoomAvailabilityService(
-                null, null, null, roomOccupancyRepository
-        );
-
         User validUser = new User();
         validUser.setId("user123");
 
@@ -100,5 +113,48 @@ public class RoomAvailabilityServiceTest {
         assertNull(validOccupancy.getEndAt());
 
         verify(roomOccupancyRepository, never()).save(any());
+    }
+
+    @Test
+    void bookingBlockedWhenPreferenceIsNone() {
+        User user = new User();
+        user.setId("uid");
+        user.setNotificationPreference(NotificationPreference.NONE);
+        when(userRepository.findById("uid")).thenReturn(Optional.of(user));
+        assertThrows(IllegalStateException.class, () -> roomAvailabilityService.reserveRoom("uid", 1L, 60L));
+    }
+
+    @Test
+    void bookingBlockedWhenTelegramSelectedButNotLinked() {
+        User user = new User();
+        user.setId("uid");
+        user.setNotificationPreference(NotificationPreference.TELEGRAM);
+        user.setTelegramChatId(null);
+        when(userRepository.findById("uid")).thenReturn(Optional.of(user));
+        assertThrows(IllegalStateException.class, () -> roomAvailabilityService.reserveRoom("uid", 1L, 60L));
+    }
+
+    @Test
+    void bookingAllowedWhenEmailSelected() {
+        User user = new User();
+        user.setId("uid");
+        user.setNotificationPreference(NotificationPreference.EMAIL);
+        when(userRepository.findById("uid")).thenReturn(Optional.of(user));
+        Room room = new Room();
+        room.setId(1L);
+        room.setRoomNumber(101);
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
+        when(roomOccupancyRepository.findActiveOccupancyByUserId(eq("uid"), any(LocalDateTime.class))).thenReturn(Optional.empty());
+        when(lectureRepository.findActiveLecturesByRoomIds(any(), any(LocalDateTime.class))).thenReturn(Collections.emptyList());
+        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(eq(1L), any(LocalDateTime.class))).thenReturn(Optional.empty());
+        RoomOccupancy saved = new RoomOccupancy();
+        saved.setId(1L);
+        saved.setRoom(room);
+        saved.setUser(user);
+        saved.setStartAt(LocalDateTime.now());
+        saved.setExpectedEndAt(LocalDateTime.now().plusMinutes(60));
+        when(roomOccupancyRepository.save(any(RoomOccupancy.class))).thenReturn(saved);
+        ReserveRoomResponseDto result = roomAvailabilityService.reserveRoom("uid", 1L, 60L);
+        assertNotNull(result);
     }
 }

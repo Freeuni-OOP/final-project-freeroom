@@ -2,23 +2,28 @@ import useProfilePage from './useProfilePage';
 
 export default function ProfilePage() {
     const {
-        displayName,
-        setDisplayName,
-        photoUrl,
-        setPhotoUrl,
-        resolvedDisplayName,
-        email,
-        university,
-        showPhoto,
-        initial,
-        handlePhotoError,
-        bio,
-        setBio,
-        isSaving,
-        isUploading,
-        isLoading,
-        handleFileUpload,
-        handleSaveProfile
+      displayName,
+      setDisplayName,
+      photoUrl,
+      setPhotoUrl,
+      resolvedDisplayName,
+      bio,
+      setBio,
+      isSaving,
+      isUploading: isSaving && !!selectedFile,
+      isLoading,
+      handleFileUpload: handleFileChange,
+      handleSaveProfile,
+      email,
+      university,
+      showPhoto,
+      initial,
+      handlePhotoError,
+      preference,
+      telegramLinked,
+      preferenceLoading,
+      handlePreferenceChange,
+      handleTelegramLink
     } = useProfilePage();
 
     return (
@@ -157,6 +162,60 @@ export default function ProfilePage() {
             </section>
 
             {/* Friends Card */}
+            <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 sm:p-8">
+                <h2 className="mb-4 text-lg font-bold text-brand-ink">შეტყობინებები</h2>
+                {preferenceLoading ? (
+                    <div className="text-sm text-brand-ink/50">იტვირთება...</div>
+                ) : (
+                    <div className="flex flex-col gap-4">
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => handlePreferenceChange('NONE')}
+                                className={`flex-1 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors ${preference === 'NONE' ? 'border-brand-accent bg-brand-accent/10 text-brand-accent-text' : 'border-black/10 text-brand-ink/60 hover:border-brand-accent/40'}`}
+                            >
+                                არცერთი
+                            </button>
+                            <button
+                                onClick={() => handlePreferenceChange('EMAIL')}
+                                className={`flex-1 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors ${preference === 'EMAIL' ? 'border-brand-accent bg-brand-accent/10 text-brand-accent-text' : 'border-black/10 text-brand-ink/60 hover:border-brand-accent/40'}`}
+                            >
+                                ელ. ფოსტა
+                            </button>
+                            <button
+                                onClick={() => handlePreferenceChange('TELEGRAM')}
+                                className={`flex-1 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors ${preference === 'TELEGRAM' ? 'border-brand-accent bg-brand-accent/10 text-brand-accent-text' : 'border-black/10 text-brand-ink/60 hover:border-brand-accent/40'}`}
+                            >
+                                Telegram
+                            </button>
+                        </div>
+                        {preference === 'TELEGRAM' && (
+                            <div className="rounded-xl border border-black/10 bg-brand-bg p-4">
+                                <p className="mb-3 text-sm font-semibold text-brand-ink">Telegram-ის დაყენება</p>
+                                <ol className="flex flex-col gap-2 text-sm text-brand-ink/70">
+                                    <li>1. დააჭირეთ ღილაკს და გახსენით ჩვენი ბოტი</li>
+                                    <li>2. Telegram-ში დააჭირეთ ღილაკს Start</li>
+                                    <li>3. დაბრუნდით და გვერდი განახლდება</li>
+                                </ol>
+                                <div className="mt-3 flex items-center gap-3">
+                                    <button
+                                        onClick={handleTelegramLink}
+                                        className="rounded-xl bg-brand-accent px-4 py-2 text-sm font-semibold text-brand-ink transition-colors hover:bg-brand-accent-dark"
+                                    >
+                                        ბოტის გახსნა
+                                    </button>
+                                    {telegramLinked && (
+                                        <span className="text-sm font-semibold text-brand-green">დაკავშირებულია</span>
+                                    )}
+                                    {!telegramLinked && (
+                                        <span className="text-sm text-brand-ink/40">არ არის დაკავშირებული</span>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </section>
+
             <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 sm:p-8">
                 <div className="mb-4 flex items-center justify-between">
                     <h2 className="text-lg font-bold text-brand-ink">მეგობრები</h2>

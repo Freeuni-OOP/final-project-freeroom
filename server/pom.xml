@@ -78,11 +78,19 @@
 			<artifactId>google-oauth-client-jetty</artifactId>
 			<version>1.36.0</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
+		<dependency>
+			<groupId>org.telegram</groupId>
+			<artifactId>telegrambots-springboot-longpolling-starter</artifactId>
+			<version>10.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.telegram</groupId>
+			<artifactId>telegrambots-client</artifactId>
+			<version>10.0.0</version>
 		</dependency>
 	</dependencies>
 

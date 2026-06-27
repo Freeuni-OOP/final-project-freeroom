@@ -37,6 +37,16 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(255) default 'NONE'")
+    private NotificationPreference notificationPreference = NotificationPreference.NONE;
+
+    @Column(nullable = true)
+    private Long telegramChatId;
+
+    @Column(nullable = true)
+    private String telegramLinkToken;
+
     @JsonIgnore
     @OneToMany(mappedBy = "user")
     private List<RoomOccupancy> occupancies;

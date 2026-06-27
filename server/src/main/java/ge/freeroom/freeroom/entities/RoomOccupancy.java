@@ -43,4 +43,7 @@ public class RoomOccupancy {
 
     @PrePersist
     protected void onCreate() { createdAt = LocalDateTime.now(); }
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean notifiedTenMin;
 }

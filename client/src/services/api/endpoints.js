@@ -15,3 +15,7 @@ export const updateProfile = (bioData) => axiosInstance.post('/user/update', bio
 export const searchLectures = (query) => {
     return axiosInstance.get(`/lectures/search?q=${query}`);
 };
+
+export const getNotificationPreference = () => axiosInstance.get('/user/notification-preference');
+export const updateNotificationPreference = (preference) => axiosInstance.patch('/user/notification-preference', { preference });
+export const generateTelegramLink = () => axiosInstance.post('/user/telegram-link');
