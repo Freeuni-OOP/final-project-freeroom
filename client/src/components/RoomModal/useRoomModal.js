@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     reserveRoom,
     cancelOccupancy,
@@ -42,7 +42,7 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         }
         : null;
 
-    const loadChat = async () => {
+    const loadChat = useCallback(async () => {
         if (!roomId) return;
         try {
             const data = await getChatMessages(roomId);
@@ -53,15 +53,18 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
                 setIsAuthorized(false);
             }
         }
-    };
+    }, [roomId]);
 
     useEffect(() => {
         if (roomId && isChatOpen) {
-            loadChat();
+            const timeout = setTimeout(loadChat, 0);
             const interval = setInterval(loadChat, 4000);
-            return () => clearInterval(interval);
+            return () => {
+                clearTimeout(timeout);
+                clearInterval(interval);
+            };
         }
-    }, [roomId, isChatOpen]);
+    }, [roomId, isChatOpen, loadChat]);
 
     const handleReserve = async (durationMinutes) => {
         if(!modalData?.isFree) {

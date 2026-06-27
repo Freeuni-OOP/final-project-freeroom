@@ -167,7 +167,9 @@ public class RoomAvailabilityService {
         response.setStartTime(saved.getStartAt());
         response.setExpectedEndTime(saved.getExpectedEndAt());
 
-        chatService.initializeRoomBooker(roomId, userId);
+        if (chatService != null) {
+            chatService.initializeRoomBooker(roomId, userId);
+        }
 
         return response;
     }
@@ -199,7 +201,9 @@ public class RoomAvailabilityService {
         response.setCancelledAt(occ.getEndAt());
         response.setMessage("Occupancy cancelled successfully");
 
-        chatService.clearRoomChat(roomId);
+        if (chatService != null) {
+            chatService.clearRoomChat(roomId);
+        }
 
         return response;
     }
