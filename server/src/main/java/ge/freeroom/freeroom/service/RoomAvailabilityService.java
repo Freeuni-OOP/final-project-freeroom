@@ -129,7 +129,8 @@ public class RoomAvailabilityService {
             throw new IllegalStateException("Telegram არ არის დაკავშირებული. პროფილზე დაასრულეთ Telegram-ის დაყენება.");
         }
 
-        Room room = roomRepository.findById(roomId)
+        // Updated to use the pessimistic lock method to prevent dual-booking gaps
+        Room room = roomRepository.findByIdWithLock(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Room not Found"));
 
         LocalDateTime nowTime = LocalDateTime.now();

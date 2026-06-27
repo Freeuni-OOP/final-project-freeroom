@@ -143,12 +143,13 @@ public class RoomAvailabilityServiceTest {
         Room room = new Room();
         room.setId(1L);
         room.setRoomNumber(101);
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
+
+        // Fixed: Updated to match the pessimistic lock query method used in the service
+        when(roomRepository.findByIdWithLock(1L)).thenReturn(Optional.of(room));
 
         when(roomOccupancyRepository.findActiveOccupancyByUserId(eq("uid"), any(LocalDateTime.class))).thenReturn(Optional.empty());
         when(lectureRepository.findActiveLecturesByRoomIds(any(), any(LocalDateTime.class))).thenReturn(Collections.emptyList());
 
-        // Fixed: Removed the secondary LocalDateTime matcher to mirror repository method declaration
         when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(eq(1L))).thenReturn(Optional.empty());
 
         RoomOccupancy saved = new RoomOccupancy();
