@@ -14,7 +14,7 @@ public class Chat {
     @Column(name = "room_id", nullable = false)
     private Long roomId;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author", referencedColumnName = "id", nullable = false)
     private User authorUser;
 
@@ -25,11 +25,12 @@ public class Chat {
     private LocalDateTime sendingTime;
 
     @Column(name = "message_type", nullable = false)
-    private String messageType;
+    @Enumerated(EnumType.STRING)
+    private MessageType messageType;
 
     public Chat() {}
 
-    public Chat(Long roomId, User authorUser, String message, String messageType) {
+    public Chat(Long roomId, User authorUser, String message, MessageType messageType) {
         this.roomId = roomId;
         this.authorUser = authorUser;
         this.message = message;
@@ -47,18 +48,6 @@ public class Chat {
     public void setMessage(String message) { this.message = message; }
     public LocalDateTime getSendingTime() { return sendingTime; }
     public void setSendingTime(LocalDateTime sendingTime) { this.sendingTime = sendingTime; }
-    public String getMessageType() { return messageType; }
-    public void setMessageType(String messageType) { this.messageType = messageType; }
-
-    public String getAuthor() {
-        return authorUser != null ? authorUser.getId() : null;
-    }
-
-    public String getNickname() {
-        return authorUser != null ? authorUser.getDisplayName() : null;
-    }
-
-    public String getEmail() {
-        return authorUser != null ? authorUser.getEmail() : null;
-    }
+    public MessageType getMessageType() { return messageType; }
+    public void setMessageType(MessageType messageType) { this.messageType = messageType; }
 }

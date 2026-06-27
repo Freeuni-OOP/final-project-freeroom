@@ -17,7 +17,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -54,7 +53,7 @@ public class RoomAvailabilityServiceTest {
 
     @Test
     void cancelOccupancy_Success_WhenUserOwnsOccupancy() {
-        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(eq(1L), any(LocalDateTime.class)))
+        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(1L))
                 .thenReturn(Optional.of(validOccupancy));
 
         when(roomOccupancyRepository.save(any(RoomOccupancy.class))).thenReturn(validOccupancy);
@@ -72,7 +71,7 @@ public class RoomAvailabilityServiceTest {
 
     @Test
     void cancelOccupancy_ThrowsException_WhenNoActiveOccupancy() {
-        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(eq(1L), any(LocalDateTime.class)))
+        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(1L))
                 .thenReturn(Optional.empty());
 
         IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
@@ -89,7 +88,7 @@ public class RoomAvailabilityServiceTest {
         User maliciousUser = new User();
         maliciousUser.setId("hackerKala");
 
-        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(eq(1L), any(LocalDateTime.class)))
+        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(1L))
                 .thenReturn(Optional.of(validOccupancy));
 
         AccessDeniedException exception = assertThrows(AccessDeniedException.class, () -> {

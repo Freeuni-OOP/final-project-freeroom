@@ -16,10 +16,10 @@ export const searchLectures = (query) => {
     return axiosInstance.get(`/lectures/search?q=${query}`);
 };
 
-export const getChatMessages = (roomId) => axiosInstance.get(`/api/chat/${roomId}`).then(res => res.data);
+export const getChatMessages = (roomId) => axiosInstance.get(`/chat/${roomId}`).then(res => res.data);
 
-export const sendChatMessage = (roomId, message) => axiosInstance.post('/api/chat/send', { roomId, message });
+export const sendChatMessage = (roomId, message) => axiosInstance.post('/chat/send', { roomId, message });
 
-export const requestJoinRoom = (roomId) => axiosInstance.post('/api/chat/request-join', { roomId });
+export const requestJoinRoom = (roomId) => axiosInstance.post('/chat/request-join', { roomId });
 
-export const approveJoinRequest = (roomId, targetUserId) => axiosInstance.post('/api/chat/approve', { roomId, targetUserId });
+export const approveJoinRequest = (roomId, targetUserId) => axiosInstance.post('/chat/approve', { roomId, targetUserId });
