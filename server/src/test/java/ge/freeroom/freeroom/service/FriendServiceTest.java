@@ -81,7 +81,7 @@ class FriendServiceTest {
         List<UserSearchResultDto> result = friendService.searchUsers("uid-a", "Bo");
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getRelationshipStatus()).isEqualTo("NONE");
+        assertThat(result.get(0).getRelationshipStatus()).isEqualTo(RelationshipStatus.NONE);
     }
 
     @Test
@@ -93,7 +93,7 @@ class FriendServiceTest {
 
         List<UserSearchResultDto> result = friendService.searchUsers("uid-a", "Bo");
 
-        assertThat(result.get(0).getRelationshipStatus()).isEqualTo("FRIENDS");
+        assertThat(result.get(0).getRelationshipStatus()).isEqualTo(RelationshipStatus.FRIENDS);
     }
 
     @Test
@@ -111,7 +111,7 @@ class FriendServiceTest {
 
         List<UserSearchResultDto> result = friendService.searchUsers("uid-a", "Bo");
 
-        assertThat(result.get(0).getRelationshipStatus()).isEqualTo("PENDING_SENT");
+        assertThat(result.get(0).getRelationshipStatus()).isEqualTo(RelationshipStatus.PENDING_SENT);
     }
 
     @Test
@@ -129,7 +129,7 @@ class FriendServiceTest {
 
         List<UserSearchResultDto> result = friendService.searchUsers("uid-a", "Bo");
 
-        assertThat(result.get(0).getRelationshipStatus()).isEqualTo("PENDING_RECEIVED");
+        assertThat(result.get(0).getRelationshipStatus()).isEqualTo(RelationshipStatus.PENDING_RECEIVED);
     }
 
     @Test
@@ -140,7 +140,8 @@ class FriendServiceTest {
 
     @Test
     void sendFriendRequest_receiverNotFound_throws() {
-        when(userRepository.existsById("uid-b")).thenReturn(false);
+        when(userRepository.findById("uid-a")).thenReturn(Optional.of(userA));
+        when(userRepository.findById("uid-b")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> friendService.sendFriendRequest("uid-a", "uid-b"))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -148,7 +149,6 @@ class FriendServiceTest {
 
     @Test
     void sendFriendRequest_alreadyFriends_throws() {
-        when(userRepository.existsById("uid-b")).thenReturn(true);
         when(friendshipRepository.existsByUsers("uid-a", "uid-b")).thenReturn(true);
 
         assertThatThrownBy(() -> friendService.sendFriendRequest("uid-a", "uid-b"))
@@ -157,7 +157,6 @@ class FriendServiceTest {
 
     @Test
     void sendFriendRequest_pendingExists_throws() {
-        when(userRepository.existsById("uid-b")).thenReturn(true);
         when(friendshipRepository.existsByUsers("uid-a", "uid-b")).thenReturn(false);
         when(friendRequestRepository.findPendingBetweenUsers("uid-a", "uid-b"))
                 .thenReturn(Optional.of(new FriendRequest()));
@@ -168,7 +167,6 @@ class FriendServiceTest {
 
     @Test
     void sendFriendRequest_valid_savesRequest() {
-        when(userRepository.existsById("uid-b")).thenReturn(true);
         when(friendshipRepository.existsByUsers("uid-a", "uid-b")).thenReturn(false);
         when(friendRequestRepository.findPendingBetweenUsers("uid-a", "uid-b"))
                 .thenReturn(Optional.empty());
@@ -215,8 +213,6 @@ class FriendServiceTest {
     void acceptFriendRequest_valid_createsFriendshipAndUpdatesStatus() {
         FriendRequest req = pendingRequest(userA, userB);
         when(friendRequestRepository.findById(1L)).thenReturn(Optional.of(req));
-        when(userRepository.findById("uid-a")).thenReturn(Optional.of(userA));
-        when(userRepository.findById("uid-b")).thenReturn(Optional.of(userB));
 
         friendService.acceptFriendRequest("uid-b", 1L);
 
@@ -228,8 +224,6 @@ class FriendServiceTest {
     void acceptFriendRequest_normalizesUserOrder() {
         FriendRequest req = pendingRequest(userB, userA);
         when(friendRequestRepository.findById(1L)).thenReturn(Optional.of(req));
-        when(userRepository.findById("uid-a")).thenReturn(Optional.of(userA));
-        when(userRepository.findById("uid-b")).thenReturn(Optional.of(userB));
 
         friendService.acceptFriendRequest("uid-a", 1L);
 
