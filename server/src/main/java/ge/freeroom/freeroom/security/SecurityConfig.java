@@ -31,18 +31,18 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // Secures CORS rules to allow our specific local UI application
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            // Disables CSRF since tokens are stateless and immune to session hijacking
-            .csrf(AbstractHttpConfigurer::disable)
-            // Enforces stateless sessions
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            // Protects every single API endpoint
-            .authorizeHttpRequests(auth -> auth
-                .anyRequest().authenticated()
-            )
-            // Injects our custom filter directly in front of the default processor
-            .addFilterBefore(firebaseTokenFilter, UsernamePasswordAuthenticationFilter.class);
+                // Secures CORS rules to allow our specific local UI application
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // Disables CSRF since tokens are stateless and immune to session hijacking
+                .csrf(AbstractHttpConfigurer::disable)
+                // Enforces stateless sessions
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // Protects every single API endpoint
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().authenticated()
+                )
+                // Injects our custom filter directly in front of the default processor
+                .addFilterBefore(firebaseTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -51,9 +51,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(allowedOrigin));
-
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
 

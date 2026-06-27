@@ -23,3 +23,9 @@ export const sendChatMessage = (roomId, message) => axiosInstance.post('/chat/se
 export const requestJoinRoom = (roomId) => axiosInstance.post('/chat/request-join', { roomId });
 
 export const approveJoinRequest = (roomId, targetUserId) => axiosInstance.post('/chat/approve', { roomId, targetUserId });
+
+export const getNotificationPreference = () => axiosInstance.get('/user/notification-preference');
+
+export const updateNotificationPreference = (preference) => axiosInstance.patch('/user/notification-preference', { preference });
+
+export const generateTelegramLink = () => axiosInstance.post('/user/telegram-link');

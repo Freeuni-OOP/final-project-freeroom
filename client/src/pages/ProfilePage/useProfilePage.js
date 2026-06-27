@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context';
 import { fetchProfile, updateProfile } from '@/services/api/userService';
+import { getNotificationPreference, updateNotificationPreference, generateTelegramLink } from '@/services/api/endpoints';
 
 const UNIVERSITY_BY_DOMAIN = {
   '@freeuni.edu.ge': 'თავისუფალი',
@@ -21,6 +22,9 @@ const getInitial = (name, email) => {
 const useProfilePage = () => {
   const { user } = useAuth();
   const [photoFailed, setPhotoFailed] = useState(false);
+  const [preference, setPreference] = useState('NONE');
+  const [telegramLinked, setTelegramLinked] = useState(false);
+  const [preferenceLoading, setPreferenceLoading] = useState(true);
 
   const [bio, setBio] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -31,6 +35,41 @@ const useProfilePage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const hasFetched = useRef(false);
+
+  useEffect(() => {
+    getNotificationPreference()
+        .then(res => {
+          setPreference(res.data.preference);
+          setTelegramLinked(res.data.telegramLinked);
+        })
+        .finally(() => setPreferenceLoading(false))
+        .catch(() => setPreferenceLoading(false));
+  }, []);
+
+  const handlePreferenceChange = (newPreference) => {
+    const previousPreference = preference;
+    const previousTelegramLinked = telegramLinked;
+    setPreference(newPreference);
+    if (newPreference !== 'TELEGRAM') {
+      setTelegramLinked(false);
+    }
+    updateNotificationPreference(newPreference)
+        .then(res => {
+          setPreference(res.data.preference);
+          setTelegramLinked(res.data.telegramLinked);
+        })
+        .catch(() => {
+          setPreference(previousPreference);
+          setTelegramLinked(previousTelegramLinked);
+        });
+  };
+
+  const handleTelegramLink = () => {
+    generateTelegramLink()
+        .then(res => {
+          window.open(res.data.deepLink, '_blank', 'noopener,noreferrer');
+        });
+  };
 
   const email = user?.email || '';
   const university = getUniversity(email);
@@ -50,7 +89,7 @@ const useProfilePage = () => {
         return;
       }
       try {
-        const data = await fetchProfile(); // Cleaner call
+        const data = await fetchProfile();
         if (data) {
           setBio(data.bio || '');
           setDisplayName(data.displayName || '');
@@ -76,7 +115,7 @@ const useProfilePage = () => {
       if (displayName) formData.append('displayName', displayName);
       if (selectedFile) formData.append('file', selectedFile);
 
-      const data = await updateProfile(formData); // Cleaner call
+      const data = await updateProfile(formData);
 
       if (data) {
         setBio(data.bio || '');
@@ -128,7 +167,12 @@ const useProfilePage = () => {
     isUploading: isSaving && !!selectedFile,
     isLoading,
     handleFileUpload: handleFileChange,
-    handleSaveProfile
+    handleSaveProfile,
+    preference,
+    telegramLinked,
+    preferenceLoading,
+    handlePreferenceChange,
+    handleTelegramLink
   };
 };
 

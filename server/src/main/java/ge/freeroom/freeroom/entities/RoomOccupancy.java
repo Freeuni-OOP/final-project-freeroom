@@ -33,8 +33,10 @@ public class RoomOccupancy {
 
     @Column(name = "start_at", nullable = false)
     private LocalDateTime startAt;
+
     @Column(name = "expected_end_at", nullable = false)
     private LocalDateTime expectedEndAt;
+
     @Column(name = "end_at")
     private LocalDateTime endAt; // actual checkout, use endAt == null to check active status
 
@@ -43,4 +45,7 @@ public class RoomOccupancy {
 
     @PrePersist
     protected void onCreate() { createdAt = LocalDateTime.now(); }
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean notifiedTenMin;
 }
