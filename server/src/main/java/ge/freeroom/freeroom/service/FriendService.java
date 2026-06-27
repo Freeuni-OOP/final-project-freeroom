@@ -8,10 +8,10 @@ import ge.freeroom.freeroom.repositories.FriendRequestRepository;
 import ge.freeroom.freeroom.repositories.FriendshipRepository;
 import ge.freeroom.freeroom.repositories.RoomOccupancyRepository;
 import ge.freeroom.freeroom.repositories.UserRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -74,13 +74,13 @@ public class FriendService {
             dto.setPhotoUrl(user.getPhotoUrl());
 
             if (friendIds.contains(user.getId())) {
-                dto.setRelationshipStatus("FRIENDS");
+                dto.setRelationshipStatus(RelationshipStatus.FRIENDS);
             } else if ("SENT".equals(pendingDirectionByUserId.get(user.getId()))) {
-                dto.setRelationshipStatus("PENDING_SENT");
+                dto.setRelationshipStatus(RelationshipStatus.PENDING_SENT);
             } else if ("RECEIVED".equals(pendingDirectionByUserId.get(user.getId()))) {
-                dto.setRelationshipStatus("PENDING_RECEIVED");
+                dto.setRelationshipStatus(RelationshipStatus.PENDING_RECEIVED);
             } else {
-                dto.setRelationshipStatus("NONE");
+                dto.setRelationshipStatus(RelationshipStatus.NONE);
             }
 
             return dto;
@@ -91,10 +91,6 @@ public class FriendService {
     public void sendFriendRequest(String senderId, String receiverId){
         if (senderId.equals(receiverId)) {
             throw new IllegalArgumentException("საკუთარ თავს მეგობრობის მოთხოვნა ვერ გაუგზავნით");
-        }
-
-        if (!userRepository.existsById(receiverId)) {
-            throw new IllegalArgumentException("მომხმარებელი ვერ მოიძებნა");
         }
 
         if (friendshipRepository.existsByUsers(senderId, receiverId)) {
@@ -108,7 +104,8 @@ public class FriendService {
         }
 
         User sender = userRepository.findById(senderId).orElseThrow();
-        User receiver = userRepository.findById(receiverId).orElseThrow();
+        User receiver = userRepository.findById(receiverId)
+                .orElseThrow(() -> new IllegalArgumentException("მომხმარებელი ვერ მოიძებნა"));
 
         FriendRequest request = new FriendRequest();
         request.setSender(sender);
@@ -134,13 +131,10 @@ public class FriendService {
         request.setStatus(FriendRequestStatus.ACCEPTED);
         friendRequestRepository.save(request);
 
-        String idA = request.getSender().getId();
-        String idB = request.getReceiver().getId();
-        String user1Id = idA.compareTo(idB) <= 0 ? idA : idB;
-        String user2Id = idA.compareTo(idB) <= 0 ? idB : idA;
-
-        User user1 = userRepository.findById(user1Id).orElseThrow();
-        User user2 = userRepository.findById(user2Id).orElseThrow();
+        User sender = request.getSender();
+        User receiver = request.getReceiver();
+        User user1 = sender.getId().compareTo(receiver.getId()) <= 0 ? sender : receiver;
+        User user2 = sender.getId().compareTo(receiver.getId()) <= 0 ? receiver : sender;
 
         Friendship friendship = new Friendship();
         friendship.setUser1(user1);
@@ -232,7 +226,7 @@ public class FriendService {
         dto.setReceiverId(req.getReceiver().getId());
         dto.setReceiverDisplayName(req.getReceiver().getDisplayName());
         dto.setReceiverPhotoUrl(req.getReceiver().getPhotoUrl());
-        dto.setStatus(req.getStatus().name());
+        dto.setStatus(req.getStatus());
         dto.setCreatedAt(req.getCreatedAt());
         return dto;
     }

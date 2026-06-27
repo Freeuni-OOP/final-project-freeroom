@@ -1,5 +1,6 @@
 package ge.freeroom.freeroom.dto;
 
+import ge.freeroom.freeroom.entities.FriendRequestStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,6 +20,6 @@ public class FriendRequestDto {
     private String receiverId;
     private String receiverDisplayName;
     private String receiverPhotoUrl;
-    private String status;
+    private FriendRequestStatus status;
     private LocalDateTime createdAt;
 }

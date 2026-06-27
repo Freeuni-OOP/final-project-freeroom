@@ -1,5 +1,6 @@
 package ge.freeroom.freeroom.dto;
 
+import ge.freeroom.freeroom.entities.RelationshipStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,5 +15,5 @@ public class UserSearchResultDto {
     private String displayName;
     private String photoUrl;
 
-    private String relationshipStatus;
+    private RelationshipStatus relationshipStatus;
 }

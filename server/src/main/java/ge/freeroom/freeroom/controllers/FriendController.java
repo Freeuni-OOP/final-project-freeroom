@@ -45,7 +45,7 @@ public class FriendController {
         return ResponseEntity.ok(friendService.getOutgoingRequests(principal.getName()));
     }
 
-    @PostMapping("/requests/{requestId}/accept")
+    @PatchMapping("/requests/{requestId}/accept")
     public ResponseEntity<Void> acceptRequest(
             @PathVariable Long requestId,
             Principal principal) {
@@ -53,7 +53,7 @@ public class FriendController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/requests/{requestId}/reject")
+    @PatchMapping("/requests/{requestId}/reject")
     public ResponseEntity<Void> rejectRequest(
             @PathVariable Long requestId,
             Principal principal) {

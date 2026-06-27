@@ -13,7 +13,13 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "friend_request")
+@Table(
+        name = "friend_request",
+        indexes = {
+                @Index(name = "idx_friend_request_sender_receiver_status",
+                        columnList = "sender_id, receiver_id, status")
+        }
+)
 public class FriendRequest {
 
     @Id
