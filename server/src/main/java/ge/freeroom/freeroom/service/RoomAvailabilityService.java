@@ -10,6 +10,7 @@ import ge.freeroom.freeroom.repositories.RoomOccupancyRepository;
 import ge.freeroom.freeroom.repositories.RoomRepository;
 import ge.freeroom.freeroom.repositories.UserRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -25,6 +26,9 @@ public class RoomAvailabilityService {
     private final LectureRepository lectureRepository;
     private final UserRepository userRepository;
     private final RoomOccupancyRepository roomOccupancyRepository;
+
+    @Autowired
+    private ChatService chatService;
 
     public RoomAvailabilityService(RoomRepository roomRepository, LectureRepository lectureRepository, UserRepository userRepository, RoomOccupancyRepository roomOccupancyRepository) {
         this.roomRepository = roomRepository;
@@ -163,6 +167,8 @@ public class RoomAvailabilityService {
         response.setStartTime(saved.getStartAt());
         response.setExpectedEndTime(saved.getExpectedEndAt());
 
+        chatService.initializeRoomBooker(roomId, userId);
+
         return response;
     }
 
@@ -192,6 +198,8 @@ public class RoomAvailabilityService {
         response.setRoomNumber(occ.getRoom().getRoomNumber());
         response.setCancelledAt(occ.getEndAt());
         response.setMessage("Occupancy cancelled successfully");
+
+        chatService.clearRoomChat(roomId);
 
         return response;
     }
