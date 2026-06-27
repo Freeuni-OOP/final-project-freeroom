@@ -4,7 +4,6 @@ import com.google.firebase.auth.FirebaseToken;
 import ge.freeroom.freeroom.dto.NotificationPreferenceResponseDto;
 import ge.freeroom.freeroom.dto.TelegramLinkResponseDto;
 import ge.freeroom.freeroom.dto.UpdateNotificationPreferenceRequest;
-import ge.freeroom.freeroom.entities.NotificationPreference;
 import ge.freeroom.freeroom.entities.User;
 import ge.freeroom.freeroom.repositories.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -48,12 +47,6 @@ public class UserController {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         user.setNotificationPreference(request.getPreference());
-
-        if (request.getPreference() != NotificationPreference.TELEGRAM) {
-            user.setTelegramChatId(null);
-            user.setTelegramLinkToken(null);
-        }
-
         userRepository.save(user);
 
         NotificationPreferenceResponseDto response = new NotificationPreferenceResponseDto();

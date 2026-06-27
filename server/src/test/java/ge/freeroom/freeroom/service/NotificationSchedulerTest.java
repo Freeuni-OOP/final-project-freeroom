@@ -54,7 +54,7 @@ public class NotificationSchedulerTest {
         user.setTelegramChatId(12345L);
         RoomOccupancy reservation = buildReservation(user);
         when(roomOccupancyRepository.findReservationsNeedingNotification(any(), any())).thenReturn(List.of(reservation));
-        when(telegramBotService.sendNotification(eq(12345L), anyString())).thenReturn(true);
+        when(telegramBotService.sendNotification(eq(12345L), anyString())).thenReturn(SendResult.SUCCESS);
 
         scheduler.sendExpiryWarnings();
 
@@ -71,7 +71,7 @@ public class NotificationSchedulerTest {
         user.setTelegramChatId(12345L);
         RoomOccupancy reservation = buildReservation(user);
         when(roomOccupancyRepository.findReservationsNeedingNotification(any(), any())).thenReturn(List.of(reservation));
-        when(telegramBotService.sendNotification(eq(12345L), anyString())).thenReturn(false);
+        when(telegramBotService.sendNotification(eq(12345L), anyString())).thenReturn(SendResult.BLOCKED);
 
         scheduler.sendExpiryWarnings();
 
@@ -79,6 +79,25 @@ public class NotificationSchedulerTest {
         assertNull(user.getTelegramChatId());
         assertEquals(NotificationPreference.NONE, user.getNotificationPreference());
         assertFalse(reservation.isNotifiedTenMin());
+    }
+
+    @Test
+    void transientFailureDoesNotUnlinkOrMarkNotified() {
+        User user = new User();
+        user.setId("uid");
+        user.setNotificationPreference(NotificationPreference.TELEGRAM);
+        user.setTelegramChatId(12345L);
+        RoomOccupancy reservation = buildReservation(user);
+        when(roomOccupancyRepository.findReservationsNeedingNotification(any(), any())).thenReturn(List.of(reservation));
+        when(telegramBotService.sendNotification(eq(12345L), anyString())).thenReturn(SendResult.OTHER_ERROR);
+
+        scheduler.sendExpiryWarnings();
+
+        verify(userRepository, never()).save(any());
+        verify(roomOccupancyRepository, never()).save(any());
+        assertFalse(reservation.isNotifiedTenMin());
+        assertEquals(12345L, user.getTelegramChatId());
+        assertEquals(NotificationPreference.TELEGRAM, user.getNotificationPreference());
     }
 
     @Test

@@ -38,11 +38,11 @@ public class NotificationScheduler {
             User user = reservation.getUser();
             if (user.getNotificationPreference() == NotificationPreference.TELEGRAM && user.getTelegramChatId() != null) {
                 String text = "თქვენი ოთახის ჯავშანი მთავრდება 10 წუთში. ოთახი " + reservation.getRoom().getRoomNumber();
-                boolean sent = telegramBotService.sendNotification(user.getTelegramChatId(), text);
-                if (sent) {
+                SendResult result = telegramBotService.sendNotification(user.getTelegramChatId(), text);
+                if (result == SendResult.SUCCESS) {
                     reservation.setNotifiedTenMin(true);
                     roomOccupancyRepository.save(reservation);
-                } else {
+                } else if (result == SendResult.BLOCKED) {
                     user.setTelegramChatId(null);
                     user.setNotificationPreference(NotificationPreference.NONE);
                     userRepository.save(user);

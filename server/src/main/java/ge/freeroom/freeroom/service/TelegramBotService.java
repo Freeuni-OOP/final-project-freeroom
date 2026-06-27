@@ -11,6 +11,7 @@ import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
@@ -73,16 +74,21 @@ public class TelegramBotService implements SpringLongPollingBot, LongPollingSing
         sendMessage(chatId, "დაკავშირება დასრულდა. აქ მიიღებთ შეტყობინებებს ოთახის ჯავშნის შესახებ.");
     }
 
-    public boolean sendNotification(Long chatId, String text) {
+    public SendResult sendNotification(Long chatId, String text) {
         SendMessage message = SendMessage.builder()
                 .chatId(chatId)
                 .text(text)
                 .build();
         try {
             telegramClient.execute(message);
-            return true;
+            return SendResult.SUCCESS;
+        } catch (TelegramApiRequestException e) {
+            if (e.getErrorCode() == 403) {
+                return SendResult.BLOCKED;
+            }
+            return SendResult.OTHER_ERROR;
         } catch (TelegramApiException e) {
-            return false;
+            return SendResult.OTHER_ERROR;
         }
     }
 
