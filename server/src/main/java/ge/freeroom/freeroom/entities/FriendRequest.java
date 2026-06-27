@@ -17,7 +17,9 @@ import java.time.LocalDateTime;
         name = "friend_request",
         indexes = {
                 @Index(name = "idx_friend_request_sender_receiver_status",
-                        columnList = "sender_id, receiver_id, status")
+                        columnList = "sender_id, receiver_id, status"),
+                @Index(name = "idx_friend_request_receiver_status",
+                        columnList = "receiver_id, status")
         }
 )
 public class FriendRequest {
