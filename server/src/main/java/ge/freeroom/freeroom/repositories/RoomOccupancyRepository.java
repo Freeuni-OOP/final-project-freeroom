@@ -2,6 +2,7 @@ package ge.freeroom.freeroom.repositories;
 
 import ge.freeroom.freeroom.entities.RoomOccupancy;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -17,16 +18,21 @@ public interface RoomOccupancyRepository extends JpaRepository<RoomOccupancy, Lo
     @Query("SELECT o FROM RoomOccupancy o WHERE o.room.id = :roomId AND o.endAt IS NULL")
     Optional<RoomOccupancy> findFirstByRoomIdAndEndAtIsNull(@Param("roomId") Long roomId);
 
+    @EntityGraph(attributePaths = {"room", "room.floor", "user"})
     List<RoomOccupancy> findByRoomIdOrderByCreatedAtDesc(Long roomId);
 
+    @EntityGraph(attributePaths = {"room", "room.floor", "user"})
     List<RoomOccupancy> findByRoomIdInAndEndAtIsNull(List<Long> roomIds);
 
+    @EntityGraph(attributePaths = {"room", "room.floor", "user"})
     @Query("SELECT o FROM RoomOccupancy o WHERE o.room.id IN :roomIds AND o.endAt IS NULL AND o.expectedEndAt > :now")
     List<RoomOccupancy> findActiveNonExpiredByRoomIds(@Param("roomIds") List<Long> roomIds, @Param("now") LocalDateTime now);
 
+    @EntityGraph(attributePaths = {"room", "room.floor", "user"})
     @Query("SELECT o FROM RoomOccupancy o WHERE o.user.id = :userId AND o.endAt IS NULL AND o.expectedEndAt > :now")
     Optional<RoomOccupancy> findActiveOccupancyByUserId(@Param("userId") String userId, @Param("now") LocalDateTime now);
 
+    @EntityGraph(attributePaths = {"room", "room.floor", "user"})
     @Query("SELECT o FROM RoomOccupancy o WHERE o.endAt IS NULL AND o.expectedEndAt <= :now")
     List<RoomOccupancy> findExpiredOccupancies(@Param("now") LocalDateTime now);
 
@@ -34,12 +40,14 @@ public interface RoomOccupancyRepository extends JpaRepository<RoomOccupancy, Lo
     SELECT o FROM RoomOccupancy o
     JOIN FETCH o.room r
     JOIN FETCH r.floor
+    JOIN FETCH o.user
     WHERE o.user.id IN :userIds
     AND o.endAt IS NULL
     AND o.expectedEndAt > :now
     """)
     List<RoomOccupancy> findActiveNonExpiredByUserIds(@Param("userIds") List<String> userIds, @Param("now") LocalDateTime now);
 
+    @EntityGraph(attributePaths = {"room", "room.floor", "user"})
     @Query("SELECT o FROM RoomOccupancy o WHERE o.endAt IS NULL AND o.notifiedTenMin = false AND o.expectedEndAt BETWEEN :now AND :windowEnd")
     List<RoomOccupancy> findReservationsNeedingNotification(@Param("now") LocalDateTime now, @Param("windowEnd") LocalDateTime windowEnd);
 }
