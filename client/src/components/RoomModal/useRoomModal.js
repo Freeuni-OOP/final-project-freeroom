@@ -14,6 +14,13 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
     const [messages, setMessages] = useState([]);
     const [isAuthorized, setIsAuthorized] = useState(null);
     const [messageText, setMessageText] = useState('');
+    const [prevRoomId, setPrevRoomId] = useState(roomId);
+
+    if (roomId !== prevRoomId) {
+        setPrevRoomId(roomId);
+        setIsAuthorized(null);
+        setMessages([]);
+    }
 
     const formatTime = (iso) => {
         if (!iso) return null;
@@ -59,8 +66,10 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
 
     useEffect(() => {
         if (roomId) {
-            setIsAuthorized(null);
-            loadChat();
+            const timeout = setTimeout(() => {
+                loadChat();
+            }, 0);
+            return () => clearTimeout(timeout);
         }
     }, [roomId, loadChat]);
 

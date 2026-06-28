@@ -52,7 +52,7 @@ class ChatServiceTest {
         Long roomId = 1L;
         String userId = "authorized-user";
         List<ChatMessageDto> expectedMessages = List.of(
-                new ChatMessageDto("Nick", "test@freeuni.edu.ge", "Hello", MessageType.TEXT, LocalDateTime.now())
+                new ChatMessageDto(1L, "authorized-user", "Nick", "test@freeuni.edu.ge", "Hello", MessageType.TEXT, LocalDateTime.now())
         );
 
         when(roomAccessRepository.existsByRoomIdAndUserId(roomId, userId)).thenReturn(true);
@@ -141,11 +141,43 @@ class ChatServiceTest {
         when(roomAccessRepository.findByRoomIdAndUserId(roomId, adminId)).thenReturn(Optional.of(adminAccess));
         when(roomAccessRepository.existsByRoomIdAndUserId(roomId, targetUserId)).thenReturn(false);
         when(userRepository.findById(adminId)).thenReturn(Optional.of(adminUser));
+        when(chatRepository.findFirstByRoomIdAndAuthorUser_IdAndMessageTypeOrderBySendingTimeDesc(roomId, targetUserId, MessageType.REQUEST))
+                .thenReturn(Optional.empty());
 
         chatService.approveJoinRequest(roomId, adminId, targetUserId);
 
         verify(roomAccessRepository, times(1)).save(any(RoomAccess.class));
         verify(chatRepository, times(1)).save(any(Chat.class));
+    }
+
+    @Test
+    void rejectJoinRequest_WhenApproverIsNotAdmin_ThrowsSecurityException() {
+        Long roomId = 1L;
+        String adminId = "fake-admin-id";
+        String targetUserId = "target-user-id";
+        RoomAccess regularAccess = new RoomAccess(roomId, adminId, false);
+
+        when(roomAccessRepository.findByRoomIdAndUserId(roomId, adminId)).thenReturn(Optional.of(regularAccess));
+
+        assertThrows(SecurityException.class, () -> chatService.rejectJoinRequest(roomId, adminId, targetUserId));
+        verify(chatRepository, never()).delete(any(Chat.class));
+    }
+
+    @Test
+    void rejectJoinRequest_WhenApproverIsAdmin_DeletesJoinRequest() {
+        Long roomId = 1L;
+        String adminId = "real-admin-id";
+        String targetUserId = "target-user-id";
+        RoomAccess adminAccess = new RoomAccess(roomId, adminId, true);
+        Chat requestChat = new Chat();
+
+        when(roomAccessRepository.findByRoomIdAndUserId(roomId, adminId)).thenReturn(Optional.of(adminAccess));
+        when(chatRepository.findFirstByRoomIdAndAuthorUser_IdAndMessageTypeOrderBySendingTimeDesc(roomId, targetUserId, MessageType.REQUEST))
+                .thenReturn(Optional.of(requestChat));
+
+        chatService.rejectJoinRequest(roomId, adminId, targetUserId);
+
+        verify(chatRepository, times(1)).delete(requestChat);
     }
 
     @Test
