@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context';
+import { fetchProfile, updateProfile } from '@/services/api/userService';
 import { getNotificationPreference, updateNotificationPreference, generateTelegramLink } from '@/services/api/endpoints';
 
 const UNIVERSITY_BY_DOMAIN = {
@@ -25,14 +26,24 @@ const useProfilePage = () => {
   const [telegramLinked, setTelegramLinked] = useState(false);
   const [preferenceLoading, setPreferenceLoading] = useState(true);
 
+  const [bio, setBio] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [photoUrl, setPhotoUrl] = useState('');
+
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const hasFetched = useRef(false);
+
   useEffect(() => {
     getNotificationPreference()
-      .then(res => {
-        setPreference(res.data.preference);
-        setTelegramLinked(res.data.telegramLinked);
-      })
-      .finally(() => setPreferenceLoading(false))
-      .catch(() => setPreferenceLoading(false));
+        .then(res => {
+          setPreference(res.data.preference);
+          setTelegramLinked(res.data.telegramLinked);
+        })
+        .finally(() => setPreferenceLoading(false))
+        .catch(() => setPreferenceLoading(false));
   }, []);
 
   const handlePreferenceChange = (newPreference) => {
@@ -43,35 +54,126 @@ const useProfilePage = () => {
       setTelegramLinked(false);
     }
     updateNotificationPreference(newPreference)
-      .then(res => {
-        setPreference(res.data.preference);
-        setTelegramLinked(res.data.telegramLinked);
-      })
-      .catch(() => {
-        setPreference(previousPreference);
-        setTelegramLinked(previousTelegramLinked);
-      });
+        .then(res => {
+          setPreference(res.data.preference);
+          setTelegramLinked(res.data.telegramLinked);
+        })
+        .catch(() => {
+          setPreference(previousPreference);
+          setTelegramLinked(previousTelegramLinked);
+        });
   };
 
   const handleTelegramLink = () => {
     generateTelegramLink()
-      .then(res => {
-        window.open(res.data.deepLink, '_blank', 'noopener,noreferrer');
-      });
+        .then(res => {
+          window.open(res.data.deepLink, '_blank', 'noopener,noreferrer');
+        });
   };
 
   const email = user?.email || '';
   const university = getUniversity(email);
   const fallbackName = university ? `${university}-ს სტუდენტი` : 'სტუდენტი';
-  const displayName = user?.displayName?.trim() || fallbackName;
 
-  const photoUrl = user?.photoURL || '';
+  const resolvedDisplayName = displayName || fallbackName;
   const showPhoto = Boolean(photoUrl) && !photoFailed;
-  const initial = getInitial(user?.displayName, email);
+  const initial = getInitial(resolvedDisplayName, email);
 
   const handlePhotoError = () => setPhotoFailed(true);
 
-  return { displayName, email, university, showPhoto, photoUrl, initial, handlePhotoError, preference, telegramLinked, preferenceLoading, handlePreferenceChange, handleTelegramLink };
+  useEffect(() => {
+    const getBackendProfile = async () => {
+      if (!user) return;
+      if (hasFetched.current) {
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const data = await fetchProfile();
+        if (data) {
+          setBio(data.bio || '');
+          setDisplayName(data.displayName || '');
+          setPhotoUrl(data.photoUrl || '');
+          hasFetched.current = true;
+        }
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    getBackendProfile();
+  }, [user]);
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    setIsSaving(true);
+
+    try {
+      const formData = new FormData();
+      if (bio) formData.append('bio', bio);
+      if (displayName) formData.append('displayName', displayName);
+      if (selectedFile) formData.append('file', selectedFile);
+
+      const data = await updateProfile(formData);
+
+      if (data) {
+        setBio(data.bio || '');
+        setDisplayName(data.displayName || '');
+        setPhotoUrl(data.photoUrl || '');
+        setSelectedFile(null);
+        alert('პროფილი წარმატებით განახლდა!');
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert('პროფილის განახლება ვერ მოხერხდა.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleFileChange = (file) => {
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('გთხოვთ აირჩიოთ მხოლოდ სურათის ფაილები!');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('სურათის ზომა არ უნდა აღემატებოდეს 5 MB-ს.');
+      return;
+    }
+
+    setSelectedFile(file);
+    setPhotoFailed(false);
+
+    setPhotoUrl(URL.createObjectURL(file));
+  };
+
+  return {
+    displayName,
+    setDisplayName,
+    photoUrl,
+    setPhotoUrl,
+    resolvedDisplayName,
+    email,
+    university,
+    showPhoto,
+    initial,
+    handlePhotoError,
+    bio,
+    setBio,
+    isSaving,
+    isUploading: isSaving && !!selectedFile,
+    isLoading,
+    handleFileUpload: handleFileChange,
+    handleSaveProfile,
+    preference,
+    telegramLinked,
+    preferenceLoading,
+    handlePreferenceChange,
+    handleTelegramLink
+  };
 };
 
 export default useProfilePage;

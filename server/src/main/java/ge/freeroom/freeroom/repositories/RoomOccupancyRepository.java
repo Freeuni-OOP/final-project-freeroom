@@ -12,19 +12,23 @@ import java.util.List;
 import java.util.Optional;
 
 public interface RoomOccupancyRepository extends JpaRepository<RoomOccupancy, Long> {
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT o FROM RoomOccupancy o WHERE o.room.id = :roomId AND o.endAt IS NULL AND o.expectedEndAt > :now")
-    Optional<RoomOccupancy> findFirstByRoomIdAndEndAtIsNull(@Param("roomId") Long roomId, @Param("now") LocalDateTime now);
+    @Query("SELECT o FROM RoomOccupancy o WHERE o.room.id = :roomId AND o.endAt IS NULL")
+    Optional<RoomOccupancy> findFirstByRoomIdAndEndAtIsNull(@Param("roomId") Long roomId);
+
     List<RoomOccupancy> findByRoomIdOrderByCreatedAtDesc(Long roomId);
+
     List<RoomOccupancy> findByRoomIdInAndEndAtIsNull(List<Long> roomIds);
 
-    // added this query to replace the last one(will leave that just in case)
-    // this one also checks if expected time is not expired, so we don't return occupancies that are already expired
     @Query("SELECT o FROM RoomOccupancy o WHERE o.room.id IN :roomIds AND o.endAt IS NULL AND o.expectedEndAt > :now")
     List<RoomOccupancy> findActiveNonExpiredByRoomIds(@Param("roomIds") List<Long> roomIds, @Param("now") LocalDateTime now);
 
     @Query("SELECT o FROM RoomOccupancy o WHERE o.user.id = :userId AND o.endAt IS NULL AND o.expectedEndAt > :now")
     Optional<RoomOccupancy> findActiveOccupancyByUserId(@Param("userId") String userId, @Param("now") LocalDateTime now);
+
+    @Query("SELECT o FROM RoomOccupancy o WHERE o.endAt IS NULL AND o.expectedEndAt <= :now")
+    List<RoomOccupancy> findExpiredOccupancies(@Param("now") LocalDateTime now);
 
     @Query("""
     SELECT o FROM RoomOccupancy o
@@ -35,6 +39,7 @@ public interface RoomOccupancyRepository extends JpaRepository<RoomOccupancy, Lo
     AND o.expectedEndAt > :now
     """)
     List<RoomOccupancy> findActiveNonExpiredByUserIds(@Param("userIds") List<String> userIds, @Param("now") LocalDateTime now);
+
     @Query("SELECT o FROM RoomOccupancy o WHERE o.endAt IS NULL AND o.notifiedTenMin = false AND o.expectedEndAt BETWEEN :now AND :windowEnd")
     List<RoomOccupancy> findReservationsNeedingNotification(@Param("now") LocalDateTime now, @Param("windowEnd") LocalDateTime windowEnd);
 }

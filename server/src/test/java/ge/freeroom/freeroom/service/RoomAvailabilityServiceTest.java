@@ -24,7 +24,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -67,7 +66,7 @@ public class RoomAvailabilityServiceTest {
 
     @Test
     void cancelOccupancy_Success_WhenUserOwnsOccupancy() {
-        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(eq(1L), any(LocalDateTime.class)))
+        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(1L))
                 .thenReturn(Optional.of(validOccupancy));
 
         when(roomOccupancyRepository.save(any(RoomOccupancy.class))).thenReturn(validOccupancy);
@@ -85,7 +84,7 @@ public class RoomAvailabilityServiceTest {
 
     @Test
     void cancelOccupancy_ThrowsException_WhenNoActiveOccupancy() {
-        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(eq(1L), any(LocalDateTime.class)))
+        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(1L))
                 .thenReturn(Optional.empty());
 
         IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
@@ -102,7 +101,7 @@ public class RoomAvailabilityServiceTest {
         User maliciousUser = new User();
         maliciousUser.setId("hackerKala");
 
-        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(eq(1L), any(LocalDateTime.class)))
+        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(1L))
                 .thenReturn(Optional.of(validOccupancy));
 
         AccessDeniedException exception = assertThrows(AccessDeniedException.class, () -> {
@@ -140,13 +139,19 @@ public class RoomAvailabilityServiceTest {
         user.setId("uid");
         user.setNotificationPreference(NotificationPreference.EMAIL);
         when(userRepository.findById("uid")).thenReturn(Optional.of(user));
+
         Room room = new Room();
         room.setId(1L);
         room.setRoomNumber(101);
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
+
+        // Fixed: Updated to match the pessimistic lock query method used in the service
+        when(roomRepository.findByIdWithLock(1L)).thenReturn(Optional.of(room));
+
         when(roomOccupancyRepository.findActiveOccupancyByUserId(eq("uid"), any(LocalDateTime.class))).thenReturn(Optional.empty());
         when(lectureRepository.findActiveLecturesByRoomIds(any(), any(LocalDateTime.class))).thenReturn(Collections.emptyList());
-        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(eq(1L), any(LocalDateTime.class))).thenReturn(Optional.empty());
+
+        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(eq(1L))).thenReturn(Optional.empty());
+
         RoomOccupancy saved = new RoomOccupancy();
         saved.setId(1L);
         saved.setRoom(room);
@@ -154,6 +159,7 @@ public class RoomAvailabilityServiceTest {
         saved.setStartAt(LocalDateTime.now());
         saved.setExpectedEndAt(LocalDateTime.now().plusMinutes(60));
         when(roomOccupancyRepository.save(any(RoomOccupancy.class))).thenReturn(saved);
+
         ReserveRoomResponseDto result = roomAvailabilityService.reserveRoom("uid", 1L, 60L);
         assertNotNull(result);
     }

@@ -11,6 +11,7 @@ import ge.freeroom.freeroom.repositories.RoomOccupancyRepository;
 import ge.freeroom.freeroom.repositories.RoomRepository;
 import ge.freeroom.freeroom.repositories.UserRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -26,6 +27,9 @@ public class RoomAvailabilityService {
     private final LectureRepository lectureRepository;
     private final UserRepository userRepository;
     private final RoomOccupancyRepository roomOccupancyRepository;
+
+    @Autowired
+    private ChatService chatService;
 
     public RoomAvailabilityService(RoomRepository roomRepository, LectureRepository lectureRepository, UserRepository userRepository, RoomOccupancyRepository roomOccupancyRepository) {
         this.roomRepository = roomRepository;
@@ -54,7 +58,7 @@ public class RoomAvailabilityService {
                 .collect(Collectors.toMap(l -> l.getRoom().getId(), l -> l, (a, b) -> a));
 
         List<RoomOccupancy> activeOccupancies = roomIds.isEmpty() ? List.of() :
-                    roomOccupancyRepository.findActiveNonExpiredByRoomIds(roomIds, now);
+                roomOccupancyRepository.findActiveNonExpiredByRoomIds(roomIds, now);
 
         Map<Long, RoomOccupancy> activeOccupancyByRoomId = activeOccupancies.stream()
                 .collect(Collectors.toMap(o -> o.getRoom().getId(), o -> o, (a, b) -> a));
@@ -125,12 +129,12 @@ public class RoomAvailabilityService {
             throw new IllegalStateException("Telegram არ არის დაკავშირებული. პროფილზე დაასრულეთ Telegram-ის დაყენება.");
         }
 
-        Room room = roomRepository.findById(roomId)
+        // Updated to use the pessimistic lock method to prevent dual-booking gaps
+        Room room = roomRepository.findByIdWithLock(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Room not Found"));
 
         LocalDateTime nowTime = LocalDateTime.now();
 
-        // only one occupancy oer user at a time
         Optional<RoomOccupancy> existingUserOccupancy = roomOccupancyRepository
                 .findActiveOccupancyByUserId(userId, nowTime);
         if (existingUserOccupancy.isPresent()) {
@@ -148,9 +152,18 @@ public class RoomAvailabilityService {
             throw new IllegalStateException("Room has an active lecture");
         }
 
-        Optional<RoomOccupancy> existing = roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(roomId, nowTime);
-        if(existing.isPresent()) {
-            throw new IllegalStateException("room is already occupied");
+        Optional<RoomOccupancy> existing = roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(roomId);
+        if (existing.isPresent()) {
+            RoomOccupancy occ = existing.get();
+            if (occ.getExpectedEndAt().isAfter(nowTime)) {
+                throw new IllegalStateException("room is already occupied");
+            } else {
+                occ.setEndAt(occ.getExpectedEndAt());
+                roomOccupancyRepository.save(occ);
+                if (chatService != null) {
+                    chatService.clearRoomChat(roomId);
+                }
+            }
         }
 
         long minutes = (durationMinutes != null) ? durationMinutes : 60;
@@ -160,7 +173,7 @@ public class RoomAvailabilityService {
         occupancy.setUser(user);
         occupancy.setStartAt(nowTime);
         occupancy.setExpectedEndAt(nowTime.plusMinutes(minutes));
-        occupancy.setEndAt(null); // marks that it is active
+        occupancy.setEndAt(null);
 
         RoomOccupancy saved = roomOccupancyRepository.save(occupancy);
 
@@ -171,6 +184,10 @@ public class RoomAvailabilityService {
         response.setStartTime(saved.getStartAt());
         response.setExpectedEndTime(saved.getExpectedEndAt());
 
+        if (chatService != null) {
+            chatService.initializeRoomBooker(roomId, userId);
+        }
+
         return response;
     }
 
@@ -179,13 +196,22 @@ public class RoomAvailabilityService {
         LocalDateTime now = LocalDateTime.now();
 
         Optional<RoomOccupancy> occupancyOpt = roomOccupancyRepository
-                .findFirstByRoomIdAndEndAtIsNull(roomId, now);
+                .findFirstByRoomIdAndEndAtIsNull(roomId);
 
         if (occupancyOpt.isEmpty()) {
             throw new IllegalStateException("No active occupancy for this room");
         }
 
         RoomOccupancy occ = occupancyOpt.get();
+
+        if (occ.getExpectedEndAt().isBefore(now) || occ.getExpectedEndAt().isEqual(now)) {
+            occ.setEndAt(occ.getExpectedEndAt());
+            roomOccupancyRepository.save(occ);
+            if (chatService != null) {
+                chatService.clearRoomChat(roomId);
+            }
+            throw new IllegalStateException("No active occupancy for this room");
+        }
 
         if (!occ.getUser().getId().equals(userId)) {
             throw new org.springframework.security.access.AccessDeniedException("You can only cancel your own occupancy");
@@ -200,6 +226,10 @@ public class RoomAvailabilityService {
         response.setRoomNumber(occ.getRoom().getRoomNumber());
         response.setCancelledAt(occ.getEndAt());
         response.setMessage("Occupancy cancelled successfully");
+
+        if (chatService != null) {
+            chatService.clearRoomChat(roomId);
+        }
 
         return response;
     }

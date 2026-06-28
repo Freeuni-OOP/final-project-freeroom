@@ -5,37 +5,46 @@ import ge.freeroom.freeroom.dto.NotificationPreferenceResponseDto;
 import ge.freeroom.freeroom.dto.TelegramLinkResponseDto;
 import ge.freeroom.freeroom.dto.UpdateNotificationPreferenceRequest;
 import ge.freeroom.freeroom.entities.User;
+import ge.freeroom.freeroom.service.UserService;
 import ge.freeroom.freeroom.repositories.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
 
 @RestController
 @RequestMapping("/user")
 public class UserController {
+
+    private final UserService userService;
     private final UserRepository userRepository;
 
-    public UserController(UserRepository userRepository) {
+    public UserController(UserService userService, UserRepository userRepository) {
+        this.userService = userService;
         this.userRepository = userRepository;
     }
 
-    @PostMapping("/sync")
-    public ResponseEntity<Void> syncUser(HttpServletRequest request, Principal principal) {
+    @GetMapping
+    public ResponseEntity<User> getUser(HttpServletRequest request) {
         FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
-        String uid = token.getUid();
+        User user = userService.getOrCreateUser(token);
+        return ResponseEntity.ok(user);
+    }
 
-        if (!userRepository.existsById(uid)) {
-            User user = new User();
-            user.setId(uid);
-            user.setEmail(token.getEmail());
-            user.setDisplayName(token.getName());
-            user.setPhotoUrl(token.getPicture());
-            userRepository.save(user);
-        }
+    @PatchMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<User> updateUser(
+            HttpServletRequest request,
+            @RequestParam(value = "displayName", required = false) String displayName,
+            @RequestParam(value = "bio", required = false) String bio,
+            @RequestParam(value = "file", required = false) MultipartFile file) throws Exception {
 
-        return ResponseEntity.ok().build();
+        FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
+
+        User updatedUser = userService.updateUserProfile(token.getUid(), displayName, bio, file);
+        return ResponseEntity.ok(updatedUser);
     }
 
     @PatchMapping("/notification-preference")

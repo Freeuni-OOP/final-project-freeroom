@@ -1,5 +1,6 @@
 package ge.freeroom.freeroom.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,14 +26,17 @@ public class RoomOccupancy {
     @JoinColumn(name = "room_id")
     private Room room;
 
+    @JsonIgnore
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
     @Column(name = "start_at", nullable = false)
     private LocalDateTime startAt;
+
     @Column(name = "expected_end_at", nullable = false)
     private LocalDateTime expectedEndAt;
+
     @Column(name = "end_at")
     private LocalDateTime endAt; // actual checkout, use endAt == null to check active status
 
