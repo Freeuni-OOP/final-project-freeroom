@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { logout } from '@/services/firebase';
 
@@ -14,6 +14,23 @@ const useNavbar = () => {
     const { pathname } = useLocation();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [showFeatures, setShowFeatures] = useState(false);
+    const searchContainerRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+                setShowFeatures(false);
+            }
+        };
+
+        if (showFeatures) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showFeatures]);
 
     const goTo = (path) => {
         setIsMenuOpen(false);
@@ -29,7 +46,10 @@ const useNavbar = () => {
     const toggleMenu = () => setIsMenuOpen((prev) => !prev);
     const closeMenu = () => setIsMenuOpen(false);
 
-    const toggleFeatures = () => setShowFeatures((prev) => !prev);
+    const toggleFeatures = (e) => {
+        if (e) e.stopPropagation();
+        setShowFeatures((prev) => !prev);
+    };
     const closeFeatures = () => setShowFeatures(false);
 
     return {
@@ -42,7 +62,8 @@ const useNavbar = () => {
         closeMenu,
         showFeatures,
         toggleFeatures,
-        closeFeatures
+        closeFeatures,
+        searchContainerRef
     };
 };
 
