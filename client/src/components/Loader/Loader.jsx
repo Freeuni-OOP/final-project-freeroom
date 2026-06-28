@@ -1,4 +1,4 @@
-import React from 'react';
+
 import freeuniLogo from '@/assets/freeuni-logo.png';
 import agruniLogo from '@/assets/agruni-logo.png';
 

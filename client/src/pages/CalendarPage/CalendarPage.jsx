@@ -1,4 +1,4 @@
-import React from 'react';
+
 import useCalendarPage from './useCalendarPage';
 import { LectureCard, Loader } from '@/components';
 

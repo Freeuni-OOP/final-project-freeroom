@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 export default function LectureCard({ lecture, getLectureCardData }) {
     const { startTime, endTime, isHappeningNow } = getLectureCardData(lecture);

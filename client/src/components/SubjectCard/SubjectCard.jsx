@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 export default function SubjectCard({ subject, isSaved, onToggle }) {
     return (

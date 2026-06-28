@@ -1,4 +1,4 @@
-import React from 'react';
+
 import useSubjectsPage from './useSubjectsPage';
 import { SubjectCard, Loader } from '@/components';
 

@@ -31,8 +31,16 @@ public class NotificationSchedulerTest {
     @Mock
     private TelegramBotService telegramBotService;
 
+    @Mock
+    private TimeService timeService;
+
     @InjectMocks
     private NotificationScheduler scheduler;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        lenient().when(timeService.now()).thenReturn(java.time.LocalDateTime.now());
+    }
 
     private RoomOccupancy buildReservation(User user) {
         Room room = new Room();
