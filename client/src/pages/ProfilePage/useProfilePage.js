@@ -25,6 +25,7 @@ const useProfilePage = () => {
   const [preference, setPreference] = useState('NONE');
   const [telegramLinked, setTelegramLinked] = useState(false);
   const [preferenceLoading, setPreferenceLoading] = useState(true);
+  const preferenceTimer = useRef(null);
 
   const [bio, setBio] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -53,15 +54,20 @@ const useProfilePage = () => {
     if (newPreference !== 'TELEGRAM') {
       setTelegramLinked(false);
     }
-    updateNotificationPreference(newPreference)
-        .then(res => {
-          setPreference(res.data.preference);
-          setTelegramLinked(res.data.telegramLinked);
-        })
-        .catch(() => {
-          setPreference(previousPreference);
-          setTelegramLinked(previousTelegramLinked);
-        });
+    if (preferenceTimer.current) {
+      clearTimeout(preferenceTimer.current);
+    }
+    preferenceTimer.current = setTimeout(() => {
+      updateNotificationPreference(newPreference)
+          .then(res => {
+            setPreference(res.data.preference);
+            setTelegramLinked(res.data.telegramLinked);
+          })
+          .catch(() => {
+            setPreference(previousPreference);
+            setTelegramLinked(previousTelegramLinked);
+          });
+    }, 400);
   };
 
   const handleTelegramLink = () => {

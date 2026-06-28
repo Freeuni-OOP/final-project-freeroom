@@ -3,6 +3,7 @@ package ge.freeroom.freeroom.controllers;
 import ge.freeroom.freeroom.entities.User;
 import ge.freeroom.freeroom.repositories.UserRepository;
 import ge.freeroom.freeroom.service.UserService;
+import ge.freeroom.freeroom.security.RateLimiter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -28,6 +29,9 @@ public class UserControllerTest {
 
     @MockitoBean
     private UserRepository userRepository;
+
+    @MockitoBean
+    private RateLimiter rateLimiter;
 
     @Test
     void getUser_ReturnsOk() throws Exception {

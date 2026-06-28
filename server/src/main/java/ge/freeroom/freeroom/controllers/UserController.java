@@ -6,6 +6,7 @@ import ge.freeroom.freeroom.dto.TelegramLinkResponseDto;
 import ge.freeroom.freeroom.dto.UpdateNotificationPreferenceRequest;
 import ge.freeroom.freeroom.entities.User;
 import ge.freeroom.freeroom.service.UserService;
+import ge.freeroom.freeroom.security.RateLimiter;
 import ge.freeroom.freeroom.repositories.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.MediaType;
@@ -21,10 +22,12 @@ public class UserController {
 
     private final UserService userService;
     private final UserRepository userRepository;
+    private final RateLimiter rateLimiter;
 
-    public UserController(UserService userService, UserRepository userRepository) {
+    public UserController(UserService userService, UserRepository userRepository, RateLimiter rateLimiter) {
         this.userService = userService;
         this.userRepository = userRepository;
+        this.rateLimiter = rateLimiter;
     }
 
     @GetMapping
@@ -51,6 +54,9 @@ public class UserController {
     public ResponseEntity<NotificationPreferenceResponseDto> updateNotificationPreference(
             @RequestBody UpdateNotificationPreferenceRequest request,
             Principal principal) {
+        if (!rateLimiter.allow("pref:" + principal.getName(), 10, 60000)) {
+            return ResponseEntity.status(429).build();
+        }
         String uid = principal.getName();
         User user = userRepository.findById(uid)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
