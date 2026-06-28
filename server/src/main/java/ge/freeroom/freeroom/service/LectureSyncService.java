@@ -8,6 +8,7 @@ import ge.freeroom.freeroom.repositories.FloorRepository;
 import ge.freeroom.freeroom.repositories.LectureRepository;
 import ge.freeroom.freeroom.repositories.RoomRepository;
 import ge.freeroom.freeroom.repositories.SubjectRepository;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -28,13 +29,15 @@ public class LectureSyncService {
     private final FloorRepository floorRepository;
     private final LectureRepository lectureRepository;
     private final SubjectRepository subjectRepository;
+    private final JdbcTemplate jdbcTemplate;
 
-    public LectureSyncService(GoogleCalendarService calendarService, RoomRepository roomRepository, FloorRepository floorRepository, LectureRepository lectureRepository, SubjectRepository subjectRepository) {
+    public LectureSyncService(GoogleCalendarService calendarService, RoomRepository roomRepository, FloorRepository floorRepository, LectureRepository lectureRepository, SubjectRepository subjectRepository, org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
         this.calendarService = calendarService;
         this.roomRepository = roomRepository;
         this.floorRepository = floorRepository;
         this.lectureRepository = lectureRepository;
         this.subjectRepository = subjectRepository;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     public void syncAllRooms() {
@@ -90,8 +93,8 @@ public class LectureSyncService {
     }
 
     private List<Lecture> fetchLecturesForRooms(List<Integer> roomNumbers, Map<Integer, Room> roomMap) {
-        LocalDateTime start = LocalDate.of(2026, 6, 2).atStartOfDay();
-        LocalDateTime end = LocalDate.of(2026, 6, 2).atTime(23, 59, 59);
+        LocalDateTime start = LocalDate.of(2026, 6, 1).atStartOfDay(); // Monday
+        LocalDateTime end = LocalDate.of(2026, 6, 7).atTime(23, 59, 59); // Sunday
 
         return roomNumbers.parallelStream()
                 .flatMap(roomNum -> {
@@ -130,22 +133,57 @@ public class LectureSyncService {
 
         List<Lecture> finalLectures = new ArrayList<>(mergedLectures.values());
 
+        System.out.println("--- Caching subjects...");
+        Map<String, Subject> subjectCache = new HashMap<>();
+        for (Subject sub : subjectRepository.findAll()) {
+            subjectCache.put(generateSubjectKey(sub), sub);
+        }
+
         for (Lecture lec : finalLectures) {
-            lec.setSubject(getOrCreateSubject(lec.getSubject()));
+            Subject rawSub = lec.getSubject();
+            String key = generateSubjectKey(rawSub);
+            
+            if (subjectCache.containsKey(key)) {
+                lec.setSubject(subjectCache.get(key));
+            } else {
+                Subject saved = subjectRepository.save(rawSub);
+                subjectCache.put(key, saved);
+                lec.setSubject(saved);
+            }
         }
 
         lectureRepository.deleteAllInBatch();
-        lectureRepository.saveAll(finalLectures);
+        
+        System.out.println("--- Executing fast batch insert for " + finalLectures.size() + " lectures...");
+        jdbcTemplate.batchUpdate(
+            "insert into lecture (end_at, event_external_id, fetched_at, recurring, room_id, start_at, subject_id) values (?, ?, ?, ?, ?, ?, ?)",
+            new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+                @Override
+                public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                    Lecture lec = finalLectures.get(i);
+                    ps.setTimestamp(1, java.sql.Timestamp.valueOf(lec.getEndAt()));
+                    ps.setString(2, lec.getEventExternalId());
+                    ps.setTimestamp(3, java.sql.Timestamp.valueOf(lec.getFetchedAt()));
+                    ps.setBoolean(4, lec.isRecurring());
+                    ps.setLong(5, lec.getRoom().getId());
+                    ps.setTimestamp(6, java.sql.Timestamp.valueOf(lec.getStartAt()));
+                    ps.setLong(7, lec.getSubject().getId());
+                }
+
+                @Override
+                public int getBatchSize() {
+                    return finalLectures.size();
+                }
+            }
+        );
         System.out.println("--- DB Truncate & Insert completed!");
     }
 
-    private Subject getOrCreateSubject(Subject parsedSubject) {
-        return subjectRepository.findFirstByTitleAndTypeAndGroupNumberAndLecturer(
-                parsedSubject.getTitle(), 
-                parsedSubject.getType(), 
-                parsedSubject.getGroupNumber(), 
-                parsedSubject.getLecturer()
-        ).orElseGet(() -> subjectRepository.save(parsedSubject));
+    private String generateSubjectKey(Subject s) {
+        return String.valueOf(s.getTitle()) + "|" + 
+               String.valueOf(s.getType()) + "|" + 
+               String.valueOf(s.getGroupNumber()) + "|" + 
+               String.valueOf(s.getLecturer());
     }
 
     public static Subject parseSubject(String rawTitle) {
