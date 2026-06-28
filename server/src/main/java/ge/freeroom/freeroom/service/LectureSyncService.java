@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.HashMap;
 
 @Service
 public class LectureSyncService {
@@ -104,12 +105,37 @@ public class LectureSyncService {
 
     private void saveLecturesAndSubjects(List<Lecture> allFetchedLectures) {
         System.out.println("--- Starting DB Truncate & Insert...");
+
+        Map<String, Lecture> mergedLectures = new HashMap<>();
         for (Lecture lec : allFetchedLectures) {
+            String key = lec.getRoom().getId() + "_" + lec.getStartAt() + "_" + lec.getEndAt();
+            if (mergedLectures.containsKey(key)) {
+                Lecture existing = mergedLectures.get(key);
+                Subject existingSub = existing.getSubject();
+                Subject newSub = lec.getSubject();
+                
+                String existingGroup = existingSub.getGroupNumber();
+                String newGroup = newSub.getGroupNumber();
+                if (newGroup != null && !newGroup.isEmpty()) {
+                    if (existingGroup == null || existingGroup.isEmpty()) {
+                        existingSub.setGroupNumber(newGroup);
+                    } else if (!existingGroup.contains(newGroup)) {
+                        existingSub.setGroupNumber(existingGroup + ", " + newGroup);
+                    }
+                }
+            } else {
+                mergedLectures.put(key, lec);
+            }
+        }
+
+        List<Lecture> finalLectures = new ArrayList<>(mergedLectures.values());
+
+        for (Lecture lec : finalLectures) {
             lec.setSubject(getOrCreateSubject(lec.getSubject()));
         }
 
         lectureRepository.deleteAllInBatch();
-        lectureRepository.saveAll(allFetchedLectures);
+        lectureRepository.saveAll(finalLectures);
         System.out.println("--- DB Truncate & Insert completed!");
     }
 

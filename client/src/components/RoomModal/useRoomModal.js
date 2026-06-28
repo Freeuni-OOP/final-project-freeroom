@@ -38,6 +38,7 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
             lecturer: roomData?.currentLecture?.organizer ?? null,
             startTime: formatTime(roomData?.currentLecture?.startAt),
             endTime: formatTime(roomData?.currentLecture?.endAt),
+            groupNumber: roomData?.currentLecture?.groupNumber ?? null,
             reservedBy: isMyOccupancy
                 ? (roomData?.currentOccupancy?.reserverDisplayName ?? 'თქვენ')
                 : "Not Your Friend",
