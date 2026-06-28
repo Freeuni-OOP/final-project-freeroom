@@ -53,13 +53,19 @@ export default function CalendarPage() {
                             </div>
 
                             <div className="space-y-4">
-                                {group.lectures.map((lec, idx) => (
-                                    <LectureCard
-                                        key={`${lec.title}-${lec.startAt}-${idx}`}
-                                        lecture={lec}
-                                        getLectureCardData={getLectureCardData}
-                                    />
-                                ))}
+                                {group.lectures.length === 0 ? (
+                                    <div className="py-4 text-center text-gray-400 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+                                        ამ დღეს ლექციები არ გაქვთ
+                                    </div>
+                                ) : (
+                                    group.lectures.map((lec, idx) => (
+                                        <LectureCard
+                                            key={`${lec.title}-${lec.startAt}-${idx}`}
+                                            lecture={lec}
+                                            getLectureCardData={getLectureCardData}
+                                        />
+                                    ))
+                                )}
                             </div>
                         </div>
                     ))}

@@ -25,20 +25,39 @@ export default function useCalendarPage() {
     }, []);
 
     const groupedLectures = useMemo(() => {
+        if (!lectures || lectures.length === 0) return [];
+
+        const earliestDate = new Date(Math.min(...lectures.map(l => new Date(l.startAt))));
+        const dayOfWeek = earliestDate.getDay() || 7; // 1-7 (Mon-Sun)
+        const monday = new Date(earliestDate);
+        monday.setDate(earliestDate.getDate() - dayOfWeek + 1);
+        monday.setHours(0, 0, 0, 0);
+
         const groups = {};
+        
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(monday);
+            date.setDate(monday.getDate() + i);
+            const dateKey = date.toISOString().split('T')[0];
+            groups[dateKey] = {
+                dateObj: date,
+                lectures: []
+            };
+        }
 
         lectures.forEach(lecture => {
             if (!lecture.startAt) return;
             const date = new Date(lecture.startAt);
             const dateKey = date.toISOString().split('T')[0];
 
-            if (!groups[dateKey]) {
+            if (groups[dateKey]) {
+                groups[dateKey].lectures.push(lecture);
+            } else {
                 groups[dateKey] = {
                     dateObj: date,
-                    lectures: []
+                    lectures: [lecture]
                 };
             }
-            groups[dateKey].lectures.push(lecture);
         });
 
         const sortedDates = Object.keys(groups).sort();
