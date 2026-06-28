@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @NoArgsConstructor
@@ -57,6 +59,22 @@ public class User {
 
     @Column(name = "bio", columnDefinition = "TEXT")
     private String bio;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "user_subjects",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "subject_id")
+    )
+    private Set<Subject> savedSubjects = new HashSet<>();
+
+    public User(String id, String email, String displayName, String photoUrl) {
+        this.id = id;
+        this.email = email;
+        this.displayName = displayName;
+        this.photoUrl = photoUrl;
+        createdAt = updatedAt = LocalDateTime.now();
+    }
 
     @PrePersist
     protected void onCreate() {

@@ -15,6 +15,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
+import java.util.Set;
+import java.util.List;
+import ge.freeroom.freeroom.entities.Subject;
+import ge.freeroom.freeroom.dto.LectureSummaryDto;
 
 @RestController
 @RequestMapping("/user")
@@ -93,5 +97,31 @@ public class UserController {
         TelegramLinkResponseDto response = new TelegramLinkResponseDto();
         response.setDeepLink("https://t.me/FreeRoom_Notify_bot?start=" + token);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/subjects")
+    public ResponseEntity<Set<Subject>> getSavedSubjects(HttpServletRequest request) {
+        FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
+        return ResponseEntity.ok(userService.getSavedSubjects(token.getUid()));
+    }
+
+    @PostMapping("/subjects/{subjectId}")
+    public ResponseEntity<Void> addSavedSubject(HttpServletRequest request, @PathVariable Long subjectId) {
+        FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
+        userService.addSavedSubject(token.getUid(), subjectId);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/subjects/{subjectId}")
+    public ResponseEntity<Void> removeSavedSubject(HttpServletRequest request, @PathVariable Long subjectId) {
+        FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
+        userService.removeSavedSubject(token.getUid(), subjectId);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/calendar")
+    public ResponseEntity<List<LectureSummaryDto>> getUserCalendar(HttpServletRequest request) {
+        FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
+        return ResponseEntity.ok(userService.getUserCalendar(token.getUid()));
     }
 }

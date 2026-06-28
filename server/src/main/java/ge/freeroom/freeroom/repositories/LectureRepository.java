@@ -42,4 +42,8 @@ public interface LectureRepository extends JpaRepository<Lecture, Long> {
                             @Param("roomIds") List<Long> roomIds,
                             @Param("now") LocalDateTime now,
                             @Param("endOfDay") LocalDateTime endOfDay);
+
+    @EntityGraph(attributePaths = {"room", "subject", "room.floor"})
+    @Query("select l from Lecture l where l.subject.id in :subjectIds order by l.startAt asc")
+    List<Lecture> findUpcomingLecturesBySubjectIds(@Param("subjectIds") List<Long> subjectIds);
 }

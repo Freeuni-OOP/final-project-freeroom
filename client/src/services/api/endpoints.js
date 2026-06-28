@@ -31,3 +31,11 @@ export const getNotificationPreference = () => axiosInstance.get('/user/notifica
 export const updateNotificationPreference = (preference) => axiosInstance.patch('/user/notification-preference', { preference });
 
 export const generateTelegramLink = () => axiosInstance.post('/user/telegram-link');
+
+export const getSavedSubjects = () => axiosInstance.get('/user/subjects');
+export const addSavedSubject = (subjectId) => axiosInstance.post(`/user/subjects/${subjectId}`);
+export const removeSavedSubject = (subjectId) => axiosInstance.delete(`/user/subjects/${subjectId}`);
+export const getUserCalendar = () => axiosInstance.get('/user/calendar');
+
+export const getAllSubjects = () => axiosInstance.get('/subjects');
+export const searchSubjects = (query) => axiosInstance.get(`/subjects/search?q=${query}`);

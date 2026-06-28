@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { logout } from '@/services/firebase';
 
 const NAV_LINKS = [
+    { label: 'კალენდარი', path: '/calendar' },
+    { label: 'საგნები', path: '/subjects' },
     { label: 'სართულები', path: '/floors' },
     { label: 'პროფილი', path: '/profile' },
 ];

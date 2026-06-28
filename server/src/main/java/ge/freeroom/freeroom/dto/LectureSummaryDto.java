@@ -18,4 +18,5 @@ public class LectureSummaryDto {
     private String organizer;
     private LocalDateTime startAt;
     private LocalDateTime endAt;
+    private Integer roomNumber;
 }

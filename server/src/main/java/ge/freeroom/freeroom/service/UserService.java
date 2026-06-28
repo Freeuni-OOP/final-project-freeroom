@@ -1,7 +1,11 @@
 package ge.freeroom.freeroom.service;
 
 import com.google.firebase.auth.FirebaseToken;
+import ge.freeroom.freeroom.dto.LectureSummaryDto;
+import ge.freeroom.freeroom.entities.Lecture;
 import ge.freeroom.freeroom.entities.User;
+import ge.freeroom.freeroom.repositories.LectureRepository;
+import ge.freeroom.freeroom.repositories.SubjectRepository;
 import ge.freeroom.freeroom.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -13,11 +17,17 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import java.io.InputStream;
+import java.util.List;
+import java.util.Set;
+import ge.freeroom.freeroom.entities.Subject;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
+    private final SubjectRepository subjectRepository;
+    private final LectureRepository lectureRepository;
+    private final TimeService timeService;
 
     @Value("${supabase.service.key}")
     private String supabaseServiceKey;
@@ -27,8 +37,11 @@ public class UserService {
 
     private final RestClient restClient = RestClient.create();
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, SubjectRepository subjectRepository, LectureRepository lectureRepository, TimeService timeService) {
         this.userRepository = userRepository;
+        this.subjectRepository = subjectRepository;
+        this.lectureRepository = lectureRepository;
+        this.timeService = timeService;
     }
 
     @Transactional
@@ -107,5 +120,61 @@ public class UserService {
         } else {
             throw new RuntimeException("Supabase Storage rejected upload with status code: " + response.getStatusCode());
         }
+    }
+
+    @Transactional(readOnly = true)
+    public Set<Subject> getSavedSubjects(String uid) {
+        User user = userRepository.findById(uid)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.getSavedSubjects().size();
+        return user.getSavedSubjects();
+    }
+
+    @Transactional
+    public void addSavedSubject(String uid, Long subjectId) {
+        User user = userRepository.findById(uid)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Subject subject = subjectRepository.findById(subjectId)
+                .orElseThrow(() -> new RuntimeException("Subject not found"));
+        user.getSavedSubjects().add(subject);
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void removeSavedSubject(String uid, Long subjectId) {
+        User user = userRepository.findById(uid)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Subject subject = subjectRepository.findById(subjectId)
+                .orElseThrow(() -> new RuntimeException("Subject not found"));
+        user.getSavedSubjects().remove(subject);
+        userRepository.save(user);
+    }
+
+    @Transactional(readOnly = true)
+    public List<LectureSummaryDto> getUserCalendar(String uid) {
+        User user = userRepository.findById(uid)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        List<Long> subjectIds = user.getSavedSubjects().stream()
+                .map(Subject::getId)
+                .toList();
+
+        if (subjectIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<Lecture> lectures = lectureRepository.findUpcomingLecturesBySubjectIds(subjectIds);
+        
+        return lectures.stream().map(lecture -> {
+            LectureSummaryDto dto = new LectureSummaryDto();
+            dto.setTitle(lecture.getSubject().getTitle());
+            dto.setType(lecture.getSubject().getType());
+            dto.setGroupNumber(lecture.getSubject().getGroupNumber());
+            dto.setOrganizer(lecture.getSubject().getLecturer());
+            dto.setStartAt(lecture.getStartAt());
+            dto.setEndAt(lecture.getEndAt());
+            dto.setRoomNumber(lecture.getRoom().getRoomNumber());
+            return dto;
+        }).toList();
     }
 }
