@@ -18,19 +18,22 @@ public class NotificationScheduler {
     private final RoomOccupancyRepository roomOccupancyRepository;
     private final UserRepository userRepository;
     private final TelegramBotService telegramBotService;
+    private final TimeService timeService;
 
     public NotificationScheduler(RoomOccupancyRepository roomOccupancyRepository,
                                  UserRepository userRepository,
-                                 TelegramBotService telegramBotService) {
+                                 TelegramBotService telegramBotService,
+                                 TimeService timeService) {
         this.roomOccupancyRepository = roomOccupancyRepository;
         this.userRepository = userRepository;
         this.telegramBotService = telegramBotService;
+        this.timeService = timeService;
     }
 
     @Scheduled(fixedRate = 60000)
     @Transactional
     public void sendExpiryWarnings() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = timeService.now();
         LocalDateTime windowEnd = now.plusMinutes(10);
         List<RoomOccupancy> reservations = roomOccupancyRepository.findReservationsNeedingNotification(now, windowEnd);
 

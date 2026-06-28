@@ -27,6 +27,9 @@ public class ChatService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private TimeService timeService;
+
     public List<ChatMessageDto> getMessages(Long roomId, String userId) {
         if (!roomAccessRepository.existsByRoomIdAndUserId(roomId, userId)) {
             throw new SecurityException("Unauthorized access to room chat.");
@@ -46,7 +49,7 @@ public class ChatService {
 
     public void sendJoinRequest(Long roomId, String requesterId) {
         Optional<Chat> lastRequest = chatRepository.findFirstByRoomIdAndAuthorUser_IdAndMessageTypeOrderBySendingTimeDesc(roomId, requesterId, MessageType.REQUEST);
-        if (lastRequest.isPresent() && lastRequest.get().getSendingTime().isAfter(LocalDateTime.now().minusMinutes(1))) {
+        if (lastRequest.isPresent() && lastRequest.get().getSendingTime().isAfter(timeService.now().minusMinutes(1))) {
             throw new IllegalStateException("Rate limit exceeded. You can only request once per minute.");
         }
         User user = userRepository.findById(requesterId)
