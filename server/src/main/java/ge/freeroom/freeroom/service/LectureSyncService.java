@@ -61,8 +61,8 @@ public class LectureSyncService {
         }
 
         System.out.println("--- Starting concurrent fetch for " + roomNumbers.size() + " rooms...");
-        LocalDateTime start = LocalDate.now().atStartOfDay();
-        LocalDateTime end = LocalDate.now().atTime(23, 59, 59);
+        LocalDateTime start = LocalDate.of(2026, 6, 2).atStartOfDay();
+        LocalDateTime end = LocalDate.of(2026, 6, 2).atTime(23, 59, 59);
 
         List<Lecture> allFetchedLectures = roomNumbers.parallelStream()
                 .flatMap(roomNum -> {
@@ -77,26 +77,15 @@ public class LectureSyncService {
 
         System.out.println("--- Finished fetching. Total lectures found: " + allFetchedLectures.size());
 
-        System.out.println("--- Starting DB Upsert...");
+        System.out.println("--- Starting DB Truncate & Insert...");
         for (Lecture lec : allFetchedLectures) {
             parseLectureTitle(lec);
-
-            Optional<Lecture> existingOpt = lectureRepository.findByEventExternalId(lec.getEventExternalId());
-            if (existingOpt.isPresent()) {
-                Lecture existing = existingOpt.get();
-                existing.setTitle(lec.getTitle());
-                existing.setDescription(lec.getDescription());
-                existing.setOrganizer(lec.getOrganizer());
-                existing.setStartAt(lec.getStartAt());
-                existing.setEndAt(lec.getEndAt());
-                existing.setRoom(lec.getRoom());
-                existing.setFetchedAt(lec.getFetchedAt());
-                lectureRepository.save(existing);
-            } else {
-                lectureRepository.save(lec);
-            }
         }
-        System.out.println("--- DB Upsert completed!");
+
+        lectureRepository.deleteAllInBatch();
+        lectureRepository.saveAll(allFetchedLectures);
+
+        System.out.println("--- DB Truncate & Insert completed!");
     }
 
     /**
@@ -114,16 +103,31 @@ public class LectureSyncService {
         String rawTitle = lec.getTitle();
         if (rawTitle == null || rawTitle.isEmpty()) return;
 
-        try {
-            String[] commaParts = rawTitle.split(", ");
-            if (commaParts.length >= 2) {
-                lec.setTitle(commaParts[0].trim());
+        System.out.println("DEBUG PARSER: raw title = " + rawTitle);
 
-                String[] dashParts = commaParts[1].split(" - ");
-                if (dashParts.length >= 2) {
-                    lec.setDescription(dashParts[0].trim());
-                    lec.setOrganizer(dashParts[1].trim());
+        try {
+            int lastComma = rawTitle.lastIndexOf(", ");
+            if (lastComma != -1) {
+                String possibleRoom = rawTitle.substring(lastComma + 2).trim();
+                if (possibleRoom.length() < 10) {
+                    rawTitle = rawTitle.substring(0, lastComma);
                 }
+            }
+
+            int firstComma = rawTitle.indexOf(", ");
+            if (firstComma != -1) {
+                lec.setTitle(rawTitle.substring(0, firstComma).trim());
+                String rest = rawTitle.substring(firstComma + 2).trim();
+                
+                int lastDash = rest.lastIndexOf(" - ");
+                if (lastDash != -1) {
+                    lec.setOrganizer(rest.substring(lastDash + 3).trim());
+                    lec.setDescription(rest.substring(0, lastDash).trim());
+                } else {
+                    lec.setDescription(rest);
+                }
+            } else {
+                lec.setTitle(rawTitle);
             }
         } catch (Exception e) {
             System.err.println("Failed to parse title: " + rawTitle);
