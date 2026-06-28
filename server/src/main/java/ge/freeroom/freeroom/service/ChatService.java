@@ -70,6 +70,20 @@ public class ChatService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         Chat approvalChat = new Chat(roomId, adminUser, "Approved access to join.", MessageType.APPROVAL);
         chatRepository.save(approvalChat);
+
+        chatRepository.findFirstByRoomIdAndAuthorUser_IdAndMessageTypeOrderBySendingTimeDesc(roomId, targetUserId, MessageType.REQUEST)
+                .ifPresent(chat -> chatRepository.delete(chat));
+    }
+
+    @Transactional
+    public void rejectJoinRequest(Long roomId, String adminId, String targetUserId) {
+        RoomAccess adminAccess = roomAccessRepository.findByRoomIdAndUserId(roomId, adminId)
+                .orElseThrow(() -> new SecurityException("Unauthorized."));
+        if (!adminAccess.isAdmin()) {
+            throw new SecurityException("Only admins can reject requests.");
+        }
+        chatRepository.findFirstByRoomIdAndAuthorUser_IdAndMessageTypeOrderBySendingTimeDesc(roomId, targetUserId, MessageType.REQUEST)
+                .ifPresent(chat -> chatRepository.delete(chat));
     }
 
     @Transactional

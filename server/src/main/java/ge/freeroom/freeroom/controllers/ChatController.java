@@ -4,6 +4,7 @@ import ge.freeroom.freeroom.dto.ChatMessageDto;
 import ge.freeroom.freeroom.dto.SendMessageRequestDto;
 import ge.freeroom.freeroom.dto.JoinRoomRequestDto;
 import ge.freeroom.freeroom.dto.ApproveJoinRequestDto;
+import ge.freeroom.freeroom.dto.RejectJoinRequestDto;
 import ge.freeroom.freeroom.service.ChatService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,5 +37,10 @@ public class ChatController {
     @PostMapping("/approve")
     public void approveUser(@Valid @RequestBody ApproveJoinRequestDto request, Principal principal) {
         chatService.approveJoinRequest(request.roomId(), principal.getName(), request.targetUserId());
+    }
+
+    @PostMapping("/reject")
+    public void rejectUser(@Valid @RequestBody RejectJoinRequestDto request, Principal principal) {
+        chatService.rejectJoinRequest(request.roomId(), principal.getName(), request.targetUserId());
     }
 }

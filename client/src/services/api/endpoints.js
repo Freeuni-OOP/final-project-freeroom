@@ -24,6 +24,8 @@ export const requestJoinRoom = (roomId) => axiosInstance.post('/chat/request-joi
 
 export const approveJoinRequest = (roomId, targetUserId) => axiosInstance.post('/chat/approve', { roomId, targetUserId });
 
+export const rejectJoinRequest = (roomId, targetUserId) => axiosInstance.post('/chat/reject', { roomId, targetUserId });
+
 export const getNotificationPreference = () => axiosInstance.get('/user/notification-preference');
 
 export const updateNotificationPreference = (preference) => axiosInstance.patch('/user/notification-preference', { preference });

@@ -13,7 +13,8 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
     setMessageText,
     handleSendMessage,
     handleRequestJoin,
-    handleApproveUser
+    handleApproveUser,
+    handleRejectUser
   } = useRoomModal(roomId, roomData, onClose, onReserveSuccess);
 
   if (!roomId || !modalData) return null;
@@ -88,12 +89,25 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                                     <p className="font-medium text-gray-900">{modalData.reservedUntil ?? '—'}</p>
                                   </div>
                                 </div>
-                                <button
-                                    onClick={() => setIsChatOpen(true)}
-                                    className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-lg transition-colors"
-                                >
-                                  ჩათის გახსნა
-                                </button>
+                                {isAuthorized === null ? (
+                                    <div className="w-full bg-gray-100 text-gray-400 font-semibold py-3 rounded-lg text-center text-sm animate-pulse">
+                                      მოწმდება წვდომა...
+                                    </div>
+                                ) : isAuthorized ? (
+                                    <button
+                                        onClick={() => setIsChatOpen(true)}
+                                        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-lg transition-colors"
+                                    >
+                                      ჩათის გახსნა
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={handleRequestJoin}
+                                        className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-lg transition-colors"
+                                    >
+                                      შესვლის მოთხოვნა
+                                    </button>
+                                )}
                               </>
                           ) : (
                               <>
@@ -177,7 +191,11 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                     <div className="w-12"></div>
                   </div>
 
-                  {isAuthorized ? (
+                  {isAuthorized === null ? (
+                      <div className="flex-1 flex items-center justify-center text-gray-400 text-sm italic">
+                        მოწმდება წვდომა...
+                      </div>
+                  ) : isAuthorized ? (
                       <>
                         <div className="flex-1 overflow-y-auto space-y-3 pr-1 mb-3">
                           {messages.map((msg) => (
@@ -202,12 +220,20 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                                 </div>
                                 <p className="text-sm text-gray-800 mt-1">{msg.message}</p>
                                 {msg.messageType === 'REQUEST' && (
-                                    <button
-                                        onClick={() => handleApproveUser(msg.author)}
-                                        className="mt-2 w-full bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors"
-                                    >
-                                      დამტკიცება
-                                    </button>
+                                    <div className="mt-2 flex gap-2">
+                                      <button
+                                          onClick={() => handleApproveUser(msg.author)}
+                                          className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors"
+                                      >
+                                        დამტკიცება
+                                      </button>
+                                      <button
+                                          onClick={() => handleRejectUser(msg.author)}
+                                          className="flex-1 bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors"
+                                      >
+                                        უარყოფა
+                                      </button>
+                                    </div>
                                 )}
                               </div>
                           ))}

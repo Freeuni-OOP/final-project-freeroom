@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public interface ChatRepository extends JpaRepository<Chat, Long> {
 
-    @Query("SELECT new ge.freeroom.freeroom.dto.ChatMessageDto(u.displayName, u.email, c.message, c.messageType, c.sendingTime) " +
+    @Query("SELECT new ge.freeroom.freeroom.dto.ChatMessageDto(c.id, u.id, u.displayName, u.email, c.message, c.messageType, c.sendingTime) " +
             "FROM Chat c JOIN c.authorUser u WHERE c.roomId = :roomId ORDER BY c.sendingTime ASC")
     List<ChatMessageDto> findMessagesByRoomId(@Param("roomId") Long roomId);
 

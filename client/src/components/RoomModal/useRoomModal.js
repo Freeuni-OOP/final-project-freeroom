@@ -5,13 +5,14 @@ import {
     getChatMessages,
     sendChatMessage,
     requestJoinRoom,
-    approveJoinRequest
+    approveJoinRequest,
+    rejectJoinRequest
 } from '@/services/api/endpoints.js';
 
 const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [messages, setMessages] = useState([]);
-    const [isAuthorized, setIsAuthorized] = useState(true);
+    const [isAuthorized, setIsAuthorized] = useState(null);
     const [messageText, setMessageText] = useState('');
 
     const formatTime = (iso) => {
@@ -51,12 +52,20 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         } catch (err) {
             if (err.response?.status === 403 || err.response?.status === 500) {
                 setIsAuthorized(false);
+                setMessages([]);
             }
         }
     }, [roomId]);
 
     useEffect(() => {
-        if (roomId && isChatOpen) {
+        if (roomId) {
+            setIsAuthorized(null);
+            loadChat();
+        }
+    }, [roomId, loadChat]);
+
+    useEffect(() => {
+        if (roomId && isChatOpen && isAuthorized) {
             const timeout = setTimeout(loadChat, 0);
             const interval = setInterval(loadChat, 4000);
             return () => {
@@ -64,7 +73,7 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
                 clearInterval(interval);
             };
         }
-    }, [roomId, isChatOpen, loadChat]);
+    }, [roomId, isChatOpen, loadChat, isAuthorized]);
 
     const handleReserve = async (durationMinutes) => {
         if(!modalData?.isFree) {
@@ -126,6 +135,16 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         }
     };
 
+    const handleRejectUser = async (targetUserId) => {
+        try {
+            await rejectJoinRequest(roomId, targetUserId);
+            alert('მოთხოვნა უარყოფილია');
+            loadChat();
+        } catch (err) {
+            alert(err.response?.data?.message || 'უარყოფა ვერ მოხერხდა');
+        }
+    };
+
     return {
         roomData: modalData,
         handleReserve,
@@ -138,7 +157,8 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         setMessageText,
         handleSendMessage,
         handleRequestJoin,
-        handleApproveUser
+        handleApproveUser,
+        handleRejectUser
     };
 };
 
