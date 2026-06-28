@@ -34,11 +34,12 @@ public class RoomAvailabilityService {
     @Autowired
     private TimeService timeService;
 
-    public RoomAvailabilityService(RoomRepository roomRepository, LectureRepository lectureRepository, UserRepository userRepository, RoomOccupancyRepository roomOccupancyRepository) {
+    public RoomAvailabilityService(RoomRepository roomRepository, LectureRepository lectureRepository, UserRepository userRepository, RoomOccupancyRepository roomOccupancyRepository, TimeService timeService) {
         this.roomRepository = roomRepository;
         this.lectureRepository = lectureRepository;
         this.userRepository = userRepository;
         this.roomOccupancyRepository = roomOccupancyRepository;
+        this.timeService = timeService;
     }
 
     public List<RoomMapDto> getAllRoomsMap(String currentUserId){
