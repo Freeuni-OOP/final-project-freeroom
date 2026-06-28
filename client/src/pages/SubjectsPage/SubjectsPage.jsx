@@ -1,6 +1,6 @@
 import React from 'react';
 import useSubjectsPage from './useSubjectsPage';
-import { SubjectCard } from '@/components';
+import { SubjectCard, Loader } from '@/components';
 
 export default function SubjectsPage() {
     const {
@@ -16,11 +16,7 @@ export default function SubjectsPage() {
     } = useSubjectsPage();
 
     if (loading) {
-        return (
-            <div className="flex justify-center items-center min-h-[60vh]">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-accent"></div>
-            </div>
-        );
+        return <Loader />;
     }
 
     return (
@@ -29,7 +25,7 @@ export default function SubjectsPage() {
 
             {/* YOUR SUBJECTS Section */}
             <div className="mb-10 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <button 
+                <button
                     onClick={() => setIsSavedExpanded(!isSavedExpanded)}
                     className="w-full flex items-center justify-between p-5 bg-gray-50 hover:bg-gray-100 transition-colors"
                 >
@@ -39,14 +35,14 @@ export default function SubjectsPage() {
                             {savedSubjectsList.length}
                         </span>
                     </div>
-                    <svg 
-                        className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${isSavedExpanded ? 'rotate-180' : ''}`} 
+                    <svg
+                        className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${isSavedExpanded ? 'rotate-180' : ''}`}
                         fill="none" viewBox="0 0 24 24" stroke="currentColor"
                     >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                 </button>
-                
+
                 {isSavedExpanded && (
                     <div className="p-5 border-t border-gray-100">
                         {savedSubjectsList.length === 0 ? (
@@ -54,11 +50,11 @@ export default function SubjectsPage() {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {savedSubjectsList.map(subject => (
-                                    <SubjectCard 
-                                        key={subject.id} 
-                                        subject={subject} 
-                                        isSaved={true} 
-                                        onToggle={() => toggleSubject(subject)} 
+                                    <SubjectCard
+                                        key={subject.id}
+                                        subject={subject}
+                                        isSaved={true}
+                                        onToggle={() => toggleSubject(subject)}
                                     />
                                 ))}
                             </div>
@@ -86,11 +82,11 @@ export default function SubjectsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredSubjects.map(subject => (
-                    <SubjectCard 
-                        key={subject.id} 
-                        subject={subject} 
-                        isSaved={savedSubjectIds.has(subject.id)} 
-                        onToggle={() => toggleSubject(subject)} 
+                    <SubjectCard
+                        key={subject.id}
+                        subject={subject}
+                        isSaved={savedSubjectIds.has(subject.id)}
+                        onToggle={() => toggleSubject(subject)}
                     />
                 ))}
                 {filteredSubjects.length === 0 && (

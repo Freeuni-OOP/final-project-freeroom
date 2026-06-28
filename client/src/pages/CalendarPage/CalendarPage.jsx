@@ -1,16 +1,12 @@
 import React from 'react';
 import useCalendarPage from './useCalendarPage';
-import { LectureCard } from '@/components';
+import { LectureCard, Loader } from '@/components';
 
 export default function CalendarPage() {
     const { loading, groupedLectures, isEmpty, formatDateHeading, getLectureCardData, goToSubjects } = useCalendarPage();
 
     if (loading) {
-        return (
-            <div className="flex justify-center items-center min-h-[60vh]">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-accent"></div>
-            </div>
-        );
+        return <Loader />;
     }
 
     return (
