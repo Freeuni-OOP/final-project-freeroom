@@ -24,9 +24,9 @@ public class Lecture {
     @Column(name = "event_external_id", unique = true, nullable = false)
     private String eventExternalId; // Google Calendar event id
 
-    private String title; // e.g. "OOP"
-    private String description; // lecture, seminar, etc
-    private String organizer; // lecturer name/email
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subject_id")
+    private Subject subject;
 
     @Column(name = "start_at", nullable = false)
     private LocalDateTime startAt;

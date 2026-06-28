@@ -77,8 +77,12 @@ public class RoomAvailabilityService {
                 dto.setCurrentOccupancy(null);
 
                 LectureSummaryDto lsd = new LectureSummaryDto();
-                lsd.setTitle(lecture.getTitle());
-                lsd.setOrganizer(lecture.getOrganizer());
+                if (lecture.getSubject() != null) {
+                    lsd.setTitle(lecture.getSubject().getTitle());
+                    lsd.setType(lecture.getSubject().getType());
+                    lsd.setGroupNumber(lecture.getSubject().getGroupNumber());
+                    lsd.setOrganizer(lecture.getSubject().getLecturer());
+                }
                 lsd.setStartAt(lecture.getStartAt());
                 lsd.setEndAt(lecture.getEndAt());
 
@@ -103,8 +107,12 @@ public class RoomAvailabilityService {
             Lecture nextLecture = nextLectureByRoomId.get(room.getId());
             if (nextLecture != null) {
                 LectureSummaryDto nextLsd = new LectureSummaryDto();
-                nextLsd.setTitle(nextLecture.getTitle());
-                nextLsd.setOrganizer(nextLecture.getOrganizer());
+                if (nextLecture.getSubject() != null) {
+                    nextLsd.setTitle(nextLecture.getSubject().getTitle());
+                    nextLsd.setType(nextLecture.getSubject().getType());
+                    nextLsd.setGroupNumber(nextLecture.getSubject().getGroupNumber());
+                    nextLsd.setOrganizer(nextLecture.getSubject().getLecturer());
+                }
                 nextLsd.setStartAt(nextLecture.getStartAt());
                 nextLsd.setEndAt(nextLecture.getEndAt());
 
