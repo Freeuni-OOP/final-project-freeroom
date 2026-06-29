@@ -21,7 +21,7 @@ public class EmailService {
         SimpleMailMessage mail = new SimpleMailMessage();
         mail.setTo(toEmail);
         mail.setFrom("FreeRoom <freeroom.notify@gmail.com>");
-        mail.setSubject("FreeRoom - ოთახი დაჯავშნილია");
+        mail.setSubject("ოთახი დაჯავშნილია");
         mail.setText(
                 "ოთახი " + roomNumber + " წარმატებით დაიჯავშნა.\n" +
                         "დაჯავშნა მოქმედია: " + expectedEndAt.toLocalTime() + "-მდე."
@@ -34,7 +34,7 @@ public class EmailService {
         SimpleMailMessage mail = new SimpleMailMessage();
         mail.setTo(toEmail);
         mail.setFrom("FreeRoom <freeroom.notify@gmail.com>");
-        mail.setSubject("FreeRoom - დაჯავშნილი დრო იწურება");
+        mail.setSubject("დაჯავშნილი დრო იწურება");
         mail.setText(
                 "ოთახი " + roomNumber + "-ის ჯავშნის დასრულებამდე დარჩენილია 10 წუთი"
         );
