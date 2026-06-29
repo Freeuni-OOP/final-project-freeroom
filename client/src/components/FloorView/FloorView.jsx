@@ -11,11 +11,13 @@ export default function FloorView() {
     selectedRoomId,
     tooltip,
     svgContainerRef,
+    wrapperRef,
+    transformRef,
     selectFloor,
     handleCloseModal,
     getRoomData,
     initialScale,
-    loadRoomsMap
+    loadRoomsMap,
   } = useFloorView();
 
   return (
@@ -37,14 +39,16 @@ export default function FloorView() {
         ))}
       </div>
 
-      <div className="flex-1 overflow-hidden relative bg-gray-50">
+      <div ref={wrapperRef} className="flex-1 overflow-hidden relative bg-gray-50">
         <TransformWrapper
+          ref={transformRef}
           key={initialScale}
           initialScale={initialScale}
           minScale={0.8}
           maxScale={4}
           centerOnInit
-          limitToBounds={false} // set it true if you want to limit the view to the svg bounds but it was reallllyyy uncomfortable
+          limitToBounds={false}
+          wheel={{ disabled: true }}
         >
           {({ resetTransform }) => (
             <>

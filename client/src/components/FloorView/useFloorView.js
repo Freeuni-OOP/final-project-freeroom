@@ -1,6 +1,12 @@
-import {useEffect, useRef, useState, useCallback} from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import FLOORS from './floorLayout';
-import {getRoomsMap} from '@/services/index.js';
+import { getRoomsMap } from '@/services/index.js';
+
+const MOUSE_WHEEL_THRESHOLD = 50;
+const MOUSE_ZOOM_FACTOR = 0.18;
+const MOUSE_ZOOM_DURATION = 120;
+const TRACKPAD_ZOOM_MULTIPLIER = 0.004;
+const SCROLL_THROTTLE_MS = 40;
 
 const useFloorView = () => {
   const [selectedFloor, setSelectedFloor] = useState(1);
@@ -11,6 +17,9 @@ const useFloorView = () => {
   const svgContainerRef = useRef(null);
   const tooltipTimerRef = useRef(null);
   const roomsDataRef = useRef({});
+  const transformRef = useRef(null);
+  const wrapperRef = useRef(null);
+  const lastScrollTime = useRef(0);
 
   const [initialScale] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -22,6 +31,33 @@ const useFloorView = () => {
   useEffect(() => {
     roomsDataRef.current = roomsData;
   }, [roomsData]);
+
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+
+    const handleWheel = (e) => {
+      e.preventDefault();
+      if (!transformRef.current) return;
+
+      const isMouseWheel = Math.abs(e.deltaY) >= MOUSE_WHEEL_THRESHOLD;
+
+      if (isMouseWheel) {
+        const now = Date.now();
+        if (now - lastScrollTime.current < SCROLL_THROTTLE_MS) return;
+        lastScrollTime.current = now;
+        const zoom = e.deltaY < 0 ? transformRef.current.zoomIn : transformRef.current.zoomOut;
+        zoom(MOUSE_ZOOM_FACTOR, MOUSE_ZOOM_DURATION);
+      } else {
+        const factor = Math.abs(e.deltaY) * TRACKPAD_ZOOM_MULTIPLIER;
+        const zoom = e.deltaY < 0 ? transformRef.current.zoomIn : transformRef.current.zoomOut;
+        zoom(factor, 0);
+      }
+    };
+
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, []);
 
   const loadRoomsMap = useCallback(async () => {
     try {
@@ -128,30 +164,30 @@ const useFloorView = () => {
     setSelectedRoomId(null);
   };
 
-  const handleCloseModal = () => {
-    setSelectedRoomId(null);
-  };
+  const handleCloseModal = () => setSelectedRoomId(null);
 
   const isOccupied = (roomId) =>
       roomsData[selectedFloor]?.[roomId]?.status === 'occupied';
 
-  const getRoomData = (roomId) => {
-    return roomsData[selectedFloor]?.[roomId] ?? null;
-  }
+  const getRoomData = (roomId) =>
+    roomsData[selectedFloor]?.[roomId] ?? null;
 
   return {
     selectedFloor,
     selectedRoomId,
     tooltip,
     svgContainerRef,
+    wrapperRef,
+    transformRef,
     selectFloor,
     handleCloseModal,
     isOccupied,
     getRoomData,
     loading,
     initialScale,
-    loadRoomsMap
+    loadRoomsMap,
   };
 };
 
 export default useFloorView;
+
