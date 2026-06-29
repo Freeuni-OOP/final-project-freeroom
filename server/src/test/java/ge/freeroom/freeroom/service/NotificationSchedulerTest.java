@@ -37,6 +37,9 @@ public class NotificationSchedulerTest {
     @InjectMocks
     private NotificationScheduler scheduler;
 
+    @Mock
+    private EmailService emailService;
+
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
         lenient().when(timeService.now()).thenReturn(java.time.LocalDateTime.now());
@@ -112,6 +115,7 @@ public class NotificationSchedulerTest {
     void emailUserMarkedNotifiedWithoutTelegram() {
         User user = new User();
         user.setId("uid");
+        user.setEmail("test@freeuni.edu.ge");
         user.setNotificationPreference(NotificationPreference.EMAIL);
         RoomOccupancy reservation = buildReservation(user);
         when(roomOccupancyRepository.findReservationsNeedingNotification(any(), any())).thenReturn(List.of(reservation));
@@ -119,6 +123,7 @@ public class NotificationSchedulerTest {
         scheduler.sendExpiryWarnings();
 
         verify(telegramBotService, never()).sendNotification(anyLong(), anyString());
+        verify(emailService, times(1)).sendExpiryWarning(eq("test@freeuni.edu.ge"), eq(101));
         verify(roomOccupancyRepository, times(1)).save(reservation);
         assertTrue(reservation.isNotifiedTenMin());
     }
