@@ -38,7 +38,7 @@ export default function useCalendarPage() {
         for (let i = 0; i < 7; i++) {
             const date = new Date(monday);
             date.setDate(monday.getDate() + i);
-            const dateKey = date.toISOString().split('T')[0];
+            const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
             groups[dateKey] = {
                 dateObj: date,
                 lectures: []
@@ -48,13 +48,13 @@ export default function useCalendarPage() {
         lectures.forEach(lecture => {
             if (!lecture.startAt) return;
             const date = new Date(lecture.startAt);
-            const dateKey = date.toISOString().split('T')[0];
+            const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
             if (groups[dateKey]) {
                 groups[dateKey].lectures.push(lecture);
             } else {
                 groups[dateKey] = {
-                    dateObj: date,
+                    dateObj: new Date(date.getFullYear(), date.getMonth(), date.getDate()),
                     lectures: [lecture]
                 };
             }
