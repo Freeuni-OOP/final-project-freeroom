@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -43,28 +44,55 @@ class ChatServiceTest {
     @Test
     void getMessages_WhenUserIsNonMember_ThrowsSecurityException() {
         Long roomId = 1L;
+        Long beforeId = 100L;
         String userId = "unauthorized-user";
         when(roomAccessRepository.existsByRoomIdAndUserId(roomId, userId)).thenReturn(false);
 
-        assertThrows(SecurityException.class, () -> chatService.getMessages(roomId, userId));
-        verify(chatRepository, never()).findMessagesByRoomId(any());
+        assertThrows(SecurityException.class, () -> chatService.getMessages(roomId, beforeId, userId));
+
+        verify(chatRepository, never()).findLatestMessages(any(), any());
+        verify(chatRepository, never()).findOlderMessages(any(), any(), any());
     }
 
     @Test
-    void getMessages_WhenUserIsMember_ReturnsMessages() {
+    void getMessages_WhenBeforeIdIsNull_ReturnsLatestMessages() {
         Long roomId = 1L;
+        Long beforeId = null;
         String userId = "authorized-user";
-        List<ChatMessageDto> expectedMessages = List.of(
-                new ChatMessageDto(1L, "authorized-user", "Nick", "test@freeuni.edu.ge", "Hello", MessageType.TEXT, LocalDateTime.now())
-        );
+
+        ChatMessageDto msg = new ChatMessageDto(10L, "user", "Nick", "t@edu.ge", "Latest", MessageType.TEXT, LocalDateTime.now());
+        List<ChatMessageDto> repoReturnedMessages = List.of(msg);
 
         when(roomAccessRepository.existsByRoomIdAndUserId(roomId, userId)).thenReturn(true);
-        when(chatRepository.findMessagesByRoomId(roomId)).thenReturn(expectedMessages);
+        when(chatRepository.findLatestMessages(roomId, PageRequest.of(0, 20))).thenReturn(repoReturnedMessages);
 
-        List<ChatMessageDto> actualMessages = chatService.getMessages(roomId, userId);
+        List<ChatMessageDto> actualMessages = chatService.getMessages(roomId, beforeId, userId);
 
-        assertEquals(expectedMessages, actualMessages);
-        verify(chatRepository, times(1)).findMessagesByRoomId(roomId);
+        assertEquals(repoReturnedMessages, actualMessages);
+        verify(chatRepository, times(1)).findLatestMessages(roomId, PageRequest.of(0, 20));
+        verify(chatRepository, never()).findOlderMessages(any(), any(), any());
+    }
+
+    @Test
+    void getMessages_WhenUserIsMemberAndBeforeIdProvided_ReturnsOlderMessagesInChronologicalOrder() {
+        Long roomId = 1L;
+        Long beforeId = 50L;
+        String userId = "authorized-user";
+
+        ChatMessageDto msg1 = new ChatMessageDto(10L, "user", "Nick", "t@edu.ge", "First", MessageType.TEXT, LocalDateTime.now());
+        ChatMessageDto msg2 = new ChatMessageDto(11L, "user", "Nick", "t@edu.ge", "Second", MessageType.TEXT, LocalDateTime.now());
+
+        List<ChatMessageDto> repoReturnedMessages = List.of(msg2, msg1); // DESC ბაზიდან
+        List<ChatMessageDto> expectedChronologicalMessages = List.of(msg1, msg2); // ASC სერვისიდან
+
+        when(roomAccessRepository.existsByRoomIdAndUserId(roomId, userId)).thenReturn(true);
+        when(chatRepository.findOlderMessages(roomId, beforeId, PageRequest.of(0, 20))).thenReturn(repoReturnedMessages);
+
+        List<ChatMessageDto> actualMessages = chatService.getMessages(roomId, beforeId, userId);
+
+        assertEquals(expectedChronologicalMessages, actualMessages);
+        verify(chatRepository, times(1)).findOlderMessages(roomId, beforeId, PageRequest.of(0, 20));
+        verify(chatRepository, never()).findLatestMessages(any(), any());
     }
 
     @Test

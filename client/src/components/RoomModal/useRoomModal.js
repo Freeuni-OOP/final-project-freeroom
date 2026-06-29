@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
     reserveRoom,
     cancelOccupancy,
@@ -16,10 +16,15 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
     const [messageText, setMessageText] = useState('');
     const [prevRoomId, setPrevRoomId] = useState(roomId);
 
+    const [hasMore, setHasMore] = useState(true);
+    const [isLoadingOlder, setIsLoadingOlder] = useState(false);
+    const chatContainerRef = useRef(null);
+
     if (roomId !== prevRoomId) {
         setPrevRoomId(roomId);
         setIsAuthorized(null);
         setMessages([]);
+        setHasMore(true);
     }
 
     const formatTime = (iso) => {
@@ -55,7 +60,13 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         if (!roomId) return;
         try {
             const data = await getChatMessages(roomId);
-            setMessages(data);
+            setMessages(prev => {
+                if (prev.length === 0) return data;
+                const existingIds = new Set(prev.map(m => m.id));
+                const newMessages = data.filter(m => !existingIds.has(m.id));
+                if (newMessages.length === 0) return prev;
+                return [...prev, ...newMessages].sort((a, b) => a.id - b.id);
+            });
             setIsAuthorized(true);
         } catch (err) {
             if (err.response?.status === 403 || err.response?.status === 500) {
@@ -64,6 +75,58 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
             }
         }
     }, [roomId]);
+
+    const loadOlderMessages = async () => {
+        if (!roomId || isLoadingOlder || !hasMore || messages.length === 0) return;
+        setIsLoadingOlder(true);
+
+        const container = chatContainerRef.current;
+        const prevScrollHeight = container ? container.scrollHeight : 0;
+
+        try {
+            const oldestId = messages[0].id;
+            const data = await getChatMessages(roomId, oldestId);
+
+            if (data.length < 20) {
+                setHasMore(false);
+            }
+
+            if (data.length > 0) {
+                setMessages(prev => {
+                    const existingIds = new Set(prev.map(m => m.id));
+                    const uniqueOlder = data.filter(m => !existingIds.has(m.id));
+                    return [...uniqueOlder, ...prev].sort((a, b) => a.id - b.id);
+                });
+
+                requestAnimationFrame(() => {
+                    if (chatContainerRef.current) {
+                        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight - prevScrollHeight;
+                    }
+                });
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsLoadingOlder(false);
+        }
+    };
+
+    const handleScroll = () => {
+        if (!chatContainerRef.current) return;
+        if (chatContainerRef.current.scrollTop === 0) {
+            loadOlderMessages();
+        }
+    };
+
+    useEffect(() => {
+        if (isChatOpen) {
+            setTimeout(() => {
+                if (chatContainerRef.current) {
+                    chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+                }
+            }, 60);
+        }
+    }, [isChatOpen, roomId]);
 
     useEffect(() => {
         if (roomId) {
@@ -120,7 +183,12 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         try {
             await sendChatMessage(roomId, messageText);
             setMessageText('');
-            loadChat();
+            await loadChat();
+            setTimeout(() => {
+                if (chatContainerRef.current) {
+                    chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+                }
+            }, 50);
         } catch (err) {
             alert(err.response?.data?.message || 'შეტყობინება ვერ გაიგზავნა');
         }
@@ -168,7 +236,10 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         handleSendMessage,
         handleRequestJoin,
         handleApproveUser,
-        handleRejectUser
+        handleRejectUser,
+        chatContainerRef,
+        isLoadingOlder,
+        handleScroll
     };
 };
 

@@ -9,9 +9,12 @@ import ge.freeroom.freeroom.repositories.ChatRepository;
 import ge.freeroom.freeroom.repositories.RoomAccessRepository;
 import ge.freeroom.freeroom.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,11 +33,24 @@ public class ChatService {
     @Autowired
     private TimeService timeService;
 
-    public List<ChatMessageDto> getMessages(Long roomId, String userId) {
+    public List<ChatMessageDto> getMessages(Long roomId, Long beforeId, String userId) {
         if (!roomAccessRepository.existsByRoomIdAndUserId(roomId, userId)) {
             throw new SecurityException("Unauthorized access to room chat.");
         }
-        return chatRepository.findMessagesByRoomId(roomId);
+
+        List<ChatMessageDto> messages;
+        PageRequest pageRequest = PageRequest.of(0, 20);
+
+        if (beforeId == null) {
+            messages = chatRepository.findLatestMessages(roomId, pageRequest);
+        } else {
+            messages = chatRepository.findOlderMessages(roomId, beforeId, pageRequest);
+        }
+
+        List<ChatMessageDto> chronologicalMessages = new ArrayList<>(messages);
+        Collections.reverse(chronologicalMessages);
+
+        return chronologicalMessages;
     }
 
     public void sendMessage(Long roomId, String authorId, String message) {

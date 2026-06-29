@@ -20,8 +20,11 @@ public class ChatController {
     private ChatService chatService;
 
     @GetMapping("/{roomId}")
-    public List<ChatMessageDto> getMessages(@PathVariable Long roomId, Principal principal) {
-        return chatService.getMessages(roomId, principal.getName());
+    public List<ChatMessageDto> getMessages(
+            @PathVariable Long roomId,
+            @RequestParam(required = false) Long beforeId,
+            Principal principal) {
+        return chatService.getMessages(roomId, beforeId, principal.getName());
     }
 
     @PostMapping("/send")
