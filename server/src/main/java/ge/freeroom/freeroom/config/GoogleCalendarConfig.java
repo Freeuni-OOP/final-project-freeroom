@@ -30,9 +30,21 @@ public class GoogleCalendarConfig {
 
         NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
 
+        java.io.InputStream in;
+        java.io.File secretFile = new java.io.File("secrets/clientSecret.json");
+        if (secretFile.exists()) {
+            in = new java.io.FileInputStream(secretFile);
+        } else {
+            try {
+                in = new ClassPathResource("clientSecret.json").getInputStream();
+            } catch (java.io.IOException e) {
+                throw new RuntimeException("CRITICAL ERROR: Google Calendar secret file is missing! Please create a 'secrets' folder in the root of your project and place 'clientSecret.json' inside it.");
+            }
+        }
+
         GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(
                 GsonFactory.getDefaultInstance(),
-                new InputStreamReader(new ClassPathResource("clientSecret.json").getInputStream())
+                new InputStreamReader(in)
         );
 
         GoogleAuthorizationCodeFlow authFlow = new GoogleAuthorizationCodeFlow.Builder(
