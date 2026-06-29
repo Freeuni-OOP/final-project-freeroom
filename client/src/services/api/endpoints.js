@@ -46,5 +46,5 @@ export const getFriends = () => axiosInstance.get('/friends');
 export const getIncomingFriendRequests = () => axiosInstance.get('/friends/requests/incoming');
 export const sendFriendRequest = (receiverId) => axiosInstance.post('/friends/requests', { receiverId });
 
-export const acceptFriendRequest = (requestId) => axiosInstance.post(`/friends/requests/${requestId}/accept`);
-export const rejectFriendRequest = (requestId) => axiosInstance.post(`/friends/requests/${requestId}/reject`);
+export const acceptFriendRequest = (requestId) => axiosInstance.patch(`/friends/requests/${requestId}/accept`);
+export const rejectFriendRequest = (requestId) => axiosInstance.patch(`/friends/requests/${requestId}/reject`);

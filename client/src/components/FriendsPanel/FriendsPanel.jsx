@@ -115,7 +115,7 @@ export default function FriendsPanel() {
                   </div>
                   {friend.hasActiveOccupancy && (
                     <span className="shrink-0 rounded-full bg-brand-accent/10 px-2.5 py-1 text-xs font-semibold text-brand-accent-text">
-                      დაკავებულია
+                      ოთახშია
                     </span>
                   )}
                 </div>
