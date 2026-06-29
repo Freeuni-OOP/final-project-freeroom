@@ -136,8 +136,13 @@ const useProfilePage = () => {
       }
     } catch (error) {
       console.error("Error updating profile:", error);
-      alert('პროფილის განახლება ვერ მოხერხდა.');
+      if (error.response?.status === 429) {
+        alert('ზედმეტად ბევრი მოთხოვნა გამოგზავნეთ. გთხოვთ სცადოთ 1 წუთში.');
+      } else {
+        alert('პროფილის განახლება ვერ მოხერხდა.');
+      }
     } finally {
+
       setIsSaving(false);
     }
   };

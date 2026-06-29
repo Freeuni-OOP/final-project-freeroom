@@ -56,6 +56,10 @@ public class UserController {
 
         FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
 
+        if (!rateLimiter.allow("profile:" + token.getUid(), 10, 60000)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+        }
+
         User updatedUser = userService.updateUserProfile(token.getUid(), displayName, bio, file);
         return ResponseEntity.ok(updatedUser);
     }
