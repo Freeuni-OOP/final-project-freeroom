@@ -44,6 +44,9 @@ public class RoomAvailabilityServiceTest {
     @Mock
     private TimeService timeService;
 
+    @Mock
+    private EmailService emailService;
+
     @InjectMocks
     private RoomAvailabilityService roomAvailabilityService;
 
@@ -126,6 +129,8 @@ public class RoomAvailabilityServiceTest {
         user.setNotificationPreference(NotificationPreference.NONE);
         when(userRepository.findById("uid")).thenReturn(Optional.of(user));
         assertThrows(IllegalStateException.class, () -> roomAvailabilityService.reserveRoom("uid", 1L, 60L));
+
+        verify(emailService, never()).sendReservationConfirmation(any(), anyInt(), any());
     }
 
     @Test
@@ -167,5 +172,68 @@ public class RoomAvailabilityServiceTest {
 
         ReserveRoomResponseDto result = roomAvailabilityService.reserveRoom("uid", 1L, 60L);
         assertNotNull(result);
+    }
+
+    @Test
+    void emailSentOnReservationWhenPreferenceIsEmail() {
+        User user = new User();
+        user.setId("uid");
+        user.setEmail("test@freeuni.edu.ge");
+        user.setNotificationPreference(NotificationPreference.EMAIL);
+        when(userRepository.findById("uid")).thenReturn(Optional.of(user));
+
+        Room room = new Room();
+        room.setId(1L);
+        room.setRoomNumber(101);
+        when(roomRepository.findByIdWithLock(1L)).thenReturn(Optional.of(room));
+        when(roomOccupancyRepository.findActiveOccupancyByUserId(eq("uid"), any())).thenReturn(Optional.empty());
+        when(lectureRepository.findActiveLecturesByRoomIds(any(), any())).thenReturn(Collections.emptyList());
+        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(1L)).thenReturn(Optional.empty());
+
+        RoomOccupancy saved = new RoomOccupancy();
+        saved.setId(1L);
+        saved.setRoom(room);
+        saved.setUser(user);
+        saved.setStartAt(LocalDateTime.now());
+        saved.setExpectedEndAt(LocalDateTime.now().plusMinutes(60));
+        when(roomOccupancyRepository.save(any())).thenReturn(saved);
+
+        roomAvailabilityService.reserveRoom("uid", 1L, 60L);
+
+        verify(emailService, times(1)).sendReservationConfirmation(
+                eq("test@freeuni.edu.ge"),
+                eq(101),
+                any(LocalDateTime.class)
+        );
+    }
+
+    @Test
+    void emailNotSentOnReservationWhenPreferenceIsTelegram() {
+        User user = new User();
+        user.setId("uid");
+        user.setEmail("test@freeuni.edu.ge");
+        user.setNotificationPreference(NotificationPreference.TELEGRAM);
+        user.setTelegramChatId(123456L);
+        when(userRepository.findById("uid")).thenReturn(Optional.of(user));
+
+        Room room = new Room();
+        room.setId(1L);
+        room.setRoomNumber(101);
+        when(roomRepository.findByIdWithLock(1L)).thenReturn(Optional.of(room));
+        when(roomOccupancyRepository.findActiveOccupancyByUserId(eq("uid"), any())).thenReturn(Optional.empty());
+        when(lectureRepository.findActiveLecturesByRoomIds(any(), any())).thenReturn(Collections.emptyList());
+        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(1L)).thenReturn(Optional.empty());
+
+        RoomOccupancy saved = new RoomOccupancy();
+        saved.setId(1L);
+        saved.setRoom(room);
+        saved.setUser(user);
+        saved.setStartAt(LocalDateTime.now());
+        saved.setExpectedEndAt(LocalDateTime.now().plusMinutes(60));
+        when(roomOccupancyRepository.save(any())).thenReturn(saved);
+
+        roomAvailabilityService.reserveRoom("uid", 1L, 60L);
+
+        verify(emailService, never()).sendReservationConfirmation(any(), anyInt(), any());
     }
 }
