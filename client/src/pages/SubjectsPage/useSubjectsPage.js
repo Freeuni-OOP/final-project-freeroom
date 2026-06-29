@@ -8,6 +8,7 @@ export default function useSubjectsPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
     const [isSavedExpanded, setIsSavedExpanded] = useState(true);
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -53,15 +54,23 @@ export default function useSubjectsPage() {
         }
     };
 
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearchQuery(searchQuery);
+        }, 300);
+        return () => clearTimeout(handler);
+    }, [searchQuery]);
+
     const filteredSubjects = useMemo(() => {
-        if (!searchQuery.trim()) return allSubjects;
-        const lowerQ = searchQuery.toLowerCase();
+        if (!debouncedSearchQuery.trim()) return allSubjects;
+        const lowerQ = debouncedSearchQuery.toLowerCase();
         return allSubjects.filter(s =>
             s.title?.toLowerCase().includes(lowerQ) ||
             s.lecturer?.toLowerCase().includes(lowerQ) ||
             s.groupNumber?.toLowerCase().includes(lowerQ)
         );
-    }, [allSubjects, searchQuery]);
+    }, [allSubjects, debouncedSearchQuery]);
 
     return {
         savedSubjectsList,

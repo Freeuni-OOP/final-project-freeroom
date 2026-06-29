@@ -152,15 +152,24 @@ public class LectureSyncService {
             }
         }
 
-        lectureRepository.deleteAllInBatch();
+        LocalDateTime syncTime = LocalDateTime.now();
         
-        System.out.println("--- Executing fast batch insert for " + finalLectures.size() + " lectures...");
+        System.out.println("--- Executing fast batch upsert for " + finalLectures.size() + " lectures...");
         jdbcTemplate.batchUpdate(
-            "insert into lecture (end_at, event_external_id, fetched_at, recurring, room_id, start_at, subject_id) values (?, ?, ?, ?, ?, ?, ?)",
+            "insert into lecture (end_at, event_external_id, fetched_at, recurring, room_id, start_at, subject_id) " +
+            "values (?, ?, ?, ?, ?, ?, ?) " +
+            "on conflict (event_external_id) do update set " +
+            "end_at = EXCLUDED.end_at, " +
+            "fetched_at = EXCLUDED.fetched_at, " +
+            "recurring = EXCLUDED.recurring, " +
+            "room_id = EXCLUDED.room_id, " +
+            "start_at = EXCLUDED.start_at, " +
+            "subject_id = EXCLUDED.subject_id",
             new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
                 @Override
                 public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
                     Lecture lec = finalLectures.get(i);
+                    lec.setFetchedAt(syncTime);
                     ps.setTimestamp(1, java.sql.Timestamp.valueOf(lec.getEndAt()));
                     ps.setString(2, lec.getEventExternalId());
                     ps.setTimestamp(3, java.sql.Timestamp.valueOf(lec.getFetchedAt()));
@@ -176,7 +185,10 @@ public class LectureSyncService {
                 }
             }
         );
-        System.out.println("--- DB Truncate & Insert completed!");
+        
+        System.out.println("--- Deleting obsolete lectures from previous syncs...");
+        int deleted = jdbcTemplate.update("delete from lecture where fetched_at < ?", syncTime);
+        System.out.println("--- DB Upsert completed! Deleted " + deleted + " obsolete lectures.");
     }
 
     private String generateSubjectKey(Subject s) {
