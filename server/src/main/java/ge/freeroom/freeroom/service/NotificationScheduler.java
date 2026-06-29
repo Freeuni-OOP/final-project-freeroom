@@ -19,15 +19,17 @@ public class NotificationScheduler {
     private final UserRepository userRepository;
     private final TelegramBotService telegramBotService;
     private final TimeService timeService;
+    private final EmailService emailService;
 
     public NotificationScheduler(RoomOccupancyRepository roomOccupancyRepository,
                                  UserRepository userRepository,
                                  TelegramBotService telegramBotService,
-                                 TimeService timeService) {
+                                 TimeService timeService, EmailService emailService) {
         this.roomOccupancyRepository = roomOccupancyRepository;
         this.userRepository = userRepository;
         this.telegramBotService = telegramBotService;
         this.timeService = timeService;
+        this.emailService = emailService;
     }
 
     @Scheduled(fixedRate = 60000)
@@ -50,6 +52,13 @@ public class NotificationScheduler {
                     user.setNotificationPreference(NotificationPreference.NONE);
                     userRepository.save(user);
                 }
+            } else if(user.getNotificationPreference() == NotificationPreference.EMAIL) {
+                emailService.sendExpiryWarning(
+                        user.getEmail(),
+                        reservation.getRoom().getRoomNumber()
+                );
+                reservation.setNotifiedTenMin(true);
+                roomOccupancyRepository.save(reservation);
             } else {
                 reservation.setNotifiedTenMin(true);
                 roomOccupancyRepository.save(reservation);

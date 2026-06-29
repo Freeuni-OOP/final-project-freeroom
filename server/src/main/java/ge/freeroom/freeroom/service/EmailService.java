@@ -2,6 +2,7 @@ package ge.freeroom.freeroom.service;
 
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -15,6 +16,7 @@ public class EmailService {
         this.mailSender = mailSender;
     }
 
+    @Async
     public void sendReservationConfirmation(String toEmail, Integer roomNumber, LocalDateTime expectedEndAt) {
         SimpleMailMessage mail = new SimpleMailMessage();
         mail.setTo(toEmail);
@@ -26,6 +28,7 @@ public class EmailService {
         mailSender.send(mail);
     }
 
+    @Async
     public void sendExpiryWarning(String toEmail, Integer roomNumber) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(toEmail);
