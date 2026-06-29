@@ -7,3 +7,5 @@ serviceAccountKey.json
 tokens/
 **/src/main/resources/clientSecret.json
 clientSecret.json
+serviceAccountKey.json
+.env

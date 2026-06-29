@@ -113,6 +113,10 @@ const useProfilePage = () => {
 
   const handleSaveProfile = async () => {
     if (!user) return;
+    if (bio && bio.length > 300) {
+      alert('ბიოგრაფია არ უნდა აღემატებოდეს 300 სიმბოლოს.');
+      return;
+    }
     setIsSaving(true);
 
     try {

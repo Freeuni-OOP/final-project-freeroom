@@ -192,12 +192,16 @@ export default function ProfilePage() {
                         </div>
 
                         <div className="flex flex-col gap-2 w-full">
-                            <label className="text-sm font-semibold text-brand-ink/70">ჩემს შესახებ</label>
+                            <div className="flex justify-between items-center">
+                                <label className="text-sm font-semibold text-brand-ink/70">ჩემს შესახებ</label>
+                                <span className={`text-xs ${bio.length > 300 ? 'text-red-500 font-semibold' : 'text-brand-ink/40'}`}>
+                                    {bio.length}/300
+                                </span>
+                            </div>
                             <textarea
                                 value={bio}
                                 onChange={(e) => setBio(e.target.value)}
                                 placeholder="მოყევი რამე შენს შესახებ..."
-                                maxLength={300}
                                 rows={3}
                                 className="w-full rounded-xl border border-black/10 p-3 text-sm text-brand-ink focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent resize-none"
                             />
@@ -207,7 +211,13 @@ export default function ProfilePage() {
                             <button
                                 onClick={handleSaveProfile}
                                 disabled={isSaving || isUploading}
-                                className="rounded-xl bg-brand-ink px-6 py-2 text-sm font-semibold text-white transition hover:bg-brand-ink/90 disabled:opacity-50"
+                                className={`rounded-xl px-6 py-2 text-sm font-semibold transition disabled:opacity-50 ${
+                                    university === 'თავისუფალი'
+                                        ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                                        : university === 'აგრარული'
+                                            ? 'bg-green-600 hover:bg-green-700 text-white'
+                                            : 'bg-brand-ink hover:bg-brand-ink/90 text-white'
+                                }`}
                             >
                                 {isSaving ? 'ინახება...' : 'ცვლილებების შენახვა'}
                             </button>
