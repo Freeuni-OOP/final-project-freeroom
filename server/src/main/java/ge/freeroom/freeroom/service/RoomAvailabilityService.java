@@ -158,7 +158,7 @@ public class RoomAvailabilityService {
             throw new IllegalStateException(
                     "თქვენ უკვე დაჯავშნილი გაქვთ ოთახი " +
                             existing.getRoom().getRoomNumber() + " " +
-                            formattedTime + "-მდე"
+                            formattedTime + "-მდე.\nსხვა ოთახის დასაჯავშნად გააუქმეთ აქტიური!"
             );
         }
 
