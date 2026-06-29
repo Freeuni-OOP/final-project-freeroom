@@ -1,7 +1,20 @@
 import { useState, useRef } from 'react';
 import { searchLectures } from '@/services';
+import { useAuth } from '@/context';
+
+const UNIVERSITY_BY_DOMAIN = {
+    '@freeuni.edu.ge': 'თავისუფალი',
+    '@agruni.edu.ge': 'აგრარული',
+};
+
+const getUniversity = (email) => {
+    const normalized = email?.toLowerCase() || '';
+    const match = Object.entries(UNIVERSITY_BY_DOMAIN).find(([domain]) => normalized.endsWith(domain));
+    return match ? match[1] : null;
+};
 
 export default function useLectureSearch() {
+    const { user } = useAuth();
     const [query, setQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -10,6 +23,8 @@ export default function useLectureSearch() {
     const lastSentQueryRef = useRef('');
     const lastFetchedResultsRef = useRef([]);
     const debounceTimeoutRef = useRef(null);
+
+    const university = getUniversity(user?.email);
 
     const handleSearch = (userInput) => {
         setQuery(userInput);
@@ -63,5 +78,5 @@ export default function useLectureSearch() {
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
     };
 
-    return { query, searchResults, loading, handleSearch, formatTime };
+    return { query, searchResults, loading, handleSearch, formatTime, university };
 }
