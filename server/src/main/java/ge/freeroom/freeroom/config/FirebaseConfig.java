@@ -16,7 +16,15 @@ public class FirebaseConfig {
         try {
             FirebaseOptions options;
 
-            try (InputStream serviceAccount = getClass().getClassLoader().getResourceAsStream("serviceAccountKey.json")) {
+            java.io.InputStream serviceAccount = null;
+            java.io.File secretFile = new java.io.File("secrets/serviceAccountKey.json");
+            if (secretFile.exists()) {
+                serviceAccount = new java.io.FileInputStream(secretFile);
+            } else {
+                serviceAccount = getClass().getClassLoader().getResourceAsStream("serviceAccountKey.json");
+            }
+            
+            try {
                 if (serviceAccount != null) {
                     options = FirebaseOptions.builder()
                             .setCredentials(GoogleCredentials.fromStream(serviceAccount))
@@ -26,6 +34,10 @@ public class FirebaseConfig {
                     options = FirebaseOptions.builder()
                             .setCredentials(GoogleCredentials.getApplicationDefault())
                             .build();
+                }
+            } finally {
+                if (serviceAccount != null) {
+                    serviceAccount.close();
                 }
             }
 
