@@ -47,12 +47,23 @@ MIT License. Free for educational and research use.
 
 ## Running the Project
 
-### Prerequisites
-- Node.js (for the frontend client)
-- Java 17+ (for the Spring Boot server)
-- PostgreSQL Database
+### The Easy Way (Docker)
+Got Docker? Perfect. You can spin up the entire app in one command.
 
-### Client (Frontend)
+1. Copy `.env.example` to `.env` and fill in your keys.
+2. Create a `secrets` folder in the project root.
+3. Drop `clientSecret.json` and `serviceAccountKey.json` into that `secrets` folder.
+4. Run `docker compose up --build`.
+
+(All of this in root folder)
+
+After you build you can just run it without `--build` flag. i.e. `docker compose up`.
+
+Open `http://localhost:3000` when the terminal calms down. That's it.
+
+### The Manual Way (For Active Dev)
+
+#### Client (Frontend)
 Navigate to the `client` directory to install dependencies and start the Vite development server:
 ```bash
 cd client
@@ -60,7 +71,7 @@ npm install
 npm run dev
 ```
 
-### Server (Backend)
+#### Server (Backend)
 Navigate to the `server` directory. Make sure to configure your database settings first (refer to `.env.example`).
 ```bash
 cd server
