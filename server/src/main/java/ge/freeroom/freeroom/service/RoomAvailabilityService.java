@@ -28,17 +28,20 @@ public class RoomAvailabilityService {
     private final UserRepository userRepository;
     private final RoomOccupancyRepository roomOccupancyRepository;
 
+    private final EmailService emailService;
+
     @Autowired
     private ChatService chatService;
 
     @Autowired
     private TimeService timeService;
 
-    public RoomAvailabilityService(RoomRepository roomRepository, LectureRepository lectureRepository, UserRepository userRepository, RoomOccupancyRepository roomOccupancyRepository, TimeService timeService) {
+    public RoomAvailabilityService(RoomRepository roomRepository, LectureRepository lectureRepository, UserRepository userRepository, RoomOccupancyRepository roomOccupancyRepository, EmailService emailService, TimeService timeService) {
         this.roomRepository = roomRepository;
         this.lectureRepository = lectureRepository;
         this.userRepository = userRepository;
         this.roomOccupancyRepository = roomOccupancyRepository;
+        this.emailService = emailService;
         this.timeService = timeService;
     }
 
@@ -155,7 +158,7 @@ public class RoomAvailabilityService {
             throw new IllegalStateException(
                     "თქვენ უკვე დაჯავშნილი გაქვთ ოთახი " +
                             existing.getRoom().getRoomNumber() + " " +
-                            formattedTime + "-მდე"
+                            formattedTime + "-მდე.\nსხვა ოთახის დასაჯავშნად გააუქმეთ აქტიური!"
             );
         }
 
@@ -198,6 +201,14 @@ public class RoomAvailabilityService {
 
         if (chatService != null) {
             chatService.initializeRoomBooker(roomId, userId);
+        }
+
+        if (user.getNotificationPreference() == NotificationPreference.EMAIL) {
+            emailService.sendReservationConfirmation(
+                    user.getEmail(),
+                    room.getRoomNumber(),
+                    saved.getExpectedEndAt()
+            );
         }
 
         return response;
