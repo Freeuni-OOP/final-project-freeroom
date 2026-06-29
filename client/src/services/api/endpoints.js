@@ -39,3 +39,12 @@ export const getUserCalendar = () => axiosInstance.get('/user/calendar');
 
 export const getAllSubjects = () => axiosInstance.get('/subjects');
 export const searchSubjects = (query) => axiosInstance.get(`/subjects/search?q=${query}`);
+
+export const searchUsers = (query) => axiosInstance.get(`/friends/search?q=${encodeURIComponent(query)}`);
+export const getFriends = () => axiosInstance.get('/friends');
+
+export const getIncomingFriendRequests = () => axiosInstance.get('/friends/requests/incoming');
+export const sendFriendRequest = (receiverId) => axiosInstance.post('/friends/requests', { receiverId });
+
+export const acceptFriendRequest = (requestId) => axiosInstance.patch(`/friends/requests/${requestId}/accept`);
+export const rejectFriendRequest = (requestId) => axiosInstance.patch(`/friends/requests/${requestId}/reject`);

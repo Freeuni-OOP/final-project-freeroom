@@ -1,4 +1,5 @@
 import useProfilePage from './useProfilePage';
+import { FriendsPanel } from '@/components';
 
 export default function ProfilePage() {
     const {
@@ -217,18 +218,8 @@ export default function ProfilePage() {
 
             {/* Friends Card */}
             <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 sm:p-8">
-                <div className="mb-4 flex items-center justify-between">
-                    <h2 className="text-lg font-bold text-brand-ink">მეგობრები</h2>
-                    <span className="rounded-full bg-brand-accent/15 px-3 py-1 text-xs font-semibold text-brand-accent-text">
-                        მალე დაემატება
-                    </span>
-                </div>
-                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-black/10 py-10 text-center">
-                    <p className="text-sm font-medium text-brand-ink/60">მეგობრები ჯერ არ გყავთ</p>
-                    <p className="mt-1 text-xs text-brand-ink/40">
-                        დაუკავშირდით ჯგუფელებს, რათა ნახოთ ვინ სწავლობს ახლომახლო.
-                    </p>
-                </div>
+                <h2 className="mb-6 text-lg font-bold text-brand-ink">მეგობრები</h2>
+                <FriendsPanel />
             </section>
         </div>
     );
