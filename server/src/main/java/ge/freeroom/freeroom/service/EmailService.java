@@ -20,6 +20,7 @@ public class EmailService {
     public void sendReservationConfirmation(String toEmail, Integer roomNumber, LocalDateTime expectedEndAt) {
         SimpleMailMessage mail = new SimpleMailMessage();
         mail.setTo(toEmail);
+        mail.setFrom("FreeRoom <freeroom.notify@gmail.com>");
         mail.setSubject("FreeRoom - ოთახი დაჯავშნილია");
         mail.setText(
                 "ოთახი " + roomNumber + " წარმატებით დაიჯავშნა.\n" +
@@ -30,12 +31,13 @@ public class EmailService {
 
     @Async
     public void sendExpiryWarning(String toEmail, Integer roomNumber) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(toEmail);
-        message.setSubject("FreeRoom - დაჯავშნილი დრო იწურება");
-        message.setText(
+        SimpleMailMessage mail = new SimpleMailMessage();
+        mail.setTo(toEmail);
+        mail.setFrom("FreeRoom <freeroom.notify@gmail.com>");
+        mail.setSubject("FreeRoom - დაჯავშნილი დრო იწურება");
+        mail.setText(
                 "ოთახი " + roomNumber + "-ის ჯავშნის დასრულებამდე დარჩენილია 10 წუთი"
         );
-        mailSender.send(message);
+        mailSender.send(mail);
     }
 }
