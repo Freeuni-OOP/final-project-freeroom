@@ -5,6 +5,7 @@ import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
 import com.google.api.client.util.DateTime;
 import ge.freeroom.freeroom.entities.Lecture;
+import ge.freeroom.freeroom.entities.Subject;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -55,11 +56,11 @@ public class GoogleCalendarService {
         String summary = event.getSummary() != null ? event.getSummary() : "Unknown Title";
         String description = event.getDescription() != null ? event.getDescription() : "";
 
+        Subject transientSubject = LectureSyncService.parseSubject(summary);
+
         return Lecture.builder()
                 .eventExternalId(event.getId())
-                .title(summary)
-                .description(description)
-                .organizer("Unknown Organizer")
+                .subject(transientSubject)
                 .startAt(toLocalDateTime(event.getStart()))
                 .endAt(toLocalDateTime(event.getEnd()))
                 .recurring(false)

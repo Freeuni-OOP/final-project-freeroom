@@ -13,7 +13,10 @@ import java.time.LocalDateTime;
 @Setter
 public class LectureSummaryDto {
     private String title;
+    private String type;
+    private String groupNumber;
     private String organizer;
     private LocalDateTime startAt;
     private LocalDateTime endAt;
+    private Integer roomNumber;
 }

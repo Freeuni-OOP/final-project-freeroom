@@ -23,19 +23,11 @@ public class RoomController {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    private final LectureSyncService syncService;
 
     @Autowired
     private RoomAvailabilityService roomAvailabilityService;
 
-    public RoomController(LectureSyncService syncService) {
-        this.syncService = syncService;
-    }
-
-    @GetMapping("/sync-lectures")
-    public String syncLectures() {
-        syncService.syncAllRooms();
-        return "Sync completed successfully!";
+    public RoomController() {
     }
 
     @GetMapping("/rooms")

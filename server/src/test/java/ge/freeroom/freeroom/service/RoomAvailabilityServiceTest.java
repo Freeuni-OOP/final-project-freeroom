@@ -41,6 +41,9 @@ public class RoomAvailabilityServiceTest {
     @Mock
     private LectureRepository lectureRepository;
 
+    @Mock
+    private TimeService timeService;
+
     @InjectMocks
     private RoomAvailabilityService roomAvailabilityService;
 
@@ -62,6 +65,8 @@ public class RoomAvailabilityServiceTest {
         validOccupancy.setStartAt(LocalDateTime.now().minusMinutes(10));
         validOccupancy.setExpectedEndAt(LocalDateTime.now().plusMinutes(50));
         validOccupancy.setEndAt(null);
+
+        lenient().when(timeService.now()).thenReturn(LocalDateTime.now());
     }
 
     @Test

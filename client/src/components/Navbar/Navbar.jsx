@@ -14,7 +14,8 @@ export default function Navbar() {
         closeMenu,
         showFeatures,
         toggleFeatures,
-        closeFeatures
+        closeFeatures,
+        searchContainerRef
     } = useNavbar();
 
     return (
@@ -47,16 +48,24 @@ export default function Navbar() {
                             </button>
                         ))}
 
-                        <button
-                            onClick={toggleFeatures}
-                            className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
-                                showFeatures
-                                    ? 'bg-brand-accent text-white'
-                                    : 'text-brand-ink/70 hover:bg-black/5 hover:text-brand-ink'
-                            }`}
-                        >
-                            ძებნა
-                        </button>
+                        <div ref={searchContainerRef} className="relative flex items-center">
+                            <button
+                                onClick={toggleFeatures}
+                                className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                                    showFeatures
+                                        ? 'bg-brand-accent text-white'
+                                        : 'text-brand-ink/70 hover:bg-black/5 hover:text-brand-ink'
+                                }`}
+                            >
+                                ძებნა
+                            </button>
+
+                            {showFeatures && (
+                                <div className="absolute right-0 top-12 w-80 z-50">
+                                    <LectureSearch />
+                                </div>
+                            )}
+                        </div>
 
                         <button
                             onClick={handleLogout}
@@ -64,12 +73,6 @@ export default function Navbar() {
                         >
                             გამოსვლა
                         </button>
-
-                        {showFeatures && (
-                            <div className="absolute right-24 top-12 w-80 z-50">
-                                <LectureSearch />
-                            </div>
-                        )}
                     </div>
 
                     <button

@@ -34,6 +34,9 @@ class ChatServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private TimeService timeService;
+
     @InjectMocks
     private ChatService chatService;
 
@@ -94,6 +97,7 @@ class ChatServiceTest {
 
         when(chatRepository.findFirstByRoomIdAndAuthorUser_IdAndMessageTypeOrderBySendingTimeDesc(roomId, userId, MessageType.REQUEST))
                 .thenReturn(Optional.of(recentRequest));
+        when(timeService.now()).thenReturn(LocalDateTime.now());
 
         assertThrows(IllegalStateException.class, () -> chatService.sendJoinRequest(roomId, userId));
         verify(chatRepository, never()).save(any(Chat.class));
@@ -110,6 +114,7 @@ class ChatServiceTest {
         when(chatRepository.findFirstByRoomIdAndAuthorUser_IdAndMessageTypeOrderBySendingTimeDesc(roomId, userId, MessageType.REQUEST))
                 .thenReturn(Optional.of(oldRequest));
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(timeService.now()).thenReturn(LocalDateTime.now());
 
         chatService.sendJoinRequest(roomId, userId);
 

@@ -28,10 +28,11 @@ export default function LectureSearch() {
                                 {formatTime(lecture.startAt)} - {formatTime(lecture.endAt)}
                             </span>
                         </div>
-                        <h4 className="m-0 text-slate-800 font-medium text-base">{lecture.title}</h4>
-                        <div className="text-xs text-gray-500 mt-1">
-                            ოთახი: <strong className="text-blue-600">{lecture.room?.roomNumber || lecture.roomId}</strong>
-                            {lecture.description && ` | ${lecture.description}`}
+                        <h4 className="m-0 text-slate-800 font-medium text-base">{lecture.subject?.title}</h4>
+                        <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-2">
+                            <span>ოთახი: <strong className="text-blue-600">{lecture.room?.roomNumber}</strong></span>
+                            {lecture.subject?.type && <span className="text-gray-400">• {lecture.subject.type}</span>}
+                            {lecture.subject?.groupNumber && <span className="bg-gray-200 px-1.5 py-0.5 rounded text-[10px] font-bold">{lecture.subject.groupNumber}</span>}
                         </div>
                     </div>
                 ))}

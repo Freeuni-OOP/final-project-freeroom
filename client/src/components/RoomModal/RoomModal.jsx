@@ -115,7 +115,7 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                                   <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">მიმდინარე ლექცია</p>
                                   <p className="text-lg font-semibold text-gray-900">{modalData.lectureName}</p>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                   <div>
                                     <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">ლექტორი</p>
                                     <p className="font-medium text-gray-900">{modalData.lecturer}</p>
@@ -124,6 +124,12 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                                     <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">დრო</p>
                                     <p className="font-medium text-gray-900">{modalData.startTime} - {modalData.endTime}</p>
                                   </div>
+                                  {modalData.groupNumber && (
+                                    <div>
+                                      <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">ჯგუფი</p>
+                                      <p className="font-medium text-gray-900">{modalData.groupNumber}</p>
+                                    </div>
+                                  )}
                                 </div>
                               </>
                           )}

@@ -31,11 +31,15 @@ public class RoomAvailabilityService {
     @Autowired
     private ChatService chatService;
 
-    public RoomAvailabilityService(RoomRepository roomRepository, LectureRepository lectureRepository, UserRepository userRepository, RoomOccupancyRepository roomOccupancyRepository) {
+    @Autowired
+    private TimeService timeService;
+
+    public RoomAvailabilityService(RoomRepository roomRepository, LectureRepository lectureRepository, UserRepository userRepository, RoomOccupancyRepository roomOccupancyRepository, TimeService timeService) {
         this.roomRepository = roomRepository;
         this.lectureRepository = lectureRepository;
         this.userRepository = userRepository;
         this.roomOccupancyRepository = roomOccupancyRepository;
+        this.timeService = timeService;
     }
 
     public List<RoomMapDto> getAllRoomsMap(String currentUserId){
@@ -45,7 +49,7 @@ public class RoomAvailabilityService {
                 .map(Room::getId)
                 .collect(Collectors.toList());
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = timeService.now();
         List<Lecture> activeLectures = roomIds.isEmpty() ? List.of() : lectureRepository.findActiveLecturesByRoomIds(roomIds, now);
 
         Map<Long, Lecture> activeLectureByRoomId = activeLectures.stream()
@@ -77,8 +81,12 @@ public class RoomAvailabilityService {
                 dto.setCurrentOccupancy(null);
 
                 LectureSummaryDto lsd = new LectureSummaryDto();
-                lsd.setTitle(lecture.getTitle());
-                lsd.setOrganizer(lecture.getOrganizer());
+                if (lecture.getSubject() != null) {
+                    lsd.setTitle(lecture.getSubject().getTitle());
+                    lsd.setType(lecture.getSubject().getType());
+                    lsd.setGroupNumber(lecture.getSubject().getGroupNumber());
+                    lsd.setOrganizer(lecture.getSubject().getLecturer());
+                }
                 lsd.setStartAt(lecture.getStartAt());
                 lsd.setEndAt(lecture.getEndAt());
 
@@ -103,8 +111,12 @@ public class RoomAvailabilityService {
             Lecture nextLecture = nextLectureByRoomId.get(room.getId());
             if (nextLecture != null) {
                 LectureSummaryDto nextLsd = new LectureSummaryDto();
-                nextLsd.setTitle(nextLecture.getTitle());
-                nextLsd.setOrganizer(nextLecture.getOrganizer());
+                if (nextLecture.getSubject() != null) {
+                    nextLsd.setTitle(nextLecture.getSubject().getTitle());
+                    nextLsd.setType(nextLecture.getSubject().getType());
+                    nextLsd.setGroupNumber(nextLecture.getSubject().getGroupNumber());
+                    nextLsd.setOrganizer(nextLecture.getSubject().getLecturer());
+                }
                 nextLsd.setStartAt(nextLecture.getStartAt());
                 nextLsd.setEndAt(nextLecture.getEndAt());
 
@@ -133,7 +145,7 @@ public class RoomAvailabilityService {
         Room room = roomRepository.findByIdWithLock(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Room not Found"));
 
-        LocalDateTime nowTime = LocalDateTime.now();
+        LocalDateTime nowTime = timeService.now();
 
         Optional<RoomOccupancy> existingUserOccupancy = roomOccupancyRepository
                 .findActiveOccupancyByUserId(userId, nowTime);
@@ -193,7 +205,7 @@ public class RoomAvailabilityService {
 
     @Transactional
     public CancelOccupancyResponseDto cancelOccupancy(String userId, Long roomId) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = timeService.now();
 
         Optional<RoomOccupancy> occupancyOpt = roomOccupancyRepository
                 .findFirstByRoomIdAndEndAtIsNull(roomId);
@@ -217,7 +229,7 @@ public class RoomAvailabilityService {
             throw new org.springframework.security.access.AccessDeniedException("You can only cancel your own occupancy");
         }
 
-        occ.setEndAt(LocalDateTime.now());
+        occ.setEndAt(timeService.now());
         roomOccupancyRepository.save(occ);
 
         CancelOccupancyResponseDto response = new CancelOccupancyResponseDto();
