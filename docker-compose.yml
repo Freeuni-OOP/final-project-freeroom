@@ -8,6 +8,7 @@ services:
       - "8888:8888"
     volumes:
       - ./server/tokens:/app/tokens
+      - ./secrets:/app/secrets
     environment:
       - SUPABASE_DB_USERNAME=${SUPABASE_DB_USERNAME}
       - SUPABASE_DB_PASSWORD=${SUPABASE_DB_PASSWORD}
