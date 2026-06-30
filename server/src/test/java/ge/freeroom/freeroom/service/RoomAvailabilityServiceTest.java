@@ -2,6 +2,7 @@ package ge.freeroom.freeroom.service;
 
 import ge.freeroom.freeroom.dto.CancelOccupancyResponseDto;
 import ge.freeroom.freeroom.dto.ReserveRoomResponseDto;
+import ge.freeroom.freeroom.entities.Lecture;
 import ge.freeroom.freeroom.entities.NotificationPreference;
 import ge.freeroom.freeroom.entities.Room;
 import ge.freeroom.freeroom.entities.RoomOccupancy;
@@ -13,6 +14,7 @@ import ge.freeroom.freeroom.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -20,14 +22,12 @@ import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-
-import org.mockito.ArgumentCaptor;
 
 @ExtendWith(MockitoExtension.class)
 public class RoomAvailabilityServiceTest {
@@ -238,6 +238,135 @@ public class RoomAvailabilityServiceTest {
         roomAvailabilityService.reserveRoom("uid", 1L, 60L);
 
         verify(emailService, never()).sendReservationConfirmation(any(), anyInt(), any());
+    }
+
+    private User emailUser() {
+        User user = new User();
+        user.setId("uid");
+        user.setEmail("test@freeuni.edu.ge");
+        user.setNotificationPreference(NotificationPreference.EMAIL);
+        return user;
+    }
+
+    private Room basicRoom() {
+        Room room = new Room();
+        room.setId(1L);
+        room.setRoomNumber(101);
+        return room;
+    }
+
+    private void stubRoomFreeAndAvailable(Room room) {
+        when(roomRepository.findByIdWithLock(1L)).thenReturn(Optional.of(room));
+        when(roomOccupancyRepository.findActiveOccupancyByUserId(eq("uid"), any())).thenReturn(Optional.empty());
+        when(lectureRepository.findActiveLecturesByRoomIds(any(), any())).thenReturn(Collections.emptyList());
+        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(1L)).thenReturn(Optional.empty());
+    }
+
+    @Test
+    void reserveRoom_throwsWhenDurationExtendsPastNextLecture() {
+        User user = emailUser();
+        when(userRepository.findById("uid")).thenReturn(Optional.of(user));
+
+        Room room = basicRoom();
+        stubRoomFreeAndAvailable(room);
+
+        LocalDateTime now = LocalDateTime.now();
+        when(timeService.now()).thenReturn(now);
+
+        Lecture nextLecture = new Lecture();
+        nextLecture.setStartAt(now.plusMinutes(45));
+        when(lectureRepository.findNextLecturesByRoomId(eq(1L), any())).thenReturn(List.of(nextLecture));
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+                roomAvailabilityService.reserveRoom("uid", 1L, 60L));
+
+        assertTrue(exception.getMessage().contains("45"));
+        verify(roomOccupancyRepository, never()).save(any());
+    }
+
+    @Test
+    void reserveRoom_allowsDurationEndingExactlyAtNextLectureStart() {
+        User user = emailUser();
+        when(userRepository.findById("uid")).thenReturn(Optional.of(user));
+
+        Room room = basicRoom();
+        stubRoomFreeAndAvailable(room);
+
+        LocalDateTime now = LocalDateTime.now();
+        when(timeService.now()).thenReturn(now);
+
+        Lecture nextLecture = new Lecture();
+        nextLecture.setStartAt(now.plusMinutes(45));
+        when(lectureRepository.findNextLecturesByRoomId(eq(1L), any())).thenReturn(List.of(nextLecture));
+
+        RoomOccupancy saved = new RoomOccupancy();
+        saved.setId(1L);
+        saved.setRoom(room);
+        saved.setUser(user);
+        saved.setStartAt(now);
+        saved.setExpectedEndAt(now.plusMinutes(45));
+        when(roomOccupancyRepository.save(any(RoomOccupancy.class))).thenReturn(saved);
+
+        ReserveRoomResponseDto result = roomAvailabilityService.reserveRoom("uid", 1L, 45L);
+
+        assertNotNull(result);
+        verify(roomOccupancyRepository, times(1)).save(any(RoomOccupancy.class));
+    }
+
+    @Test
+    void reserveRoom_allowsDurationWhenNoNextLecture() {
+        User user = emailUser();
+        when(userRepository.findById("uid")).thenReturn(Optional.of(user));
+
+        Room room = basicRoom();
+        stubRoomFreeAndAvailable(room);
+
+        LocalDateTime now = LocalDateTime.now();
+        when(timeService.now()).thenReturn(now);
+        when(lectureRepository.findNextLecturesByRoomId(eq(1L), any())).thenReturn(Collections.emptyList());
+
+        RoomOccupancy saved = new RoomOccupancy();
+        saved.setId(1L);
+        saved.setRoom(room);
+        saved.setUser(user);
+        saved.setStartAt(now);
+        saved.setExpectedEndAt(now.plusMinutes(120));
+        when(roomOccupancyRepository.save(any(RoomOccupancy.class))).thenReturn(saved);
+
+        ReserveRoomResponseDto result = roomAvailabilityService.reserveRoom("uid", 1L, 120L);
+
+        assertNotNull(result);
+        assertNull(result.getNextLectureStart());
+    }
+
+    @Test
+    void reserveRoom_populatesNextLectureFieldsOnSuccess() {
+        User user = emailUser();
+        when(userRepository.findById("uid")).thenReturn(Optional.of(user));
+
+        Room room = basicRoom();
+        stubRoomFreeAndAvailable(room);
+
+        LocalDateTime now = LocalDateTime.now();
+        when(timeService.now()).thenReturn(now);
+
+        Lecture nextLecture = new Lecture();
+        LocalDateTime lectureStart = now.plusMinutes(90);
+        nextLecture.setStartAt(lectureStart);
+        when(lectureRepository.findNextLecturesByRoomId(eq(1L), any())).thenReturn(List.of(nextLecture));
+
+        RoomOccupancy saved = new RoomOccupancy();
+        saved.setId(1L);
+        saved.setRoom(room);
+        saved.setUser(user);
+        saved.setStartAt(now);
+        saved.setExpectedEndAt(now.plusMinutes(30));
+        when(roomOccupancyRepository.save(any(RoomOccupancy.class))).thenReturn(saved);
+
+        ReserveRoomResponseDto result = roomAvailabilityService.reserveRoom("uid", 1L, 30L);
+
+        assertEquals(lectureStart, result.getNextLectureStart());
+        assertEquals(90L, result.getMaxAllowedDurationMinutes());
     }
 
     private void stubHappyPathReservation(User user, Room room, LocalDateTime fixedNow) {
