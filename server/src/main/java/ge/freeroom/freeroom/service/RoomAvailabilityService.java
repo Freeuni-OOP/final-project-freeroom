@@ -77,6 +77,7 @@ public class RoomAvailabilityService {
             dto.setRoomNumber(room.getRoomNumber());
             dto.setCapacity(room.getCapacity());
             dto.setFloorNumber(room.getFloor().getNumber());
+            dto.setServerNow(now);
 
             Lecture lecture = activeLectureByRoomId.get(room.getId());
             RoomOccupancy occupancy = activeOccupancyByRoomId.get(room.getId());
@@ -196,12 +197,24 @@ public class RoomAvailabilityService {
         }
 
         long minutes = (durationMinutes != null) ? Math.max(1, Math.min(480, durationMinutes)) : 60;
+        LocalDateTime expectedEnd = nowTime.plusMinutes(minutes);
+
+        List<Lecture> nextLectures = lectureRepository.findNextLecturesByRoomId(roomId, nowTime);
+        Lecture nextLecture = nextLectures.isEmpty() ? null : nextLectures.get(0);
+
+        if (nextLecture != null && expectedEnd.isAfter(nextLecture.getStartAt())) {
+            long maxAllowedMinutes = java.time.Duration.between(nowTime, nextLecture.getStartAt()).toMinutes();
+            throw new IllegalStateException(
+                    "ამ ხანგრძლივობით დაჯავშნა შეუძლებელია - შემდეგი ლექცია იწყება " +
+                            maxAllowedMinutes + " წუთში."
+            );
+        }
 
         RoomOccupancy occupancy = new RoomOccupancy();
         occupancy.setRoom(room);
         occupancy.setUser(user);
         occupancy.setStartAt(nowTime);
-        occupancy.setExpectedEndAt(nowTime.plusMinutes(minutes));
+        occupancy.setExpectedEndAt(expectedEnd);
         occupancy.setEndAt(null);
 
         RoomOccupancy saved = roomOccupancyRepository.save(occupancy);
@@ -212,6 +225,10 @@ public class RoomAvailabilityService {
         response.setRoomNumber(saved.getRoom().getRoomNumber());
         response.setStartTime(saved.getStartAt());
         response.setExpectedEndTime(saved.getExpectedEndAt());
+        if (nextLecture != null) {
+            response.setNextLectureStart(nextLecture.getStartAt());
+            response.setMaxAllowedDurationMinutes(java.time.Duration.between(nowTime, nextLecture.getStartAt()).toMinutes());
+        }
 
         if (chatService != null) {
             chatService.initializeRoomBooker(roomId, userId);

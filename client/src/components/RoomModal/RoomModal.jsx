@@ -5,6 +5,7 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
     roomData: modalData,
     handleReserve,
     handleCancel,
+    availableDurations,
     isChatOpen,
     setIsChatOpen,
     messages,
@@ -183,26 +184,26 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                     {modalData.isFree && (
                         <div className="space-y-2">
                           <p className="text-sm text-gray-600 mb-1">დაჯავშნის ხანგრძლივობა:</p>
-                          <div className="flex gap-2">
-                            <button
-                                onClick={() => { handleReserve(30); }}
-                                className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-semibold py-3 rounded-lg"
-                            >
-                              30 წუთი
-                            </button>
-                            <button
-                                onClick={() => { handleReserve(60); }}
-                                className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-semibold py-3 rounded-lg"
-                            >
-                              1 საათი
-                            </button>
-                            <button
-                                onClick={() => { handleReserve(120); }}
-                                className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-semibold py-3 rounded-lg"
-                            >
-                              2 საათი
-                            </button>
-                          </div>
+                          {availableDurations.length > 0 ? (
+                              <div className="flex gap-2">
+                                {availableDurations.map((duration) => (
+                                    <button
+                                        key={duration}
+                                        onClick={() => { handleReserve(duration); }}
+                                        className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-semibold py-3 rounded-lg"
+                                    >
+                                      {duration === 30 && '30 წუთი'}
+                                      {duration === 60 && '1 საათი'}
+                                      {duration === 120 && '2 საათი'}
+                                      {![30, 60, 120].includes(duration) && `${duration} წუთი (დარჩენილი დრო)`}
+                                    </button>
+                                ))}
+                              </div>
+                          ) : (
+                              <p className="text-sm text-amber-600 italic bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                                ⏰ შემდეგი ლექცია მალე იწყება.
+                              </p>
+                          )}
                         </div>
                     )}
                   </div>
