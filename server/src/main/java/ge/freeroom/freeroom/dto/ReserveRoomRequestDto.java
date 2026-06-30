@@ -1,5 +1,7 @@
 package ge.freeroom.freeroom.dto;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,5 +14,7 @@ import lombok.Setter;
 public class ReserveRoomRequestDto {
     private Long roomDbId;
     private Integer roomNumber;
+    @Min(1)
+    @Max(480)
     private Long durationMinutes;
 }

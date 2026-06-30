@@ -367,4 +367,94 @@ public class RoomAvailabilityServiceTest {
         assertEquals(lectureStart, result.getNextLectureStart());
         assertEquals(90L, result.getMaxAllowedDurationMinutes());
     }
+
+    private void stubHappyPathReservation(User user, Room room, LocalDateTime fixedNow) {
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(roomRepository.findByIdWithLock(room.getId())).thenReturn(Optional.of(room));
+        when(roomOccupancyRepository.findActiveOccupancyByUserId(eq(user.getId()), any())).thenReturn(Optional.empty());
+        when(lectureRepository.findActiveLecturesByRoomIds(any(), any())).thenReturn(Collections.emptyList());
+        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(room.getId())).thenReturn(Optional.empty());
+        when(timeService.now()).thenReturn(fixedNow);
+    }
+
+    @Test
+    void reserveRoom_negativeDuration_clampedToOneMinute() {
+        LocalDateTime fixedNow = LocalDateTime.of(2026, 1, 1, 12, 0);
+        User user = new User();
+        user.setId("uid");
+        user.setNotificationPreference(NotificationPreference.EMAIL);
+        Room room = new Room();
+        room.setId(1L);
+        room.setRoomNumber(101);
+
+        stubHappyPathReservation(user, room, fixedNow);
+
+        RoomOccupancy saved = new RoomOccupancy();
+        saved.setId(1L);
+        saved.setRoom(room);
+        saved.setUser(user);
+        saved.setStartAt(fixedNow);
+        saved.setExpectedEndAt(fixedNow.plusMinutes(1));
+        when(roomOccupancyRepository.save(any(RoomOccupancy.class))).thenReturn(saved);
+
+        roomAvailabilityService.reserveRoom("uid", 1L, -10L);
+
+        ArgumentCaptor<RoomOccupancy> captor = ArgumentCaptor.forClass(RoomOccupancy.class);
+        verify(roomOccupancyRepository).save(captor.capture());
+        assertEquals(fixedNow.plusMinutes(1), captor.getValue().getExpectedEndAt());
+    }
+
+    @Test
+    void reserveRoom_durationAbove480_clampedTo480() {
+        LocalDateTime fixedNow = LocalDateTime.of(2026, 1, 1, 12, 0);
+        User user = new User();
+        user.setId("uid");
+        user.setNotificationPreference(NotificationPreference.EMAIL);
+        Room room = new Room();
+        room.setId(1L);
+        room.setRoomNumber(101);
+
+        stubHappyPathReservation(user, room, fixedNow);
+
+        RoomOccupancy saved = new RoomOccupancy();
+        saved.setId(1L);
+        saved.setRoom(room);
+        saved.setUser(user);
+        saved.setStartAt(fixedNow);
+        saved.setExpectedEndAt(fixedNow.plusMinutes(480));
+        when(roomOccupancyRepository.save(any(RoomOccupancy.class))).thenReturn(saved);
+
+        roomAvailabilityService.reserveRoom("uid", 1L, 9999L);
+
+        ArgumentCaptor<RoomOccupancy> captor = ArgumentCaptor.forClass(RoomOccupancy.class);
+        verify(roomOccupancyRepository).save(captor.capture());
+        assertEquals(fixedNow.plusMinutes(480), captor.getValue().getExpectedEndAt());
+    }
+
+    @Test
+    void reserveRoom_nullDuration_defaultsTo60() {
+        LocalDateTime fixedNow = LocalDateTime.of(2026, 1, 1, 12, 0);
+        User user = new User();
+        user.setId("uid");
+        user.setNotificationPreference(NotificationPreference.EMAIL);
+        Room room = new Room();
+        room.setId(1L);
+        room.setRoomNumber(101);
+
+        stubHappyPathReservation(user, room, fixedNow);
+
+        RoomOccupancy saved = new RoomOccupancy();
+        saved.setId(1L);
+        saved.setRoom(room);
+        saved.setUser(user);
+        saved.setStartAt(fixedNow);
+        saved.setExpectedEndAt(fixedNow.plusMinutes(60));
+        when(roomOccupancyRepository.save(any(RoomOccupancy.class))).thenReturn(saved);
+
+        roomAvailabilityService.reserveRoom("uid", 1L, null);
+
+        ArgumentCaptor<RoomOccupancy> captor = ArgumentCaptor.forClass(RoomOccupancy.class);
+        verify(roomOccupancyRepository).save(captor.capture());
+        assertEquals(fixedNow.plusMinutes(60), captor.getValue().getExpectedEndAt());
+    }
 }
