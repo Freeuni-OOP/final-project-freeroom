@@ -191,7 +191,15 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         startTime: formatTime(roomData?.currentLecture?.startAt),
         endTime: formatTime(roomData?.currentLecture?.endAt),
         groupNumber: roomData?.currentLecture?.groupNumber ?? null,
-        reservedBy: roomData?.currentOccupancy?.isMyOccupancy ? 'თქვენ' : "Not Your Friend",
+        reservedBy: roomData?.currentOccupancy?.isMyOccupancy
+            ? 'თქვენ'
+            : roomData?.currentOccupancy?.isFriendOccupancy
+                ? roomData?.currentOccupancy?.reserverDisplayName
+                : 'სხვა სტუდენტი',
+        reservedByPhotoUrl: roomData?.currentOccupancy?.isFriendOccupancy
+            ? roomData?.currentOccupancy?.reserverPhotoUrl
+            : null,
+        isFriendOccupancy: roomData?.currentOccupancy?.isFriendOccupancy ?? false,
         reservedUntil: formatTime(roomData?.currentOccupancy?.expectedEndAt),
         nextLectureTitle: roomData?.nextLecture?.title ?? null,
         nextLectureStart: formatTime(roomData?.nextLecture?.startAt),
