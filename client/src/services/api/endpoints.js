@@ -48,3 +48,5 @@ export const sendFriendRequest = (receiverId) => axiosInstance.post('/friends/re
 
 export const acceptFriendRequest = (requestId) => axiosInstance.patch(`/friends/requests/${requestId}/accept`);
 export const rejectFriendRequest = (requestId) => axiosInstance.patch(`/friends/requests/${requestId}/reject`);
+
+export const reportUser = (userId, reason, details) => axiosInstance.post(`/users/${userId}/report`, { reason, details })
