@@ -1,4 +1,5 @@
 import useLectureSearch from './useLectureSearch';
+import { UNIVERSITY } from '@/utils';
 
 export default function LectureSearch() {
     const { query, searchResults, loading, handleSearch, formatTime, university } = useLectureSearch();
@@ -25,7 +26,7 @@ export default function LectureSearch() {
                     <div key={lecture.id} className="p-3 border-b border-gray-100 mb-2 bg-gray-50 rounded">
                         <div className="flex justify-between items-center mb-1">
                             <span className={`text-white px-2 py-0.5 rounded text-xs font-bold ${
-                                university === 'აგრარული' ? 'bg-green-600' : 'bg-amber-400'
+                                university === UNIVERSITY.AGRUNI ? 'bg-green-600' : 'bg-amber-400'
                             }`}>
                                 {formatTime(lecture.startAt)} - {formatTime(lecture.endAt)}
                             </span>
