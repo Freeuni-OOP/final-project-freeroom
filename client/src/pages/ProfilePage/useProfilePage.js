@@ -27,16 +27,34 @@ const useProfilePage = () => {
 
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const hasFetched = useRef(false);
+  const fetchedUserIdRef = useRef(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     getNotificationPreference()
         .then(res => {
-          setPreference(res.data.preference);
-          setTelegramLinked(res.data.telegramLinked);
+          if (isMounted) {
+            setPreference(res.data.preference);
+            setTelegramLinked(res.data.telegramLinked);
+          }
         })
-        .finally(() => setPreferenceLoading(false))
-        .catch(() => setPreferenceLoading(false));
+        .catch((err) => console.error(err))
+        .finally(() => {
+          if (isMounted) setPreferenceLoading(false);
+        });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (preferenceTimer.current) {
+        clearTimeout(preferenceTimer.current);
+      }
+    };
   }, []);
 
   const handlePreferenceChange = (newPreference) => {
@@ -80,33 +98,41 @@ const useProfilePage = () => {
   const handlePhotoError = () => setPhotoFailed(true);
 
   useEffect(() => {
+    if (!user) return;
+    let isMounted = true;
+
     const getBackendProfile = async () => {
-      if (!user) return;
-      if (hasFetched.current) {
-        setIsLoading(false);
+      if (fetchedUserIdRef.current === user.uid) {
+        if (isMounted) setIsLoading(false);
         return;
       }
       try {
         const data = await fetchProfile();
-        if (data) {
+        if (data && isMounted) {
           setBio(data.bio || '');
           setDisplayName(data.displayName || '');
           setPhotoUrl(data.photoUrl || '');
-          hasFetched.current = true;
+          fetchedUserIdRef.current = user.uid;
         }
       } catch (err) {
         console.error("Error fetching profile:", err);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
     getBackendProfile();
+
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
   const handleSaveProfile = async () => {
     if (!user) return;
     if (bio && bio.length > 300) {
-      alert('ბიოგრაფია არ უნდა აღემატებოდეს 300 სიმბოლოს.');
+      showNotification({ message: 'ბიოგრაფია არ უნდა აღემატებოდეს 300 სიმბოლოს.', type: 'error' });
       return;
     }
     setIsSaving(true);
@@ -150,9 +176,12 @@ const useProfilePage = () => {
       return;
     }
 
+    if (photoUrl && photoUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(photoUrl);
+    }
+
     setSelectedFile(file);
     setPhotoFailed(false);
-
     setPhotoUrl(URL.createObjectURL(file));
   };
 

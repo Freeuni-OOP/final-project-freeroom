@@ -29,6 +29,14 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
 
     const chatContainerRef = useRef(null);
     const isFetchingOlder = useRef(false);
+    const isMountedRef = useRef(true);
+
+    useEffect(() => {
+        isMountedRef.current = true;
+        return () => {
+            isMountedRef.current = false;
+        };
+    }, []);
 
     if (roomId !== prevRoomId) {
         setPrevRoomId(roomId);
@@ -83,21 +91,41 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
             stompClient = new Client({
                 webSocketFactory: () => socket,
                 onConnect: () => {
-                    setReloadTrigger((prev) => prev + 1);
+                    if (isMountedRef.current) {
+                        setReloadTrigger((prev) => prev + 1);
+                    }
 
                     stompClient.subscribe(`/topic/room/${roomId}`, (message) => {
                         const newMsg = JSON.parse(message.body);
-                        setMessages((prev) => {
-                            if (prev.some(m => m.id === newMsg.id)) return prev;
-                            return [...prev, newMsg].sort((a, b) => a.id - b.id);
-                        });
+                        if (isMountedRef.current) {
+                            setMessages((prev) => {
+                                if (prev.some(m => m.id === newMsg.id)) return prev;
+                                return [...prev, newMsg].sort((a, b) => a.id - b.id);
+                            });
+                        }
                     });
 
                     stompClient.subscribe(`/topic/room/${roomId}/reload`, () => {
-                        setReloadTrigger((prev) => prev + 1);
+                        if (isMountedRef.current) {
+                            setReloadTrigger((prev) => prev + 1);
+                        }
                     });
                 },
-                onStompError: (err) => console.error(err),
+                onStompError: (err) => {
+                    console.error(err);
+                    showNotification({
+                        message: 'ჩატთან კავშირი შეწყდა. შეტყობინებები დროებით ვერ განახლდება.',
+                        type: 'error'
+                    });
+                },
+                onWebSocketClose: () => {
+                    if (isMountedRef.current && isChatOpen) {
+                        showNotification({
+                            message: 'სერვერთან კავშირი დაკარგულია. მიმდინარეობს ხელახლა დაკავშირება...',
+                            type: 'info'
+                        });
+                    }
+                }
             });
             stompClient.activate();
         }
@@ -117,6 +145,9 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         try {
             const oldestId = messages[0].id;
             const data = await getChatMessages(roomId, oldestId);
+
+            if (!isMountedRef.current) return;
+
             if (data.length < 20) setHasMore(false);
             if (data.length > 0) {
                 setMessages(prev => {
@@ -139,7 +170,9 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
             console.error(err);
             isFetchingOlder.current = false;
         } finally {
-            setIsLoadingOlder(false);
+            if (isMountedRef.current) {
+                setIsLoadingOlder(false);
+            }
         }
     };
 
@@ -173,7 +206,7 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
             return;
         }
         try {
-            await reserveRoom(roomData.id, durationMinutes);
+            await reserveRoom(roomId, durationMinutes);
             onClose();
             onReserveSuccess();
             showNotification({ message: `ოთახი ${roomId} დაჯავშნილია ${durationMinutes} წუთით`, type: 'success' });
@@ -189,7 +222,7 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
             return;
         }
         try {
-            await cancelOccupancy(roomData.id);
+            await cancelOccupancy(roomId);
             onClose();
             onReserveSuccess();
             showNotification({ message: `ოთახი ${roomId} გათავისუფლდა`, type: 'success' });
@@ -203,7 +236,9 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         if (!messageText.trim()) return;
         try {
             await sendChatMessage(roomId, messageText);
-            setMessageText('');
+            if (isMountedRef.current) {
+                setMessageText('');
+            }
         } catch (err) {
             console.error(err);
             showNotification({ message: err.response?.data?.message || 'შეტყობინება ვერ გაიგზავნა', type: 'error' });
@@ -224,7 +259,9 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         try {
             await approveJoinRequest(roomId, targetUserId);
             showNotification({ message: 'მომხმარებელი წარმატებით დაემატა', type: 'success' });
-            setReloadTrigger((prev) => prev + 1);
+            if (isMountedRef.current) {
+                setReloadTrigger((prev) => prev + 1);
+            }
         } catch (err) {
             console.error(err);
             showNotification({ message: err.response?.data?.message || 'დამტკიცება ვერ მოხერხდა', type: 'error' });
@@ -235,7 +272,9 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         try {
             await rejectJoinRequest(roomId, targetUserId);
             showNotification({ message: 'მოთხოვნა უარყოფილია', type: 'info' });
-            setReloadTrigger((prev) => prev + 1);
+            if (isMountedRef.current) {
+                setReloadTrigger((prev) => prev + 1);
+            }
         } catch (err) {
             console.error(err);
             showNotification({ message: err.response?.data?.message || 'უარყოფა ვერ მოხერხდა', type: 'error' });

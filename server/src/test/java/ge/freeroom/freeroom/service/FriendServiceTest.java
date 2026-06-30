@@ -28,6 +28,7 @@ class FriendServiceTest {
     @Mock FriendshipRepository friendshipRepository;
     @Mock UserRepository userRepository;
     @Mock RoomOccupancyRepository roomOccupancyRepository;
+    @Mock TimeService timeService;
 
     @InjectMocks FriendService friendService;
 
