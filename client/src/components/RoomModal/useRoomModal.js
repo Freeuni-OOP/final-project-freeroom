@@ -8,8 +8,10 @@ import {
     approveJoinRequest,
     rejectJoinRequest
 } from '@/services/api/endpoints.js';
+import { useNotification } from '@/context';
 
 const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
+    const { showNotification } = useNotification();
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [messages, setMessages] = useState([]);
     const [isAuthorized, setIsAuthorized] = useState(null);
@@ -87,31 +89,31 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
 
     const handleReserve = async (durationMinutes) => {
         if(!modalData?.isFree) {
-            alert('ოთახი დაკავებულია');
+            showNotification({ message: 'ოთახი დაკავებულია', type: 'error' });
             return;
         }
         try {
             await reserveRoom(roomData.id, durationMinutes);
             onClose();
             onReserveSuccess();
-            alert(`ოთახი ${roomId} დაჯავშნილია ${durationMinutes} წუთით`);
+            showNotification({ message: `ოთახი ${roomId} დაჯავშნილია ${durationMinutes} წუთით`, type: 'success' });
         } catch (err) {
-            alert(err.response?.data?.error || 'დაჯავშნა ვერ მოხერხდა');
+            showNotification({ message: err.response?.data?.error || 'დაჯავშნა ვერ მოხერხდა', type: 'error' });
         }
     };
 
     const handleCancel = async () => {
         if (!modalData?.isMyOccupancy) {
-            alert('მხოლოდ საკუთარი ჯავშნის გაუქმება შეგიძლიათ');
+            showNotification({ message: 'მხოლოდ საკუთარი ჯავშნის გაუქმება შეგიძლიათ', type: 'error' });
             return;
         }
         try {
             await cancelOccupancy(roomData.id);
             onClose();
             onReserveSuccess();
-            alert(`ოთახი ${roomId} გათავისუფლდა`);
+            showNotification({ message: `ოთახი ${roomId} გათავისუფლდა`, type: 'success' });
         } catch (err) {
-            alert(err.response?.data?.message || 'გაუქმება ვერ მოხერხდა');
+            showNotification({ message: err.response?.data?.message || 'გაუქმება ვერ მოხერხდა', type: 'error' });
         }
     };
 
@@ -122,36 +124,36 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
             setMessageText('');
             loadChat();
         } catch (err) {
-            alert(err.response?.data?.message || 'შეტყობინება ვერ გაიგზავნა');
+            showNotification({ message: err.response?.data?.message || 'შეტყობინება ვერ გაიგზავნა', type: 'error' });
         }
     };
 
     const handleRequestJoin = async () => {
         try {
             await requestJoinRoom(roomId);
-            alert('მოთხოვნა გაიგზავნა წარმატებით');
+            showNotification({ message: 'მოთხოვნა გაიგზავნა წარმატებით', type: 'success' });
         } catch (err) {
-            alert(err.response?.data?.message || 'მოთხოვნა ვერ გაიგზავნა. მოთხოვნის გაგზავნა შესაძლებელია წუთში ერთხელ.');
+            showNotification({ message: err.response?.data?.message || 'მოთხოვნა ვერ გაიგზავნა. მოთხოვნის გაგზავნა შესაძლებელია წუთში ერთხელ.', type: 'error' });
         }
     };
 
     const handleApproveUser = async (targetUserId) => {
         try {
             await approveJoinRequest(roomId, targetUserId);
-            alert('მომხმარებელი წარმატებით დაემატა');
+            showNotification({ message: 'მომხმარებელი წარმატებით დაემატა', type: 'success' });
             loadChat();
         } catch (err) {
-            alert(err.response?.data?.message || 'დამტკიცება ვერ მოხერხდა');
+            showNotification({ message: err.response?.data?.message || 'დამტკიცება ვერ მოხერხდა', type: 'error' });
         }
     };
 
     const handleRejectUser = async (targetUserId) => {
         try {
             await rejectJoinRequest(roomId, targetUserId);
-            alert('მოთხოვნა უარყოფილია');
+            showNotification({ message: 'მოთხოვნა უარყოფილია', type: 'info' });
             loadChat();
         } catch (err) {
-            alert(err.response?.data?.message || 'უარყოფა ვერ მოხერხდა');
+            showNotification({ message: err.response?.data?.message || 'უარყოფა ვერ მოხერხდა', type: 'error' });
         }
     };
 

@@ -24,16 +24,19 @@ public class FriendService {
     private final FriendshipRepository friendshipRepository;
     private final UserRepository userRepository;
     private final RoomOccupancyRepository roomOccupancyRepository;
+    private final TimeService timeService;
 
     public FriendService(
             FriendRequestRepository friendRequestRepository,
             FriendshipRepository friendshipRepository,
             UserRepository userRepository,
-            RoomOccupancyRepository roomOccupancyRepository) {
+            RoomOccupancyRepository roomOccupancyRepository,
+            TimeService timeService) {
         this.friendRequestRepository = friendRequestRepository;
         this.friendshipRepository = friendshipRepository;
         this.userRepository = userRepository;
         this.roomOccupancyRepository = roomOccupancyRepository;
+        this.timeService = timeService;
     }
 
     public List<UserSearchResultDto> searchUsers(String currentUserId, String query){
@@ -167,7 +170,7 @@ public class FriendService {
 
         List<User> friends = userRepository.findAllById(friendIds);
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = timeService.now();
         List<RoomOccupancy> activeOccupancies =
                 roomOccupancyRepository.findActiveNonExpiredByUserIds(friendIds, now);
 
