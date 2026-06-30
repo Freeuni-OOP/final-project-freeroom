@@ -77,6 +77,7 @@ public class RoomAvailabilityService {
             dto.setRoomNumber(room.getRoomNumber());
             dto.setCapacity(room.getCapacity());
             dto.setFloorNumber(room.getFloor().getNumber());
+            dto.setServerNow(now);
 
             Lecture lecture = activeLectureByRoomId.get(room.getId());
             RoomOccupancy occupancy = activeOccupancyByRoomId.get(room.getId());
