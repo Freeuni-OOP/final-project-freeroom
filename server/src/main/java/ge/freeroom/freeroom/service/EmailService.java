@@ -18,30 +18,38 @@ public class EmailService {
 
     @Async
     public void sendReservationConfirmation(String toEmail, Integer roomNumber, LocalDateTime expectedEndAt) {
-        String formattedTime = expectedEndAt.format(
-                java.time.format.DateTimeFormatter.ofPattern("HH:mm")
-        );
+        try {
+            if (toEmail == null || toEmail.isEmpty()) return;
+            String formattedTime = expectedEndAt.format(
+                    java.time.format.DateTimeFormatter.ofPattern("HH:mm")
+            );
 
-        SimpleMailMessage mail = new SimpleMailMessage();
-        mail.setTo(toEmail);
-        mail.setFrom("FreeRoom <freeroom.notify@gmail.com>");
-        mail.setSubject("ოთახი დაჯავშნილია");
-        mail.setText(
-                "ოთახი " + roomNumber + " წარმატებით დაიჯავშნა.\n" +
-                        "დაჯავშნა მოქმედია: " + formattedTime + "-მდე."
-        );
-        mailSender.send(mail);
+            SimpleMailMessage mail = new SimpleMailMessage();
+            mail.setTo(toEmail);
+            mail.setFrom("FreeRoom <freeroom.notify@gmail.com>");
+            mail.setSubject("ოთახი დაჯავშნილია");
+            mail.setText(
+                    "ოთახი " + roomNumber + " წარმატებით დაიჯავშნა.\n" +
+                            "დაჯავშნა მოქმედია: " + formattedTime + "-მდე."
+            );
+            mailSender.send(mail);
+        } catch (Exception e) {
+        }
     }
 
     @Async
     public void sendExpiryWarning(String toEmail, Integer roomNumber) {
-        SimpleMailMessage mail = new SimpleMailMessage();
-        mail.setTo(toEmail);
-        mail.setFrom("FreeRoom <freeroom.notify@gmail.com>");
-        mail.setSubject("დაჯავშნილი დრო იწურება");
-        mail.setText(
-                "ოთახი " + roomNumber + "-ის ჯავშნის დასრულებამდე დარჩენილია 10 წუთი"
-        );
-        mailSender.send(mail);
+        try {
+            if (toEmail == null || toEmail.isEmpty()) return;
+            SimpleMailMessage mail = new SimpleMailMessage();
+            mail.setTo(toEmail);
+            mail.setFrom("FreeRoom <freeroom.notify@gmail.com>");
+            mail.setSubject("დაჯავშნილი დრო იწურება");
+            mail.setText(
+                    "ოთახი " + roomNumber + "-ის ჯავშნის დასრულებამდე დარჩენილია 10 წუთი"
+            );
+            mailSender.send(mail);
+        } catch (Exception e) {
+        }
     }
 }

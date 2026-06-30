@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@stomp/stompjs": "^7.3.0",
     "@tailwindcss/vite": "^4.3.0",
     "alk-rounded-nusx-med": "^1.0.0",
     "axios": "^1.17.0",
@@ -18,6 +19,7 @@
     "react-dom": "^19.2.6",
     "react-router-dom": "^7.15.1",
     "react-zoom-pan-pinch": "^4.0.3",
+    "sockjs-client": "^1.6.1",
     "tailwindcss": "^4.3.0"
   },
   "devDependencies": {

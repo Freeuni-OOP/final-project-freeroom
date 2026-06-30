@@ -43,6 +43,13 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
+    @PostMapping("/sync")
+    public ResponseEntity<User> syncUser(HttpServletRequest request) {
+        FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
+        User user = userService.getOrCreateUser(token);
+        return ResponseEntity.ok(user);
+    }
+
     @PatchMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<User> updateUser(
             HttpServletRequest request,

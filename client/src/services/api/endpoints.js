@@ -13,7 +13,7 @@ export const syncUser = () => axiosInstance.post('/user/sync');
 export const updateProfile = (bioData) => axiosInstance.post('/user/update', bioData);
 
 export const searchLectures = (query) => {
-    return axiosInstance.get(`/lectures/search?q=${query}`);un
+    return axiosInstance.get(`/lectures/search?q=${query}`);
 };
 
 export const getChatMessages = (roomId, beforeId) => axiosInstance.get(beforeId ? `/chat/${roomId}?beforeId=${beforeId}` : `/chat/${roomId}`).then(res => res.data);
