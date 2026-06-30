@@ -1,6 +1,10 @@
 package ge.freeroom.freeroom.controllers;
 
+import ge.freeroom.freeroom.dto.LectureDto;
+import ge.freeroom.freeroom.dto.RoomSummaryDto;
+import ge.freeroom.freeroom.dto.SubjectSummaryDto;
 import ge.freeroom.freeroom.entities.Lecture;
+import ge.freeroom.freeroom.entities.Subject;
 import ge.freeroom.freeroom.repositories.LectureRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,11 +40,25 @@ public class LectureController {
     }
 
     @GetMapping("/lectures/search")
-    public List<Lecture> searchLectures(@RequestParam("q") String query) {
+    public List<LectureDto> searchLectures(@RequestParam("q") String query) {
         if (query == null || query.trim().isEmpty()) {
             return List.of();
         }
         String safeSearchTerm = "%" + query.trim() + "%";
-        return lectureRepository.searchLecturesChronologically(safeSearchTerm);
+        return lectureRepository.searchLecturesChronologically(safeSearchTerm)
+                .stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    private LectureDto toDto(Lecture lecture) {
+        Subject s = lecture.getSubject();
+        SubjectSummaryDto subject = s != null
+                ? new SubjectSummaryDto(s.getTitle(), s.getType(), s.getGroupNumber())
+                : null;
+        RoomSummaryDto room = lecture.getRoom() != null
+                ? new RoomSummaryDto(lecture.getRoom().getRoomNumber())
+                : null;
+        return new LectureDto(lecture.getId(), lecture.getStartAt(), lecture.getEndAt(), subject, room);
     }
 }

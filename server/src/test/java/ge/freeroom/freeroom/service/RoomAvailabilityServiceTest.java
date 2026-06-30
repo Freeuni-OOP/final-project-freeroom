@@ -50,6 +50,9 @@ public class RoomAvailabilityServiceTest {
     @Mock
     private EmailService emailService;
 
+    @Mock
+    private ChatService chatService;
+
     @InjectMocks
     private RoomAvailabilityService roomAvailabilityService;
 
@@ -457,5 +460,37 @@ public class RoomAvailabilityServiceTest {
         ArgumentCaptor<RoomOccupancy> captor = ArgumentCaptor.forClass(RoomOccupancy.class);
         verify(roomOccupancyRepository).save(captor.capture());
         assertEquals(fixedNow.plusMinutes(60), captor.getValue().getExpectedEndAt());
+    }
+
+    @Test
+    void cancelOccupancy_ThrowsAccessDenied_AndDoesNotClearChat_WhenNonOwnerOnExpiredOccupancy() {
+        User owner = new User();
+        owner.setId("owner123");
+
+        Room room = new Room();
+        room.setId(1L);
+        room.setRoomNumber(404);
+
+        LocalDateTime fixedNow = LocalDateTime.of(2026, 1, 1, 12, 0);
+        when(timeService.now()).thenReturn(fixedNow);
+
+        RoomOccupancy expiredOccupancy = new RoomOccupancy();
+        expiredOccupancy.setId(20L);
+        expiredOccupancy.setUser(owner);
+        expiredOccupancy.setRoom(room);
+        expiredOccupancy.setStartAt(fixedNow.minusMinutes(120));
+        expiredOccupancy.setExpectedEndAt(fixedNow.minusMinutes(10));
+        expiredOccupancy.setEndAt(null);
+
+        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(1L))
+                .thenReturn(Optional.of(expiredOccupancy));
+
+        AccessDeniedException exception = assertThrows(AccessDeniedException.class, () -> {
+            roomAvailabilityService.cancelOccupancy("differentUser", 1L);
+        });
+
+        assertEquals("You can only cancel your own occupancy", exception.getMessage());
+        verify(chatService, never()).clearRoomChat(anyLong());
+        verify(roomOccupancyRepository, never()).save(any());
     }
 }
