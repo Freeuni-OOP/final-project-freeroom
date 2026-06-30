@@ -158,7 +158,7 @@ const useFloorView = () => {
       ring.setAttribute('r', radius);
       ring.setAttribute('fill', 'none');
       ring.setAttribute('stroke', 'white');
-      ring.setAttribute('stroke-width', '2');
+      ring.setAttribute('stroke-width', '1.5');
       badgeGroup.appendChild(ring);
 
       group.appendChild(badgeGroup);
