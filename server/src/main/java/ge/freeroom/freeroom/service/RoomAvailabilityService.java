@@ -241,6 +241,10 @@ public class RoomAvailabilityService {
 
         RoomOccupancy occ = occupancyOpt.get();
 
+        if (!occ.getUser().getId().equals(userId)) {
+            throw new org.springframework.security.access.AccessDeniedException("You can only cancel your own occupancy");
+        }
+
         if (occ.getExpectedEndAt().isBefore(now) || occ.getExpectedEndAt().isEqual(now)) {
             occ.setEndAt(occ.getExpectedEndAt());
             roomOccupancyRepository.save(occ);
@@ -248,10 +252,6 @@ public class RoomAvailabilityService {
                 chatService.clearRoomChat(roomId);
             }
             throw new IllegalStateException("No active occupancy for this room");
-        }
-
-        if (!occ.getUser().getId().equals(userId)) {
-            throw new org.springframework.security.access.AccessDeniedException("You can only cancel your own occupancy");
         }
 
         occ.setEndAt(timeService.now());
