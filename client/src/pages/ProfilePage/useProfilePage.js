@@ -9,6 +9,14 @@ const UNIVERSITY_BY_DOMAIN = {
   '@agruni.edu.ge': 'აგრარული',
 };
 
+const REPORT_REASONS = [
+  { value: 'INAPPROPRIATE_PHOTO', label: 'შეუსაბამო ფოტო' },
+  { value: 'INAPPROPRIATE_BIO', label: 'შეუსაბამო ბიოგრაფია' },
+  { value: 'OFFENSIVE_NAME', label: 'შეურაცხმყოფელი სახელი' },
+  { value: 'HARASSMENT', label: 'შევიწროება' },
+  { value: 'OTHER', label: 'სხვა' },
+];
+
 const getUniversity = (email) => {
   const normalized = email?.toLowerCase() || '';
   const match = Object.entries(UNIVERSITY_BY_DOMAIN).find(([domain]) => normalized.endsWith(domain));
