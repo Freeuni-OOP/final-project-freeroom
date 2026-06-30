@@ -2,11 +2,9 @@ package ge.freeroom.freeroom.service;
 
 import com.google.firebase.auth.FirebaseToken;
 import ge.freeroom.freeroom.dto.LectureSummaryDto;
-import ge.freeroom.freeroom.entities.Lecture;
-import ge.freeroom.freeroom.entities.User;
-import ge.freeroom.freeroom.repositories.LectureRepository;
-import ge.freeroom.freeroom.repositories.SubjectRepository;
-import ge.freeroom.freeroom.repositories.UserRepository;
+import ge.freeroom.freeroom.dto.PublicProfileDto;
+import ge.freeroom.freeroom.entities.*;
+import ge.freeroom.freeroom.repositories.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -18,8 +16,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
-import ge.freeroom.freeroom.entities.Subject;
 
 @Service
 public class UserService {
@@ -27,6 +25,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final SubjectRepository subjectRepository;
     private final LectureRepository lectureRepository;
+    private final FriendshipRepository friendshipRepository;
+    private final FriendRequestRepository friendRequestRepository;
     private final TimeService timeService;
 
     @Value("${supabase.service.key}")
@@ -37,10 +37,12 @@ public class UserService {
 
     private final RestClient restClient = RestClient.create();
 
-    public UserService(UserRepository userRepository, SubjectRepository subjectRepository, LectureRepository lectureRepository, TimeService timeService) {
+    public UserService(UserRepository userRepository, SubjectRepository subjectRepository, LectureRepository lectureRepository, FriendshipRepository friendshipRepository, FriendRequestRepository friendRequestRepository, TimeService timeService) {
         this.userRepository = userRepository;
         this.subjectRepository = subjectRepository;
         this.lectureRepository = lectureRepository;
+        this.friendshipRepository = friendshipRepository;
+        this.friendRequestRepository = friendRequestRepository;
         this.timeService = timeService;
     }
 
@@ -179,5 +181,41 @@ public class UserService {
             dto.setRoomNumber(lecture.getRoom().getRoomNumber());
             return dto;
         }).toList();
+    }
+
+    public PublicProfileDto getPublicProfile(String currentUserId, String targetUserId) {
+        User targetUser = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new RuntimeException("მომხმარებელი ვერ მოიძებნა"));
+
+        PublicProfileDto profileDto = new PublicProfileDto();
+        profileDto.setId(targetUser.getId());
+        profileDto.setDisplayName(targetUser.getDisplayName());
+        profileDto.setPhotoUrl(targetUser.getPhotoUrl());
+        profileDto.setBio(targetUser.getBio());
+
+        profileDto.setRelationshipStatus(computeRelationshipStatus(currentUserId, targetUserId));
+        return profileDto;
+    }
+
+    private RelationshipStatus computeRelationshipStatus(String currentUserId, String targetUserId) {
+        if(currentUserId.equals(targetUserId)) {
+            return RelationshipStatus.SELF;
+        }
+
+        if (friendshipRepository.existsByUsers(currentUserId, targetUserId)) {
+            return RelationshipStatus.FRIENDS;
+        }
+
+        Optional<FriendRequest> pending =
+                friendRequestRepository.findPendingBetweenUsers(currentUserId, targetUserId);
+
+        if(pending.isPresent()) {
+            FriendRequest friendRequest = pending.get();
+            return friendRequest.getSender().getId().equals(currentUserId)
+                            ? RelationshipStatus.PENDING_SENT
+                            : RelationshipStatus.PENDING_RECEIVED;
+        }
+
+        return RelationshipStatus.NONE;
     }
 }
