@@ -195,7 +195,7 @@ public class RoomAvailabilityService {
             }
         }
 
-        long minutes = (durationMinutes != null) ? durationMinutes : 60;
+        long minutes = (durationMinutes != null) ? Math.max(1, Math.min(480, durationMinutes)) : 60;
 
         RoomOccupancy occupancy = new RoomOccupancy();
         occupancy.setRoom(room);
