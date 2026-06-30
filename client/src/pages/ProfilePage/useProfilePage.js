@@ -2,17 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context';
 import { fetchProfile, updateProfile } from '@/services/api/userService';
 import { getNotificationPreference, updateNotificationPreference, generateTelegramLink } from '@/services/api/endpoints';
-
-const UNIVERSITY_BY_DOMAIN = {
-  '@freeuni.edu.ge': 'თავისუფალი',
-  '@agruni.edu.ge': 'აგრარული',
-};
-
-const getUniversity = (email) => {
-  const normalized = email?.toLowerCase() || '';
-  const match = Object.entries(UNIVERSITY_BY_DOMAIN).find(([domain]) => normalized.endsWith(domain));
-  return match ? match[1] : null;
-};
+import { useNotification } from '@/context';
+import { getUniversity, NOTIFICATION_PREFERENCE } from '@/utils';
 
 const getInitial = (name, email) => {
   const source = name?.trim() || email?.trim() || '';
@@ -21,8 +12,9 @@ const getInitial = (name, email) => {
 
 const useProfilePage = () => {
   const { user } = useAuth();
+  const { showNotification } = useNotification();
   const [photoFailed, setPhotoFailed] = useState(false);
-  const [preference, setPreference] = useState('NONE');
+  const [preference, setPreference] = useState(NOTIFICATION_PREFERENCE.NONE);
   const [telegramLinked, setTelegramLinked] = useState(false);
   const [preferenceLoading, setPreferenceLoading] = useState(true);
   const preferenceTimer = useRef(null);
@@ -51,7 +43,7 @@ const useProfilePage = () => {
     const previousPreference = preference;
     const previousTelegramLinked = telegramLinked;
     setPreference(newPreference);
-    if (newPreference !== 'TELEGRAM') {
+    if (newPreference !== NOTIFICATION_PREFERENCE.TELEGRAM) {
       setTelegramLinked(false);
     }
     if (preferenceTimer.current) {
@@ -132,17 +124,16 @@ const useProfilePage = () => {
         setDisplayName(data.displayName || '');
         setPhotoUrl(data.photoUrl || '');
         setSelectedFile(null);
-        alert('პროფილი წარმატებით განახლდა!');
+        showNotification({ message: 'პროფილი წარმატებით განახლდა!', type: 'success' });
       }
     } catch (error) {
       console.error("Error updating profile:", error);
       if (error.response?.status === 429) {
-        alert('ზედმეტად ბევრი მოთხოვნა გამოგზავნეთ. გთხოვთ სცადოთ 1 წუთში.');
+        showNotification({ message: 'ზედმეტად ბევრი მოთხოვნა გამოგზავნეთ. გთხოვთ სცადოთ 1 წუთში.', type: 'error' });
       } else {
-        alert('პროფილის განახლება ვერ მოხერხდა.');
+        showNotification({ message: 'პროფილის განახლება ვერ მოხერხდა.', type: 'error' });
       }
     } finally {
-
       setIsSaving(false);
     }
   };
@@ -151,11 +142,11 @@ const useProfilePage = () => {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('გთხოვთ აირჩიოთ მხოლოდ სურათის ფაილები!');
+      showNotification({ message: 'გთხოვთ აირჩიოთ მხოლოდ სურათის ფაილები!', type: 'error' });
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      alert('სურათის ზომა არ უნდა აღემატებოდეს 5 MB-ს.');
+      showNotification({ message: 'სურათის ზომა არ უნდა აღემატებოდეს 5 MB-ს.', type: 'error' });
       return;
     }
 

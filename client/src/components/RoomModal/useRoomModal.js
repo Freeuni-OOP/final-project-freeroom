@@ -10,24 +10,26 @@ import {
     approveJoinRequest,
     rejectJoinRequest
 } from '@/services/api/endpoints.js';
+import { useNotification } from '@/context';
+import { ROOM_STATUS } from '@/utils';
+
+const ENV_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+const CLEAN_BASE_URL = ENV_BASE_URL.endsWith('/') ? ENV_BASE_URL.slice(0, -1) : ENV_BASE_URL;
 
 const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
+    const { showNotification } = useNotification();
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [messages, setMessages] = useState([]);
     const [isAuthorized, setIsAuthorized] = useState(null);
     const [messageText, setMessageText] = useState('');
     const [hasMore, setHasMore] = useState(true);
     const [isLoadingOlder, setIsLoadingOlder] = useState(false);
-
-    // Track previous ID for render-phase resets
     const [prevRoomId, setPrevRoomId] = useState(roomId);
-    // Declarative trigger for WebSocket reloads
     const [reloadTrigger, setReloadTrigger] = useState(0);
 
     const chatContainerRef = useRef(null);
     const isFetchingOlder = useRef(false);
 
-    // 1. Reset state during render when the ID changes
     if (roomId !== prevRoomId) {
         setPrevRoomId(roomId);
         setIsAuthorized(null);
@@ -35,11 +37,10 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         setHasMore(true);
     }
 
-    // 2. Fetch messages using standard Promise callbacks (satisfies the IDE)
     useEffect(() => {
         if (!roomId) return;
 
-        let isMounted = true; // Prevents race conditions if closed quickly
+        let isMounted = true;
 
         getChatMessages(roomId)
             .then((data) => {
@@ -59,9 +60,8 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         return () => {
             isMounted = false;
         };
-    }, [roomId, reloadTrigger]); // Re-runs when roomId or reloadTrigger changes
+    }, [roomId, reloadTrigger]);
 
-    // 3. Auto-scroll chat to bottom
     useEffect(() => {
         if (isChatOpen && chatContainerRef.current && !isFetchingOlder.current) {
             setTimeout(() => {
@@ -72,19 +72,17 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         }
     }, [isChatOpen, messages]);
 
-    // 4. WebSocket connection
     useEffect(() => {
         let stompClient = null;
 
         if (roomId && isChatOpen) {
             const token = localStorage.getItem('token');
-            const socketUrl = token ? `http://localhost:8080/ws?token=${token}` : 'http://localhost:8080/ws';
+            const socketUrl = token ? `${CLEAN_BASE_URL}/ws?token=${token}` : `${CLEAN_BASE_URL}/ws`;
             const socket = new SockJS(socketUrl);
 
             stompClient = new Client({
                 webSocketFactory: () => socket,
                 onConnect: () => {
-                    // Trigger a fetch to ensure we have the latest on connect
                     setReloadTrigger((prev) => prev + 1);
 
                     stompClient.subscribe(`/topic/room/${roomId}`, (message) => {
@@ -96,7 +94,6 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
                     });
 
                     stompClient.subscribe(`/topic/room/${roomId}/reload`, () => {
-                        // Simply increment the trigger to force the fetch effect to run
                         setReloadTrigger((prev) => prev + 1);
                     });
                 },
@@ -154,7 +151,7 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
 
     const modalData = roomId ? {
         id: roomId,
-        isFree: roomData?.status !== 'occupied',
+        isFree: roomData?.status !== ROOM_STATUS.OCCUPIED,
         isReserved: roomData?.currentOccupancy != null,
         lectureName: roomData?.currentLecture?.title ?? null,
         lecturer: roomData?.currentLecture?.organizer ?? null,
@@ -170,26 +167,35 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         capacity: roomData?.capacity ?? null,
     } : null;
 
-    const handleReserve = async (duration) => {
-        if (!modalData?.isFree) return alert('ოთახი დაკავებულია');
+    const handleReserve = async (durationMinutes) => {
+        if (!modalData?.isFree) {
+            showNotification({ message: 'ოთახი დაკავებულია', type: 'error' });
+            return;
+        }
         try {
-            await reserveRoom(roomData.id, duration);
+            await reserveRoom(roomData.id, durationMinutes);
             onClose();
             onReserveSuccess();
+            showNotification({ message: `ოთახი ${roomId} დაჯავშნილია ${durationMinutes} წუთით`, type: 'success' });
         } catch (err) {
             console.error(err);
-            alert(err.response?.data?.error || 'დაჯავშნა ვერ მოხერხდა');
+            showNotification({ message: err.response?.data?.error || 'დაჯავშნა ვერ მოხერხდა', type: 'error' });
         }
     };
 
     const handleCancel = async () => {
+        if (!modalData?.isMyOccupancy) {
+            showNotification({ message: 'მხოლოდ საკუთარი ჯავშნის გაუქმება შეგიძლიათ', type: 'error' });
+            return;
+        }
         try {
             await cancelOccupancy(roomData.id);
             onClose();
             onReserveSuccess();
+            showNotification({ message: `ოთახი ${roomId} გათავისუფლდა`, type: 'success' });
         } catch (err) {
             console.error(err);
-            alert(err.response?.data?.message || 'გაუქმება ვერ მოხერხდა');
+            showNotification({ message: err.response?.data?.message || 'გაუქმება ვერ მოხერხდა', type: 'error' });
         }
     };
 
@@ -200,28 +206,40 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
             setMessageText('');
         } catch (err) {
             console.error(err);
-            alert(err.response?.data?.message || 'შეტყობინება ვერ გაიგზავნა');
+            showNotification({ message: err.response?.data?.message || 'შეტყობინება ვერ გაიგზავნა', type: 'error' });
         }
     };
 
     const handleRequestJoin = async () => {
         try {
             await requestJoinRoom(roomId);
-            alert('მოთხოვნა გაიგზავნა');
+            showNotification({ message: 'მოთხოვნა გაიგზავნა წარმატებით', type: 'success' });
         } catch (err) {
             console.error(err);
-            alert('მოთხოვნა ვერ გაიგზავნა');
+            showNotification({ message: err.response?.data?.message || 'მოთხოვნა ვერ გაიგზავნა. მოთხოვნის გაგზავნა შესაძლებელია წუთში ერთხელ.', type: 'error' });
         }
     };
 
-    const handleApproveUser = async (userId) => {
-        try { await approveJoinRequest(roomId, userId); }
-        catch (err) { console.error(err); alert('დამტკიცება ვერ მოხერხდა'); }
+    const handleApproveUser = async (targetUserId) => {
+        try {
+            await approveJoinRequest(roomId, targetUserId);
+            showNotification({ message: 'მომხმარებელი წარმატებით დაემატა', type: 'success' });
+            setReloadTrigger((prev) => prev + 1);
+        } catch (err) {
+            console.error(err);
+            showNotification({ message: err.response?.data?.message || 'დამტკიცება ვერ მოხერხდა', type: 'error' });
+        }
     };
 
-    const handleRejectUser = async (userId) => {
-        try { await rejectJoinRequest(roomId, userId); }
-        catch (err) { console.error(err); alert('უარყოფა ვერ მოხერხდა'); }
+    const handleRejectUser = async (targetUserId) => {
+        try {
+            await rejectJoinRequest(roomId, targetUserId);
+            showNotification({ message: 'მოთხოვნა უარყოფილია', type: 'info' });
+            setReloadTrigger((prev) => prev + 1);
+        } catch (err) {
+            console.error(err);
+            showNotification({ message: err.response?.data?.message || 'უარყოფა ვერ მოხერხდა', type: 'error' });
+        }
     };
 
     return {

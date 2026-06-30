@@ -1,17 +1,7 @@
 import { useState, useRef } from 'react';
 import { searchLectures } from '@/services';
 import { useAuth } from '@/context';
-
-const UNIVERSITY_BY_DOMAIN = {
-    '@freeuni.edu.ge': 'თავისუფალი',
-    '@agruni.edu.ge': 'აგრარული',
-};
-
-const getUniversity = (email) => {
-    const normalized = email?.toLowerCase() || '';
-    const match = Object.entries(UNIVERSITY_BY_DOMAIN).find(([domain]) => normalized.endsWith(domain));
-    return match ? match[1] : null;
-};
+import { getUniversity } from '@/utils';
 
 export default function useLectureSearch() {
     const { user } = useAuth();
