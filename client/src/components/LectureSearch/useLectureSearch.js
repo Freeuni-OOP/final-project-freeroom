@@ -1,7 +1,13 @@
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { searchLectures } from '@/services';
+import { useAuth } from '@/context';
+import { getUniversity } from '@/utils';
+
+const DEBOUNCE_DELAY_MS = 300;
+const TIME_FORMAT_LOCALE = [];
 
 export default function useLectureSearch() {
+    const { user } = useAuth();
     const [query, setQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -10,6 +16,16 @@ export default function useLectureSearch() {
     const lastSentQueryRef = useRef('');
     const lastFetchedResultsRef = useRef([]);
     const debounceTimeoutRef = useRef(null);
+
+    const university = getUniversity(user?.email);
+
+    useEffect(() => {
+        return () => {
+            if (debounceTimeoutRef.current) {
+                clearTimeout(debounceTimeoutRef.current);
+            }
+        };
+    }, []);
 
     const handleSearch = (userInput) => {
         setQuery(userInput);
@@ -28,7 +44,6 @@ export default function useLectureSearch() {
         setLoading(true);
 
         debounceTimeoutRef.current = setTimeout(async () => {
-
             if (userInput === lastSentQueryRef.current) {
                 setSearchResults(lastFetchedResultsRef.current);
                 setLoading(false);
@@ -54,14 +69,14 @@ export default function useLectureSearch() {
                     setLoading(false);
                 }
             }
-        }, 300);
+        }, DEBOUNCE_DELAY_MS);
     };
 
     const formatTime = (timeString) => {
         if (!timeString) return '';
         const date = new Date(timeString);
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+        return date.toLocaleTimeString(TIME_FORMAT_LOCALE, { hour: '2-digit', minute: '2-digit', hour12: false });
     };
 
-    return { query, searchResults, loading, handleSearch, formatTime };
+    return { query, searchResults, loading, handleSearch, formatTime, university };
 }

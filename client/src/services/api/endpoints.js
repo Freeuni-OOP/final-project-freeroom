@@ -16,7 +16,7 @@ export const searchLectures = (query) => {
     return axiosInstance.get(`/lectures/search?q=${query}`);
 };
 
-export const getChatMessages = (roomId) => axiosInstance.get(`/chat/${roomId}`).then(res => res.data);
+export const getChatMessages = (roomId, beforeId) => axiosInstance.get(beforeId ? `/chat/${roomId}?beforeId=${beforeId}` : `/chat/${roomId}`).then(res => res.data);
 
 export const sendChatMessage = (roomId, message) => axiosInstance.post('/chat/send', { roomId, message });
 

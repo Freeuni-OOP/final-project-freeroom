@@ -1,5 +1,6 @@
 import useProfilePage from './useProfilePage';
 import { FriendsPanel } from '@/components';
+import { NOTIFICATION_PREFERENCE, UNIVERSITY } from '@/utils';
 
 export default function ProfilePage() {
     const {
@@ -29,7 +30,6 @@ export default function ProfilePage() {
 
     return (
         <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
-            {/* Identity Card */}
             <section className="flex flex-col items-center rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-black/5 sm:p-10">
                 {isLoading ? (
                     <div className="h-24 w-24 rounded-full bg-black/5 animate-pulse ring-4 ring-black/5" />
@@ -74,25 +74,25 @@ export default function ProfilePage() {
                     <div className="flex flex-col gap-4">
                         <div className="flex gap-3">
                             <button
-                                onClick={() => handlePreferenceChange('NONE')}
-                                className={`flex-1 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors ${preference === 'NONE' ? 'border-brand-accent bg-brand-accent/10 text-brand-accent-text' : 'border-black/10 text-brand-ink/60 hover:border-brand-accent/40'}`}
+                                onClick={() => handlePreferenceChange(NOTIFICATION_PREFERENCE.NONE)}
+                                className={`flex-1 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors ${preference === NOTIFICATION_PREFERENCE.NONE ? 'border-brand-accent bg-brand-accent/10 text-brand-accent-text' : 'border-black/10 text-brand-ink/60 hover:border-brand-accent/40'}`}
                             >
                                 არცერთი
                             </button>
                             <button
-                                onClick={() => handlePreferenceChange('EMAIL')}
-                                className={`flex-1 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors ${preference === 'EMAIL' ? 'border-brand-accent bg-brand-accent/10 text-brand-accent-text' : 'border-black/10 text-brand-ink/60 hover:border-brand-accent/40'}`}
+                                onClick={() => handlePreferenceChange(NOTIFICATION_PREFERENCE.EMAIL)}
+                                className={`flex-1 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors ${preference === NOTIFICATION_PREFERENCE.EMAIL ? 'border-brand-accent bg-brand-accent/10 text-brand-accent-text' : 'border-black/10 text-brand-ink/60 hover:border-brand-accent/40'}`}
                             >
                                 ელ. ფოსტა
                             </button>
                             <button
-                                onClick={() => handlePreferenceChange('TELEGRAM')}
-                                className={`flex-1 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors ${preference === 'TELEGRAM' ? 'border-brand-accent bg-brand-accent/10 text-brand-accent-text' : 'border-black/10 text-brand-ink/60 hover:border-brand-accent/40'}`}
+                                onClick={() => handlePreferenceChange(NOTIFICATION_PREFERENCE.TELEGRAM)}
+                                className={`flex-1 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors ${preference === NOTIFICATION_PREFERENCE.TELEGRAM ? 'border-brand-accent bg-brand-accent/10 text-brand-accent-text' : 'border-black/10 text-brand-ink/60 hover:border-brand-accent/40'}`}
                             >
                                 Telegram
                             </button>
                         </div>
-                        {preference === 'TELEGRAM' && (
+                        {preference === NOTIFICATION_PREFERENCE.TELEGRAM && (
                             <div className="rounded-xl border border-black/10 bg-brand-bg p-4">
                                 <p className="mb-3 text-sm font-semibold text-brand-ink">Telegram-ის დაყენება</p>
                                 <ol className="flex flex-col gap-2 text-sm text-brand-ink/70">
@@ -120,7 +120,6 @@ export default function ProfilePage() {
                 )}
             </section>
 
-            {/* Profile Settings Section */}
             <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 sm:p-8">
                 <h2 className="text-lg font-bold text-brand-ink mb-6">პროფილის რედაქტირება</h2>
 
@@ -141,7 +140,6 @@ export default function ProfilePage() {
                             />
                         </div>
 
-                        {/* Drag and Drop Profile Image Zone */}
                         <div className="flex flex-col gap-2 w-full">
                             <label className="text-sm font-semibold text-brand-ink/70">პროფილის სურათი</label>
 
@@ -168,7 +166,6 @@ export default function ProfilePage() {
                                 )}
                             </div>
 
-                            {/* Hidden Hidden File Input Element */}
                             <input
                                 id="avatar-file-input"
                                 type="file"
@@ -181,7 +178,6 @@ export default function ProfilePage() {
                                 className="hidden"
                             />
 
-                            {/* Manual Text Backup URL Field */}
                             <input
                                 type="text"
                                 value={photoUrl}
@@ -192,12 +188,16 @@ export default function ProfilePage() {
                         </div>
 
                         <div className="flex flex-col gap-2 w-full">
-                            <label className="text-sm font-semibold text-brand-ink/70">ჩემს შესახებ</label>
+                            <div className="flex justify-between items-center">
+                                <label className="text-sm font-semibold text-brand-ink/70">ჩემს შესახებ</label>
+                                <span className={`text-xs ${bio.length > 300 ? 'text-red-500 font-semibold' : 'text-brand-ink/40'}`}>
+                                    {bio.length}/300
+                                </span>
+                            </div>
                             <textarea
                                 value={bio}
                                 onChange={(e) => setBio(e.target.value)}
                                 placeholder="მოყევი რამე შენს შესახებ..."
-                                maxLength={300}
                                 rows={3}
                                 className="w-full rounded-xl border border-black/10 p-3 text-sm text-brand-ink focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent resize-none"
                             />
@@ -207,7 +207,13 @@ export default function ProfilePage() {
                             <button
                                 onClick={handleSaveProfile}
                                 disabled={isSaving || isUploading}
-                                className="rounded-xl bg-brand-ink px-6 py-2 text-sm font-semibold text-white transition hover:bg-brand-ink/90 disabled:opacity-50"
+                                className={`rounded-xl px-6 py-2 text-sm font-semibold transition disabled:opacity-50 ${
+                                    university === UNIVERSITY.FREEUNI
+                                        ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                                        : university === UNIVERSITY.AGRUNI
+                                            ? 'bg-green-600 hover:bg-green-700 text-white'
+                                            : 'bg-brand-ink hover:bg-brand-ink/90 text-white'
+                                }`}
                             >
                                 {isSaving ? 'ინახება...' : 'ცვლილებების შენახვა'}
                             </button>
@@ -216,7 +222,6 @@ export default function ProfilePage() {
                 )}
             </section>
 
-            {/* Friends Card */}
             <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 sm:p-8">
                 <h2 className="mb-6 text-lg font-bold text-brand-ink">მეგობრები</h2>
                 <FriendsPanel />

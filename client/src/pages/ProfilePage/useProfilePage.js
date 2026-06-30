@@ -3,17 +3,7 @@ import { useAuth } from '@/context';
 import { fetchProfile, updateProfile } from '@/services/api/userService';
 import { getNotificationPreference, updateNotificationPreference, generateTelegramLink } from '@/services/api/endpoints';
 import { useNotification } from '@/context';
-
-const UNIVERSITY_BY_DOMAIN = {
-  '@freeuni.edu.ge': 'თავისუფალი',
-  '@agruni.edu.ge': 'აგრარული',
-};
-
-const getUniversity = (email) => {
-  const normalized = email?.toLowerCase() || '';
-  const match = Object.entries(UNIVERSITY_BY_DOMAIN).find(([domain]) => normalized.endsWith(domain));
-  return match ? match[1] : null;
-};
+import { getUniversity, NOTIFICATION_PREFERENCE } from '@/utils';
 
 const getInitial = (name, email) => {
   const source = name?.trim() || email?.trim() || '';
@@ -24,7 +14,7 @@ const useProfilePage = () => {
   const { user } = useAuth();
   const { showNotification } = useNotification();
   const [photoFailed, setPhotoFailed] = useState(false);
-  const [preference, setPreference] = useState('NONE');
+  const [preference, setPreference] = useState(NOTIFICATION_PREFERENCE.NONE);
   const [telegramLinked, setTelegramLinked] = useState(false);
   const [preferenceLoading, setPreferenceLoading] = useState(true);
   const preferenceTimer = useRef(null);
@@ -37,23 +27,41 @@ const useProfilePage = () => {
 
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const hasFetched = useRef(false);
+  const fetchedUserIdRef = useRef(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     getNotificationPreference()
         .then(res => {
-          setPreference(res.data.preference);
-          setTelegramLinked(res.data.telegramLinked);
+          if (isMounted) {
+            setPreference(res.data.preference);
+            setTelegramLinked(res.data.telegramLinked);
+          }
         })
-        .finally(() => setPreferenceLoading(false))
-        .catch(() => setPreferenceLoading(false));
+        .catch((err) => console.error(err))
+        .finally(() => {
+          if (isMounted) setPreferenceLoading(false);
+        });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (preferenceTimer.current) {
+        clearTimeout(preferenceTimer.current);
+      }
+    };
   }, []);
 
   const handlePreferenceChange = (newPreference) => {
     const previousPreference = preference;
     const previousTelegramLinked = telegramLinked;
     setPreference(newPreference);
-    if (newPreference !== 'TELEGRAM') {
+    if (newPreference !== NOTIFICATION_PREFERENCE.TELEGRAM) {
       setTelegramLinked(false);
     }
     if (preferenceTimer.current) {
@@ -90,31 +98,43 @@ const useProfilePage = () => {
   const handlePhotoError = () => setPhotoFailed(true);
 
   useEffect(() => {
+    if (!user) return;
+    let isMounted = true;
+
     const getBackendProfile = async () => {
-      if (!user) return;
-      if (hasFetched.current) {
-        setIsLoading(false);
+      if (fetchedUserIdRef.current === user.uid) {
+        if (isMounted) setIsLoading(false);
         return;
       }
       try {
         const data = await fetchProfile();
-        if (data) {
+        if (data && isMounted) {
           setBio(data.bio || '');
           setDisplayName(data.displayName || '');
           setPhotoUrl(data.photoUrl || '');
-          hasFetched.current = true;
+          fetchedUserIdRef.current = user.uid;
         }
       } catch (err) {
         console.error("Error fetching profile:", err);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
     getBackendProfile();
+
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
   const handleSaveProfile = async () => {
     if (!user) return;
+    if (bio && bio.length > 300) {
+      showNotification({ message: 'ბიოგრაფია არ უნდა აღემატებოდეს 300 სიმბოლოს.', type: 'error' });
+      return;
+    }
     setIsSaving(true);
 
     try {
@@ -134,7 +154,11 @@ const useProfilePage = () => {
       }
     } catch (error) {
       console.error("Error updating profile:", error);
-      showNotification({ message: 'პროფილის განახლება ვერ მოხერხდა.', type: 'error' });
+      if (error.response?.status === 429) {
+        showNotification({ message: 'ზედმეტად ბევრი მოთხოვნა გამოგზავნეთ. გთხოვთ სცადოთ 1 წუთში.', type: 'error' });
+      } else {
+        showNotification({ message: 'პროფილის განახლება ვერ მოხერხდა.', type: 'error' });
+      }
     } finally {
       setIsSaving(false);
     }
@@ -152,9 +176,12 @@ const useProfilePage = () => {
       return;
     }
 
+    if (photoUrl && photoUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(photoUrl);
+    }
+
     setSelectedFile(file);
     setPhotoFailed(false);
-
     setPhotoUrl(URL.createObjectURL(file));
   };
 

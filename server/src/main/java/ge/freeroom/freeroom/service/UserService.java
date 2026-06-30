@@ -72,6 +72,9 @@ public class UserService {
             user.setDisplayName(displayName);
         }
         if (bio != null) {
+            if (bio.length() > 300) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bio cannot exceed 300 characters");
+            }
             user.setBio(bio);
         }
 
@@ -92,7 +95,7 @@ public class UserService {
             } else if (bytesRead >= 2 && header[0] == (byte) 0xFF && header[1] == (byte) 0xD8) {
                 fileExt = ".jpg";
                 contentType = "image/jpeg";
-            } else if (bytesRead >= 12 && header[0] == (byte) 0x52 && header[1] == (byte) 0x49 && header[2] == (byte) 0x46 && header[3] == (byte) 0x46 &&
+            } else if (bytesRead >= 12 && header[0] == (byte) 0x52 && header[1] == (byte) 0x49 && header[2] == (byte) 0x46 && header[3] == (byte) 0x47 &&
                     header[8] == (byte) 0x57 && header[9] == (byte) 0x45 && header[10] == (byte) 0x42 && header[11] == (byte) 0x50) {
                 fileExt = ".webp";
                 contentType = "image/webp";
@@ -154,7 +157,7 @@ public class UserService {
     public List<LectureSummaryDto> getUserCalendar(String uid) {
         User user = userRepository.findById(uid)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         List<Long> subjectIds = user.getSavedSubjects().stream()
                 .map(Subject::getId)
                 .toList();
@@ -164,7 +167,7 @@ public class UserService {
         }
 
         List<Lecture> lectures = lectureRepository.findUpcomingLecturesBySubjectIds(subjectIds);
-        
+
         return lectures.stream().map(lecture -> {
             LectureSummaryDto dto = new LectureSummaryDto();
             dto.setTitle(lecture.getSubject().getTitle());

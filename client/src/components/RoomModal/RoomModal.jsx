@@ -14,7 +14,10 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
     handleSendMessage,
     handleRequestJoin,
     handleApproveUser,
-    handleRejectUser
+    handleRejectUser,
+    chatContainerRef,
+    isLoadingOlder,
+    handleScroll
   } = useRoomModal(roomId, roomData, onClose, onReserveSuccess);
 
   if (!roomId || !modalData) return null;
@@ -125,10 +128,10 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                                     <p className="font-medium text-gray-900">{modalData.startTime} - {modalData.endTime}</p>
                                   </div>
                                   {modalData.groupNumber && (
-                                    <div>
-                                      <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">ჯგუფი</p>
-                                      <p className="font-medium text-gray-900">{modalData.groupNumber}</p>
-                                    </div>
+                                      <div>
+                                        <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">ჯგუფი</p>
+                                        <p className="font-medium text-gray-900">{modalData.groupNumber}</p>
+                                      </div>
                                   )}
                                 </div>
                               </>
@@ -203,7 +206,17 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                       </div>
                   ) : isAuthorized ? (
                       <>
-                        <div className="flex-1 overflow-y-auto space-y-3 pr-1 mb-3">
+                        <div
+                            ref={chatContainerRef}
+                            onScroll={handleScroll}
+                            className="flex-1 overflow-y-auto space-y-3 pr-1 mb-3 scroll-smooth"
+                        >
+                          {isLoadingOlder && (
+                              <div className="flex justify-center items-center py-2 text-xs text-gray-400 animate-pulse bg-gray-50 rounded-lg border border-dashed">
+                                ⏳ ძველი შეტყობინებები იტვირთება...
+                              </div>
+                          )}
+
                           {messages.map((msg) => (
                               <div
                                   key={msg.id}

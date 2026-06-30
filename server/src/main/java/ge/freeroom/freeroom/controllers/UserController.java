@@ -9,10 +9,12 @@ import ge.freeroom.freeroom.service.UserService;
 import ge.freeroom.freeroom.security.RateLimiter;
 import ge.freeroom.freeroom.repositories.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 import java.util.Set;
@@ -41,6 +43,13 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
+    @PostMapping("/sync")
+    public ResponseEntity<User> syncUser(HttpServletRequest request) {
+        FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
+        User user = userService.getOrCreateUser(token);
+        return ResponseEntity.ok(user);
+    }
+
     @PatchMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<User> updateUser(
             HttpServletRequest request,
@@ -48,7 +57,15 @@ public class UserController {
             @RequestParam(value = "bio", required = false) String bio,
             @RequestParam(value = "file", required = false) MultipartFile file) throws Exception {
 
+        if (bio != null && bio.length() > 300) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bio cannot exceed 300 characters");
+        }
+
         FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
+
+        if (!rateLimiter.allow("profile:" + token.getUid(), 10, 60000)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+        }
 
         User updatedUser = userService.updateUserProfile(token.getUid(), displayName, bio, file);
         return ResponseEntity.ok(updatedUser);

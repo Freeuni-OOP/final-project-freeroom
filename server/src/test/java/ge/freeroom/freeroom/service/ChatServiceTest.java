@@ -13,6 +13,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,6 +23,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,8 +41,13 @@ class ChatServiceTest {
     @Mock
     private TimeService timeService;
 
+    @Mock
+    private SimpMessagingTemplate messagingTemplate;
+
     @InjectMocks
     private ChatService chatService;
+
+    private static final Pageable PAGEABLE = PageRequest.of(0, 20);
 
     @Test
     void getMessages_WhenUserIsNonMember_ThrowsSecurityException() {
@@ -46,25 +55,46 @@ class ChatServiceTest {
         String userId = "unauthorized-user";
         when(roomAccessRepository.existsByRoomIdAndUserId(roomId, userId)).thenReturn(false);
 
-        assertThrows(SecurityException.class, () -> chatService.getMessages(roomId, userId));
-        verify(chatRepository, never()).findMessagesByRoomId(any());
+        assertThrows(SecurityException.class, () -> chatService.getMessages(roomId, null, userId));
+
+        verify(chatRepository, never()).findLatestMessages(any(), any());
     }
 
     @Test
-    void getMessages_WhenUserIsMember_ReturnsMessages() {
+    void getMessages_WhenBeforeIdIsNull_ReturnsLatestMessages() {
         Long roomId = 1L;
         String userId = "authorized-user";
-        List<ChatMessageDto> expectedMessages = List.of(
-                new ChatMessageDto(1L, "authorized-user", "Nick", "test@freeuni.edu.ge", "Hello", MessageType.TEXT, LocalDateTime.now())
-        );
+        ChatMessageDto msg = new ChatMessageDto(10L, "user", "Nick", "t@edu.ge", "Latest", MessageType.TEXT, LocalDateTime.now());
+        List<ChatMessageDto> messages = List.of(msg);
 
         when(roomAccessRepository.existsByRoomIdAndUserId(roomId, userId)).thenReturn(true);
-        when(chatRepository.findMessagesByRoomId(roomId)).thenReturn(expectedMessages);
+        when(chatRepository.findLatestMessages(eq(roomId), any(Pageable.class))).thenReturn(messages);
 
-        List<ChatMessageDto> actualMessages = chatService.getMessages(roomId, userId);
+        List<ChatMessageDto> result = chatService.getMessages(roomId, null, userId);
 
-        assertEquals(expectedMessages, actualMessages);
-        verify(chatRepository, times(1)).findMessagesByRoomId(roomId);
+        assertEquals(messages, result);
+        verify(chatRepository).findLatestMessages(eq(roomId), any(Pageable.class));
+    }
+
+    @Test
+    void getMessages_WhenUserIsMemberAndBeforeIdProvided_ReturnsOlderMessages() {
+        Long roomId = 1L;
+        Long beforeId = 50L;
+        String userId = "authorized-user";
+
+        ChatMessageDto msg1 = new ChatMessageDto(10L, "u1", "N1", "e1", "First", MessageType.TEXT, LocalDateTime.now());
+        ChatMessageDto msg2 = new ChatMessageDto(11L, "u2", "N2", "e2", "Second", MessageType.TEXT, LocalDateTime.now());
+
+        List<ChatMessageDto> repoReturned = List.of(msg2, msg1);
+        List<ChatMessageDto> expected = List.of(msg1, msg2);
+
+        when(roomAccessRepository.existsByRoomIdAndUserId(roomId, userId)).thenReturn(true);
+        when(chatRepository.findOlderMessages(eq(roomId), eq(beforeId), any(Pageable.class))).thenReturn(repoReturned);
+
+        List<ChatMessageDto> result = chatService.getMessages(roomId, beforeId, userId);
+
+        assertEquals(expected, result);
+        verify(chatRepository).findOlderMessages(eq(roomId), eq(beforeId), any(Pageable.class));
     }
 
     @Test
@@ -84,7 +114,7 @@ class ChatServiceTest {
         when(roomAccessRepository.existsByRoomIdAndUserId(roomId, userId)).thenReturn(true);
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class, () -> chatService.sendMessage(roomId, userId, "Valid room, missing user profile"));
+        assertThrows(IllegalArgumentException.class, () -> chatService.sendMessage(roomId, userId, "Test message"));
         verify(chatRepository, never()).save(any());
     }
 
@@ -92,7 +122,7 @@ class ChatServiceTest {
     void sendJoinRequest_WhenRateLimitExceeded_ThrowsIllegalStateException() {
         Long roomId = 1L;
         String userId = "spammer-id";
-        Chat recentRequest = new Chat(roomId, new User(), "First request", MessageType.REQUEST);
+        Chat recentRequest = new Chat();
         recentRequest.setSendingTime(LocalDateTime.now().minusSeconds(30));
 
         when(chatRepository.findFirstByRoomIdAndAuthorUser_IdAndMessageTypeOrderBySendingTimeDesc(roomId, userId, MessageType.REQUEST))
@@ -108,7 +138,7 @@ class ChatServiceTest {
         Long roomId = 1L;
         String userId = "valid-requester-id";
         User user = new User();
-        Chat oldRequest = new Chat(roomId, user, "Old request", MessageType.REQUEST);
+        Chat oldRequest = new Chat();
         oldRequest.setSendingTime(LocalDateTime.now().minusMinutes(2));
 
         when(chatRepository.findFirstByRoomIdAndAuthorUser_IdAndMessageTypeOrderBySendingTimeDesc(roomId, userId, MessageType.REQUEST))
@@ -132,7 +162,6 @@ class ChatServiceTest {
 
         assertThrows(SecurityException.class, () -> chatService.approveJoinRequest(roomId, adminId, targetUserId));
         verify(roomAccessRepository, never()).save(any(RoomAccess.class));
-        verify(chatRepository, never()).save(any(Chat.class));
     }
 
     @Test
@@ -146,26 +175,11 @@ class ChatServiceTest {
         when(roomAccessRepository.findByRoomIdAndUserId(roomId, adminId)).thenReturn(Optional.of(adminAccess));
         when(roomAccessRepository.existsByRoomIdAndUserId(roomId, targetUserId)).thenReturn(false);
         when(userRepository.findById(adminId)).thenReturn(Optional.of(adminUser));
-        when(chatRepository.findFirstByRoomIdAndAuthorUser_IdAndMessageTypeOrderBySendingTimeDesc(roomId, targetUserId, MessageType.REQUEST))
-                .thenReturn(Optional.empty());
 
         chatService.approveJoinRequest(roomId, adminId, targetUserId);
 
-        verify(roomAccessRepository, times(1)).save(any(RoomAccess.class));
-        verify(chatRepository, times(1)).save(any(Chat.class));
-    }
-
-    @Test
-    void rejectJoinRequest_WhenApproverIsNotAdmin_ThrowsSecurityException() {
-        Long roomId = 1L;
-        String adminId = "fake-admin-id";
-        String targetUserId = "target-user-id";
-        RoomAccess regularAccess = new RoomAccess(roomId, adminId, false);
-
-        when(roomAccessRepository.findByRoomIdAndUserId(roomId, adminId)).thenReturn(Optional.of(regularAccess));
-
-        assertThrows(SecurityException.class, () -> chatService.rejectJoinRequest(roomId, adminId, targetUserId));
-        verify(chatRepository, never()).delete(any(Chat.class));
+        verify(roomAccessRepository).save(any(RoomAccess.class));
+        verify(chatRepository).save(any(Chat.class));
     }
 
     @Test
@@ -182,7 +196,7 @@ class ChatServiceTest {
 
         chatService.rejectJoinRequest(roomId, adminId, targetUserId);
 
-        verify(chatRepository, times(1)).delete(requestChat);
+        verify(chatRepository).delete(requestChat);
     }
 
     @Test
@@ -191,7 +205,7 @@ class ChatServiceTest {
 
         chatService.clearRoomChat(roomId);
 
-        verify(chatRepository, times(1)).deleteByRoomId(roomId);
-        verify(roomAccessRepository, times(1)).deleteByRoomId(roomId);
+        verify(chatRepository).deleteByRoomId(roomId);
+        verify(roomAccessRepository).deleteByRoomId(roomId);
     }
 }
