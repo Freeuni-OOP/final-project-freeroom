@@ -1,4 +1,6 @@
 import useFriendsPanel from './useFriendsPanel';
+import { Link } from 'react-router-dom';
+import { RELATIONSHIP_STATUS } from "@/utils";
 
 const Spinner = () => (
   <div className="flex justify-center py-10">
@@ -87,42 +89,47 @@ export default function FriendsPanel() {
       </div>
 
       {activeTab === 'friends' && (
-        <>
-          {isLoadingFriends ? (
-            <Spinner />
-          ) : friends.length === 0 ? (
-            <EmptyState
-              message="მეგობრები ჯერ არ გყავთ"
-              sub="დაუკავშირდით ჯგუფელებს, რათა ნახოთ ვინ სწავლობს ახლომახლო."
-            />
-          ) : (
-            <div className="space-y-3">
-              {friends.map((friend) => (
-                <div
-                  key={friend.id}
-                  className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 ring-1 ring-black/5"
-                >
-                  <Avatar photoUrl={friend.photoUrl} displayName={friend.displayName} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-brand-ink">
-                      {friend.displayName}
-                    </p>
-                    {friend.occupancyLabel && (
-                      <p className="mt-0.5 text-xs text-brand-ink/50">
-                        {friend.occupancyLabel}
-                      </p>
-                    )}
-                  </div>
-                  {friend.hasActiveOccupancy && (
-                    <span className="shrink-0 rounded-full bg-brand-accent/10 px-2.5 py-1 text-xs font-semibold text-brand-accent-text">
-                      ოთახშია
-                    </span>
-                  )}
+          <>
+            {isLoadingFriends ? (
+                <Spinner />
+            ) : friends.length === 0 ? (
+                <EmptyState
+                    message="მეგობრები ჯერ არ გყავთ"
+                    sub="დაუკავშირდით ჯგუფელებს, რათა ნახოთ ვინ სწავლობს ახლომახლო."
+                />
+            ) : (
+                <div className="space-y-3">
+                  {friends.map((friend) => (
+                      <div
+                          key={friend.id}
+                          className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 ring-1 ring-black/5"
+                      >
+                        <Link
+                            to={`/profile/${friend.id}`}
+                            className="flex min-w-0 flex-1 items-center gap-3"
+                        >
+                          <Avatar photoUrl={friend.photoUrl} displayName={friend.displayName} />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-brand-ink">
+                              {friend.displayName}
+                            </p>
+                            {friend.occupancyLabel && (
+                                <p className="mt-0.5 text-xs text-brand-ink/50">
+                                  {friend.occupancyLabel}
+                                </p>
+                            )}
+                          </div>
+                        </Link>
+                        {friend.hasActiveOccupancy && (
+                            <span className="shrink-0 rounded-full bg-brand-accent/10 px-2.5 py-1 text-xs font-semibold text-brand-accent-text">
+                ოთახშია
+              </span>
+                        )}
+                      </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
-        </>
+            )}
+          </>
       )}
 
       {activeTab === 'requests' && (
@@ -136,7 +143,7 @@ export default function FriendsPanel() {
                   : 'text-brand-ink/50 hover:text-brand-ink/70'
               }`}
             >
-              გაგზავნა
+              ძებნა
             </button>
             <button
               onClick={() => setRequestSubTab('received')}
@@ -185,96 +192,106 @@ export default function FriendsPanel() {
               )}
 
               {searchResults.length > 0 && (
-                <div className="space-y-2">
-                  {searchResults.map((user) => (
-                    <div
-                      key={user.id}
-                      className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 ring-1 ring-black/5"
-                    >
-                      <Avatar photoUrl={user.photoUrl} displayName={user.displayName} size="sm" />
-                      <p className="min-w-0 flex-1 truncate text-sm font-semibold text-brand-ink">
-                        {user.displayName}
-                      </p>
-
-                      {user.relationshipStatus === 'FRIENDS' && (
-                        <span className="shrink-0 rounded-full bg-brand-accent/10 px-2.5 py-1 text-xs font-semibold text-brand-accent-text">
-                          მეგობარი
-                        </span>
-                      )}
-
-                      {user.relationshipStatus === 'PENDING_SENT' && (
-                        <span className="shrink-0 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-brand-ink/40">
-                          გაგზავნილია
-                        </span>
-                      )}
-
-                      {user.relationshipStatus === 'PENDING_RECEIVED' && (
-                        <button
-                          onClick={() => handleAcceptFromSearch(user.id)}
-                          disabled={actionPending.has(user.id)}
-                          className="shrink-0 rounded-full bg-brand-accent/10 px-2.5 py-1 text-xs font-semibold text-brand-accent-text transition-colors hover:bg-brand-accent/20 disabled:opacity-50"
+                  <div className="space-y-2">
+                    {searchResults.map((user) => (
+                        <div
+                            key={user.id}
+                            className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 ring-1 ring-black/5"
                         >
-                          მიღება
-                        </button>
-                      )}
+                          <Link
+                              to={`/profile/${user.id}`}
+                              className="flex min-w-0 flex-1 items-center gap-3"
+                          >
+                            <Avatar photoUrl={user.photoUrl} displayName={user.displayName} size="sm" />
+                            <p className="min-w-0 flex-1 truncate text-sm font-semibold text-brand-ink">
+                              {user.displayName}
+                            </p>
+                          </Link>
 
-                      {user.relationshipStatus === 'NONE' && (
-                        <button
-                          onClick={() => handleSendRequest(user.id)}
-                          disabled={actionPending.has(user.id)}
-                          className="shrink-0 rounded-full bg-brand-accent/10 px-2.5 py-1 text-xs font-semibold text-brand-accent-text transition-colors hover:bg-brand-accent/20 disabled:opacity-50"
-                        >
-                          {actionPending.has(user.id) ? '...' : 'დამატება'}
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                          {user.relationshipStatus === RELATIONSHIP_STATUS.FRIENDS && (
+                              <span className="shrink-0 rounded-full bg-brand-green/10 px-2.5 py-1 text-xs font-semibold text-brand-green">
+            მეგობარი
+          </span>
+                          )}
+
+                          {user.relationshipStatus === RELATIONSHIP_STATUS.PENDING_SENT && (
+                              <span className="shrink-0 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-brand-ink/40">
+            გაგზავნილია
+          </span>
+                          )}
+
+                          {user.relationshipStatus === RELATIONSHIP_STATUS.PENDING_RECEIVED && (
+                              <button
+                                  onClick={() => handleAcceptFromSearch(user.id)}
+                                  disabled={actionPending.has(user.id)}
+                                  className="shrink-0 rounded-full bg-brand-green/10 px-2.5 py-1 text-xs font-semibold text-brand-green transition-colors hover:bg-brand-green/20 disabled:opacity-50"
+                              >
+                                მიღება
+                              </button>
+                          )}
+
+                          {user.relationshipStatus === RELATIONSHIP_STATUS.NONE && (
+                              <button
+                                  onClick={() => handleSendRequest(user.id)}
+                                  disabled={actionPending.has(user.id)}
+                                  className="shrink-0 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-brand-ink/50 transition-colors hover:bg-gray-200 disabled:opacity-50"
+                              >
+                                {actionPending.has(user.id) ? '...' : 'დამატება'}
+                              </button>
+                          )}
+                        </div>
+                    ))}
+                  </div>
               )}
             </>
           )}
 
           {requestSubTab === 'received' && (
-            <>
-              {isLoadingRequests ? (
-                <Spinner />
-              ) : incomingRequests.length === 0 ? (
-                <EmptyState message="შემოსული მოთხოვნები არ გაქვთ" />
-              ) : (
-                <div className="space-y-3">
-                  {incomingRequests.map((req) => (
-                    <div
-                      key={req.requestId}
-                      className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 ring-1 ring-black/5"
-                    >
-                      <Avatar
-                        photoUrl={req.senderPhotoUrl}
-                        displayName={req.senderDisplayName}
-                      />
-                      <p className="min-w-0 flex-1 truncate text-sm font-semibold text-brand-ink">
-                        {req.senderDisplayName}
-                      </p>
-                      <div className="flex shrink-0 gap-2">
-                        <button
-                          onClick={() => handleAccept(req.requestId)}
-                          disabled={actionPending.has(req.requestId)}
-                          className="rounded-full bg-brand-accent/10 px-3 py-1 text-xs font-semibold text-brand-accent-text transition-colors hover:bg-brand-accent/20 disabled:opacity-50"
-                        >
-                          მიღება
-                        </button>
-                        <button
-                          onClick={() => handleReject(req.requestId)}
-                          disabled={actionPending.has(req.requestId)}
-                          className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-600 transition-colors hover:bg-red-100 disabled:opacity-50"
-                        >
-                          უარყოფა
-                        </button>
-                      </div>
+              <>
+                {isLoadingRequests ? (
+                    <Spinner />
+                ) : incomingRequests.length === 0 ? (
+                    <EmptyState message="შემოსული მოთხოვნები არ გაქვთ" />
+                ) : (
+                    <div className="space-y-3">
+                      {incomingRequests.map((req) => (
+                          <div
+                              key={req.requestId}
+                              className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 ring-1 ring-black/5"
+                          >
+                            <Link
+                                to={`/profile/${req.senderId}`}
+                                className="flex min-w-0 flex-1 items-center gap-3"
+                            >
+                              <Avatar
+                                  photoUrl={req.senderPhotoUrl}
+                                  displayName={req.senderDisplayName}
+                              />
+                              <p className="min-w-0 flex-1 truncate text-sm font-semibold text-brand-ink">
+                                {req.senderDisplayName}
+                              </p>
+                            </Link>
+                            <div className="flex shrink-0 gap-2">
+                              <button
+                                  onClick={() => handleAccept(req.requestId)}
+                                  disabled={actionPending.has(req.requestId)}
+                                  className="rounded-full bg-brand-accent/10 px-3 py-1 text-xs font-semibold text-brand-accent-text transition-colors hover:bg-brand-accent/20 disabled:opacity-50"
+                              >
+                                მიღება
+                              </button>
+                              <button
+                                  onClick={() => handleReject(req.requestId)}
+                                  disabled={actionPending.has(req.requestId)}
+                                  className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-600 transition-colors hover:bg-red-100 disabled:opacity-50"
+                              >
+                                უარყოფა
+                              </button>
+                            </div>
+                          </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
-            </>
+                )}
+              </>
           )}
         </>
       )}
