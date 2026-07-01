@@ -1,6 +1,6 @@
 import useFriendsPanel from './useFriendsPanel';
 import { Link } from 'react-router-dom';
-import { RELATIONSHIP_STATUS } from "@/utils";
+import {RELATIONSHIP_STATUS, UNIVERSITY} from "@/utils";
 
 const Spinner = () => (
   <div className="flex justify-center py-10">
@@ -51,6 +51,7 @@ export default function FriendsPanel() {
     handleAccept,
     handleAcceptFromSearch,
     handleReject,
+    university,
   } = useFriendsPanel();
 
   return (
@@ -224,7 +225,13 @@ export default function FriendsPanel() {
                               <button
                                   onClick={() => handleAcceptFromSearch(user.id)}
                                   disabled={actionPending.has(user.id)}
-                                  className="shrink-0 rounded-full bg-brand-green/10 px-2.5 py-1 text-xs font-semibold text-brand-green transition-colors hover:bg-brand-green/20 disabled:opacity-50"
+                                  className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors disabled:opacity-50 ${
+                                      university === UNIVERSITY.FREEUNI
+                                          ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                                          : university === UNIVERSITY.AGRUNI
+                                              ? 'bg-green-600 hover:bg-green-700 text-white'
+                                              : 'bg-brand-ink hover:bg-brand-ink/90 text-white'
+                                  }`}
                               >
                                 მიღება
                               </button>
@@ -234,7 +241,13 @@ export default function FriendsPanel() {
                               <button
                                   onClick={() => handleSendRequest(user.id)}
                                   disabled={actionPending.has(user.id)}
-                                  className="shrink-0 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-brand-ink/50 transition-colors hover:bg-gray-200 disabled:opacity-50"
+                                  className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors disabled:opacity-50 ${
+                                      university === UNIVERSITY.FREEUNI
+                                          ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                                          : university === UNIVERSITY.AGRUNI
+                                              ? 'bg-green-600 hover:bg-green-700 text-white'
+                                              : 'bg-brand-ink hover:bg-brand-ink/90 text-white'
+                                  }`}
                               >
                                 {actionPending.has(user.id) ? '...' : 'დამატება'}
                               </button>

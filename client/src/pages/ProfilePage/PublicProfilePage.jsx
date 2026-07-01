@@ -1,5 +1,6 @@
 import NotFoundPage from '@/pages/NotFoundPage';
 import usePublicProfilePage from './usePublicProfilePage.js';
+import {UNIVERSITY} from "@/utils";
 
 export default function PublicProfilePage() {
     const {
@@ -17,6 +18,7 @@ export default function PublicProfilePage() {
         handleSendRequest,
         handleAccept,
         handleReject,
+        university,
     } = usePublicProfilePage();
 
     if (notFound) {
@@ -62,7 +64,13 @@ export default function PublicProfilePage() {
                                 <button
                                     onClick={handleSendRequest}
                                     disabled={actionPending}
-                                    className="rounded-xl bg-brand-accent px-6 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-accent-dark disabled:opacity-50"
+                                    className={`rounded-xl px-6 py-2 text-sm font-semibold transition disabled:opacity-50 ${
+                                        university === UNIVERSITY.FREEUNI
+                                            ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                                            : university === UNIVERSITY.AGRUNI
+                                                ? 'bg-green-600 hover:bg-green-700 text-white'
+                                                : 'bg-brand-ink hover:bg-brand-ink/90 text-white'
+                                    }`}
                                 >
                                     {actionPending ? 'იგზავნება...' : 'მეგობრობის მოთხოვნა'}
                                 </button>
@@ -79,7 +87,13 @@ export default function PublicProfilePage() {
                                     <button
                                         onClick={handleAccept}
                                         disabled={actionPending}
-                                        className="rounded-xl bg-brand-green px-6 py-2 text-sm font-semibold text-white transition hover:bg-brand-green/90 disabled:opacity-50"
+                                        className={`rounded-xl px-6 py-2 text-sm font-semibold transition disabled:opacity-50 ${
+                                            university === UNIVERSITY.FREEUNI
+                                                ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                                                : university === UNIVERSITY.AGRUNI
+                                                    ? 'bg-green-600 hover:bg-green-700 text-white'
+                                                    : 'bg-brand-ink hover:bg-brand-ink/90 text-white'
+                                        }`}
                                     >
                                         დადასტურება
                                     </button>

@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useNotification } from '@/context';
 import { RELATIONSHIP_STATUS } from '@/utils';
+import { useAuth } from '@/context';
+import { getUniversity } from '@/utils';
 import {
     getPublicProfile,
     getIncomingFriendRequests,
@@ -16,6 +18,8 @@ const getInitial = (name) => {
 };
 
 const usePublicProfilePage = () => {
+    const { user } = useAuth();
+    const university = getUniversity(user?.email);
     const { userId } = useParams();
     const navigate = useNavigate();
     const { showNotification } = useNotification();
@@ -139,6 +143,7 @@ const usePublicProfilePage = () => {
         handleSendRequest,
         handleAccept,
         handleReject,
+        university,
     };
 };
 

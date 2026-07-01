@@ -1,3 +1,5 @@
+import { useAuth } from '@/context';
+import { getUniversity } from '@/utils';
 import { useState, useEffect } from 'react';
 import { RELATIONSHIP_STATUS } from '@/utils';
 import useDebounce from '@/hooks/useDebounce';
@@ -14,6 +16,8 @@ const formatTime = (isoString) =>
     new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
 const useFriendsPanel = () => {
+    const { user } = useAuth();
+    const university = getUniversity(user?.email);
     const [activeTab, setActiveTab] = useState('friends');
     const [requestSubTab, setRequestSubTab] = useState('send');
     const [searchQuery, setSearchQuery] = useState('');
@@ -186,6 +190,7 @@ const useFriendsPanel = () => {
         handleAccept,
         handleAcceptFromSearch,
         handleReject,
+        university,
     };
 };
 
