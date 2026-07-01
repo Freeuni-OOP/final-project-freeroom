@@ -94,6 +94,7 @@ const usePublicProfilePage = () => {
         try {
             await sendFriendRequest(profile.id);
             setProfile( (prev) => ({...prev, relationshipStatus: RELATIONSHIP_STATUS.PENDING_SENT}));
+            showNotification({ message: 'მეგობრობის მოთხოვნა გაგზავნილია', type: 'success' });
         } catch(e) {
             console.error(e);
             showNotification({ message: 'მოთხოვნის გაგზავნა ვერ მოხერხდა.', type: 'error' });
@@ -108,6 +109,7 @@ const usePublicProfilePage = () => {
         try {
             await acceptFriendRequest(requestId);
             setProfile((prev) => ({...prev, relationshipStatus: RELATIONSHIP_STATUS.FRIENDS}))
+            showNotification({ message: 'თქვენ ახლა მეგობრები ხართ.', type: 'success' });
         } catch(e) {
             console.error(e);
             showNotification({ message: 'დადასტურება ვერ მოხერხდა.', type: 'error'})
@@ -122,6 +124,7 @@ const usePublicProfilePage = () => {
         try {
             await rejectFriendRequest(requestId);
             setProfile((prev) => ({...prev, relationshipStatus: RELATIONSHIP_STATUS.NONE}))
+            showNotification({ message: 'მეგობრობის მოთხოვნა უარყოფილია', type: 'success' });
         } catch(e) {
             console.error(e);
             showNotification({ message: 'უარყოფა ვერ მოხერხდა.', type: 'error'})
