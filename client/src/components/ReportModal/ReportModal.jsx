@@ -9,8 +9,9 @@ export default function ReportModal({ userId, onClose }) {
         isSubmitting,
         isSubmitted,
         error,
+        canSubmit,
         handleSelectReason,
-        handleSubmitOther,
+        handleSubmit,
     } = useReportModal(userId);
 
     return (
@@ -40,55 +41,41 @@ export default function ReportModal({ userId, onClose }) {
                             <h2 className="mb-4 text-lg font-bold text-brand-ink">მომხმარებლის დარეპორტება</h2>
 
                             <div className="flex flex-col gap-2">
-                                {Object.values(REPORT_REASON)
-                                    .filter((reason) => reason !== REPORT_REASON.OTHER)
-                                    .map((reason) => (
-                                        <button
-                                            key={reason}
-                                            onClick={() => handleSelectReason(reason)}
-                                            disabled={isSubmitting}
-                                            className={`rounded-xl border px-4 py-3 text-left text-sm font-medium transition-colors disabled:opacity-50 ${
-                                                selectedReason === reason
-                                                    ? 'border-brand-accent bg-brand-accent/10 text-brand-accent-text'
-                                                    : 'border-black/10 text-brand-ink/70 hover:border-brand-accent/40'
-                                            }`}
-                                        >
-                                            {REPORT_REASON_LABELS[reason]}
-                                        </button>
-                                    ))}
-                                <button
-                                    onClick={() => handleSelectReason(REPORT_REASON.OTHER)}
-                                    disabled={isSubmitting}
-                                    className={`rounded-xl border px-4 py-3 text-left text-sm font-medium transition-colors disabled:opacity-50 ${
-                                        selectedReason === REPORT_REASON.OTHER
-                                            ? 'border-brand-accent bg-brand-accent/10 text-brand-accent-text'
-                                            : 'border-black/10 text-brand-ink/70 hover:border-brand-accent/40'
-                                    }`}
-                                >
-                                    {REPORT_REASON_LABELS[REPORT_REASON.OTHER]}
-                                </button>
+                                {Object.values(REPORT_REASON).map((reason) => (
+                                    <button
+                                        key={reason}
+                                        onClick={() => handleSelectReason(reason)}
+                                        disabled={isSubmitting}
+                                        className={`rounded-xl border px-4 py-3 text-left text-sm font-medium transition-colors disabled:opacity-50 ${
+                                            selectedReason === reason
+                                                ? 'border-brand-accent bg-brand-accent/10 text-brand-accent-text'
+                                                : 'border-black/10 text-brand-ink/70 hover:border-brand-accent/40'
+                                        }`}
+                                    >
+                                        {REPORT_REASON_LABELS[reason]}
+                                    </button>
+                                ))}
                             </div>
 
                             {selectedReason === REPORT_REASON.OTHER && (
-                                <>
-                                    <textarea
-                                        value={details}
-                                        onChange={(e) => setDetails(e.target.value)}
-                                        placeholder="დაწერეთ დეტალები..."
-                                        rows={3}
-                                        className="mt-3 w-full resize-none rounded-xl border border-black/10 p-3 text-sm text-brand-ink focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
-                                    />
-                                    <button
-                                        onClick={handleSubmitOther}
-                                        disabled={isSubmitting || !details.trim()}
-                                        className="mt-3 w-full rounded-xl bg-red-500 py-3 font-semibold text-white transition-colors hover:bg-red-600 disabled:opacity-50"
-                                    >
-                                        {isSubmitting ? 'იგზავნება...' : 'გაგზავნა'}
-                                    </button>
-                                </>
+                                <textarea
+                                    value={details}
+                                    onChange={(e) => setDetails(e.target.value)}
+                                    placeholder="დაწერეთ დეტალები..."
+                                    rows={3}
+                                    className="mt-3 w-full resize-none rounded-xl border border-black/10 p-3 text-sm text-brand-ink focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                                />
                             )}
 
                             {error && <p className="mt-3 text-xs text-red-500">{error}</p>}
+
+                            <button
+                                onClick={handleSubmit}
+                                disabled={isSubmitting || !canSubmit}
+                                className="mt-4 w-full rounded-xl bg-red-500 py-3 font-semibold text-white transition-colors hover:bg-red-600 disabled:opacity-50"
+                            >
+                                {isSubmitting ? 'იგზავნება...' : 'გაგზავნა'}
+                            </button>
                         </>
                     )}
                 </div>

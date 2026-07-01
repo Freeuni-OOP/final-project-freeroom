@@ -9,11 +9,19 @@ const useReportModal = (userId) => {
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [error, setError] = useState('');
 
-    const submitReport = async (reason, reasonDetails) => {
+    const handleSelectReason = (reason) => {
+        setSelectedReason(reason);
+        setError('');
+    };
+
+    const handleSubmit = async () => {
+        if (!selectedReason) return;
+        if (selectedReason === REPORT_REASON.OTHER && !details.trim()) return;
+
         setIsSubmitting(true);
         setError('');
         try {
-            await reportUser(userId, reason, reasonDetails || null);
+            await reportUser(userId, selectedReason, selectedReason === REPORT_REASON.OTHER ? details.trim() : null);
             setIsSubmitted(true);
         } catch (err) {
             console.error(err);
@@ -29,17 +37,9 @@ const useReportModal = (userId) => {
         }
     };
 
-    const handleSelectReason = (reason) => {
-        setSelectedReason(reason);
-        if (reason !== REPORT_REASON.OTHER) {
-            submitReport(reason, null);
-        }
-    };
-
-    const handleSubmitOther = () => {
-        if (!details.trim()) return;
-        submitReport(REPORT_REASON.OTHER, details.trim());
-    };
+    const canSubmit =
+        selectedReason !== null &&
+        (selectedReason !== REPORT_REASON.OTHER || details.trim().length > 0);
 
     return {
         selectedReason,
@@ -48,8 +48,9 @@ const useReportModal = (userId) => {
         isSubmitting,
         isSubmitted,
         error,
+        canSubmit,
         handleSelectReason,
-        handleSubmitOther,
+        handleSubmit,
     };
 };
 
