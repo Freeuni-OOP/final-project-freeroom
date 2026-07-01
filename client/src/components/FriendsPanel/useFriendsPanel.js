@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { RELATIONSHIP_STATUS } from '@/utils';
 import useDebounce from '@/hooks/useDebounce';
 import {
     getFriends,
@@ -94,7 +95,7 @@ const useFriendsPanel = () => {
             await sendFriendRequest(receiverId);
             setSearchResults((prev) =>
                 prev.map((u) =>
-                    u.id === receiverId ? { ...u, relationshipStatus: 'PENDING_SENT' } : u
+                    u.id === receiverId ? { ...u, relationshipStatus: RELATIONSHIP_STATUS.PENDING_SENT } : u
                 )
             );
         } catch (e) {
@@ -130,7 +131,7 @@ const useFriendsPanel = () => {
             );
             setSearchResults((prev) =>
                 prev.map((u) =>
-                    u.id === senderId ? { ...u, relationshipStatus: 'FRIENDS' } : u
+                    u.id === senderId ? { ...u, relationshipStatus: RELATIONSHIP_STATUS.FRIENDS } : u
                 )
             );
             await loadFriends();
