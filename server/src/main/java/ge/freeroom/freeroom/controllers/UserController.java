@@ -140,7 +140,7 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserCalendar(token.getUid()));
     }
 
-    @GetMapping("/profile/{userId}")
+    @GetMapping("/{userId}/profile")
     public ResponseEntity<PublicProfileDto> getPublicProfile(
             @PathVariable String userId,
             Principal principal) {
