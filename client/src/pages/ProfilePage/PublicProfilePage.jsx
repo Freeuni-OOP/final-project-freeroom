@@ -54,7 +54,7 @@ export default function PublicProfilePage() {
                         <div className="mt-4">
                             {isFriends && (
                                 <span className="inline-flex items-center rounded-full bg-brand-green/10 px-4 py-2 text-sm font-semibold text-brand-green">
-                                    მეგობრები ხართ
+                                    მეგობარი
                                 </span>
                             )}
 
@@ -70,7 +70,7 @@ export default function PublicProfilePage() {
 
                             {isPendingSent && (
                                 <span className="inline-flex items-center rounded-full bg-black/5 px-4 py-2 text-sm font-semibold text-brand-ink/50">
-                                    მოთხოვნა გაგზავნილია
+                                    მეგობრობის მოთხოვნა გაგზავნილია
                                 </span>
                             )}
 
