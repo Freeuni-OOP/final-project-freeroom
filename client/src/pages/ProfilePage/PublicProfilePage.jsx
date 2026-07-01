@@ -1,0 +1,108 @@
+import NotFoundPage from '@/pages/NotFoundPage';
+import usePublicProfile from './usePublicProfile';
+
+export default function PublicProfilePage() {
+    const {
+        profile,
+        isLoading,
+        notFound,
+        showPhoto,
+        initial,
+        handlePhotoError,
+        actionPending,
+        canRequest,
+        isPendingSent,
+        isPendingReceived,
+        isFriends,
+        handleSendRequest,
+        handleAccept,
+        handleReject,
+    } = usePublicProfile();
+
+    if (notFound) {
+        return <NotFoundPage />;
+    }
+
+    return (
+        <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
+            <section className="flex flex-col items-center rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-black/5 sm:p-10">
+                {isLoading ? (
+                    <div className="h-24 w-24 rounded-full bg-black/5 animate-pulse ring-4 ring-black/5" />
+                ) : showPhoto ? (
+                    <img
+                        src={profile.photoUrl}
+                        alt={profile.displayName}
+                        onError={handlePhotoError}
+                        referrerPolicy="no-referrer"
+                        className="h-24 w-24 rounded-full object-cover ring-4 ring-brand-accent/15"
+                    />
+                ) : (
+                    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-brand-accent/10 text-3xl font-bold text-brand-accent-text ring-4 ring-brand-accent/15">
+                        {initial}
+                    </div>
+                )}
+
+                {isLoading ? (
+                    <div className="mt-5 flex flex-col items-center gap-2 w-full animate-pulse">
+                        <div className="h-7 w-48 rounded-lg bg-black/5" />
+                        <div className="mt-3 h-9 w-32 rounded-xl bg-black/5" />
+                    </div>
+                ) : (
+                    <>
+                        <h1 className="mt-5 text-2xl font-bold text-brand-ink">{profile.displayName}</h1>
+
+                        <div className="mt-4">
+                            {isFriends && (
+                                <span className="inline-flex items-center rounded-full bg-brand-green/10 px-4 py-2 text-sm font-semibold text-brand-green">
+                                    მეგობრები ხართ
+                                </span>
+                            )}
+
+                            {canRequest && (
+                                <button
+                                    onClick={handleSendRequest}
+                                    disabled={actionPending}
+                                    className="rounded-xl bg-brand-accent px-6 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-accent-dark disabled:opacity-50"
+                                >
+                                    {actionPending ? 'იგზავნება...' : 'მეგობრობის მოთხოვნა'}
+                                </button>
+                            )}
+
+                            {isPendingSent && (
+                                <span className="inline-flex items-center rounded-full bg-black/5 px-4 py-2 text-sm font-semibold text-brand-ink/50">
+                                    მოთხოვნა გაგზავნილია
+                                </span>
+                            )}
+
+                            {isPendingReceived && (
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={handleAccept}
+                                        disabled={actionPending}
+                                        className="rounded-xl bg-brand-green px-6 py-2 text-sm font-semibold text-white transition hover:bg-brand-green/90 disabled:opacity-50"
+                                    >
+                                        დადასტურება
+                                    </button>
+                                    <button
+                                        onClick={handleReject}
+                                        disabled={actionPending}
+                                        className="rounded-xl border border-black/10 px-6 py-2 text-sm font-semibold text-brand-ink/60 transition hover:border-brand-accent/40 disabled:opacity-50"
+                                    >
+                                        უარყოფა
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </>
+                )}
+            </section>
+
+            {!isLoading && profile?.bio && (
+                <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 sm:p-8">
+                    <h2 className="mb-4 text-lg font-bold text-brand-ink">ჩემს შესახებ</h2>
+                    <p className="whitespace-pre-wrap text-sm text-brand-ink/70">{profile.bio}</p>
+                </section>
+            )}
+        </div>
+    );
+}
