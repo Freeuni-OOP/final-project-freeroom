@@ -233,7 +233,7 @@ export default function FriendsPanel() {
                                               : 'bg-brand-ink hover:bg-brand-ink/90 text-white'
                                   }`}
                               >
-                                მიღება
+                                დადასტურება
                               </button>
                           )}
 
@@ -290,7 +290,7 @@ export default function FriendsPanel() {
                                   disabled={actionPending.has(req.requestId)}
                                   className="rounded-full bg-brand-accent/10 px-3 py-1 text-xs font-semibold text-brand-accent-text transition-colors hover:bg-brand-accent/20 disabled:opacity-50"
                               >
-                                მიღება
+                                დადასტურება
                               </button>
                               <button
                                   onClick={() => handleReject(req.requestId)}
