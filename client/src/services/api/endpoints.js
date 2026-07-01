@@ -49,4 +49,7 @@ export const sendFriendRequest = (receiverId) => axiosInstance.post('/friends/re
 export const acceptFriendRequest = (requestId) => axiosInstance.patch(`/friends/requests/${requestId}/accept`);
 export const rejectFriendRequest = (requestId) => axiosInstance.patch(`/friends/requests/${requestId}/reject`);
 
+export const removeFriend = (friendId) => axiosInstance.delete(`/friends/${friendId}`);
+export const cancelFriendRequest = (userId) => axiosInstance.delete(`/friends/requests/${userId}`);
+
 export const getPublicProfile = (userId) => axiosInstance.get(`/user/${userId}/profile`);

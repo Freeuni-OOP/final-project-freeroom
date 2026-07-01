@@ -10,6 +10,8 @@ import {
     sendFriendRequest,
     acceptFriendRequest,
     rejectFriendRequest,
+    removeFriend,
+    cancelFriendRequest,
 } from '@/services/api/endpoints';
 
 const getInitial = (name) => {
@@ -92,6 +94,7 @@ const usePublicProfilePage = () => {
         try {
             await sendFriendRequest(profile.id);
             setProfile( (prev) => ({...prev, relationshipStatus: RELATIONSHIP_STATUS.PENDING_SENT}));
+            showNotification({ message: 'მეგობრობის მოთხოვნა გაგზავნილია', type: 'success' });
         } catch(e) {
             console.error(e);
             showNotification({ message: 'მოთხოვნის გაგზავნა ვერ მოხერხდა.', type: 'error' });
@@ -101,11 +104,12 @@ const usePublicProfilePage = () => {
     };
 
     const handleAccept = async () => {
-        if(!profile) return;
+        if(!profile || !requestId) return;
         setActionPending(true);
         try {
             await acceptFriendRequest(requestId);
             setProfile((prev) => ({...prev, relationshipStatus: RELATIONSHIP_STATUS.FRIENDS}))
+            showNotification({ message: 'თქვენ ახლა მეგობრები ხართ.', type: 'success' });
         } catch(e) {
             console.error(e);
             showNotification({ message: 'დადასტურება ვერ მოხერხდა.', type: 'error'})
@@ -115,14 +119,45 @@ const usePublicProfilePage = () => {
     };
 
     const handleReject = async () => {
-        if(!profile) return;
+        if(!profile || !requestId) return;
         setActionPending(true);
         try {
             await rejectFriendRequest(requestId);
             setProfile((prev) => ({...prev, relationshipStatus: RELATIONSHIP_STATUS.NONE}))
+            showNotification({ message: 'მეგობრობის მოთხოვნა უარყოფილია', type: 'success' });
         } catch(e) {
             console.error(e);
             showNotification({ message: 'უარყოფა ვერ მოხერხდა.', type: 'error'})
+        } finally {
+            setActionPending(false);
+        }
+    };
+
+    const handleUnfriend = async () => {
+        if(!profile) return;
+        setActionPending(true);
+        try {
+            await removeFriend(profile.id);
+            setProfile((prev) => ({...prev, relationshipStatus: RELATIONSHIP_STATUS.NONE}))
+            showNotification({ message: 'მეგობრობა გაუქმებულია', type: 'success' });
+        } catch(e) {
+            console.error(e);
+            showNotification({ message: 'მეგობრობის გაუქმება ვერ მოხერხდა.', type: 'error'})
+        } finally {
+            setActionPending(false);
+        }
+    };
+
+    const handleCancelRequest = async () => {
+        if(!profile || !requestId) return;
+        setActionPending(true);
+        try {
+            await cancelFriendRequest(profile.id);
+            setProfile((prev) => ({...prev, relationshipStatus: RELATIONSHIP_STATUS.NONE}))
+            showNotification({ message: 'მეგობრობის მოთხოვნა გაუქმებულია', type: 'success' });
+        } catch(e) {
+            console.error(e);
+            showNotification({ message: 'მეგობრობის მოთხოვნის გაუქმება ვერ მოხერხდა.', type: 'error'})
         } finally {
             setActionPending(false);
         }
@@ -143,6 +178,8 @@ const usePublicProfilePage = () => {
         handleSendRequest,
         handleAccept,
         handleReject,
+        handleUnfriend,
+        handleCancelRequest,
         university,
     };
 };

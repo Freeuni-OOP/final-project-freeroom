@@ -309,4 +309,57 @@ class FriendServiceTest {
         req.setStatus(FriendRequestStatus.PENDING);
         return req;
     }
+
+    @Test
+    void removeFriend_notFriends_throws() {
+        when(friendshipRepository.findByUsers("uid-a", "uid-b")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> friendService.removeFriend("uid-a", "uid-b"))
+                .isInstanceOf(IllegalStateException.class);
+
+        verify(friendshipRepository, never()).delete(any(Friendship.class));
+    }
+
+    @Test
+    void removeFriend_valid_deletesFriendship() {
+        Friendship friendship = new Friendship();
+        friendship.setUser1(userA);
+        friendship.setUser2(userB);
+        when(friendshipRepository.findByUsers("uid-a", "uid-b")).thenReturn(Optional.of(friendship));
+
+        friendService.removeFriend("uid-a", "uid-b");
+
+        verify(friendshipRepository).delete(friendship);
+    }
+
+    @Test
+    void cancelFriendRequest_noPendingRequest_throws() {
+        when(friendRequestRepository.findPendingBetweenUsers("uid-a", "uid-b")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> friendService.cancelFriendRequest("uid-a", "uid-b"))
+                .isInstanceOf(IllegalStateException.class);
+
+        verify(friendRequestRepository, never()).delete(any(FriendRequest.class));
+    }
+
+    @Test
+    void cancelFriendRequest_callerIsNotSender_throwsAccessDenied() {
+        FriendRequest req = pendingRequest(userB, userA);
+        when(friendRequestRepository.findPendingBetweenUsers("uid-a", "uid-b")).thenReturn(Optional.of(req));
+
+        assertThatThrownBy(() -> friendService.cancelFriendRequest("uid-a", "uid-b"))
+                .isInstanceOf(AccessDeniedException.class);
+
+        verify(friendRequestRepository, never()).delete(any(FriendRequest.class));
+    }
+
+    @Test
+    void cancelFriendRequest_callerIsSender_deletesRequest() {
+        FriendRequest req = pendingRequest(userA, userB);
+        when(friendRequestRepository.findPendingBetweenUsers("uid-a", "uid-b")).thenReturn(Optional.of(req));
+
+        friendService.cancelFriendRequest("uid-a", "uid-b");
+
+        verify(friendRequestRepository).delete(req);
+    }
 }

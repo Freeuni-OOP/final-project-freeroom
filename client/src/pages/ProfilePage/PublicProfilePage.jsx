@@ -18,6 +18,8 @@ export default function PublicProfilePage() {
         handleSendRequest,
         handleAccept,
         handleReject,
+        handleUnfriend,
+        handleCancelRequest,
         university,
     } = usePublicProfilePage();
 
@@ -55,9 +57,18 @@ export default function PublicProfilePage() {
 
                         <div className="mt-4">
                             {isFriends && (
-                                <span className="inline-flex items-center rounded-full bg-brand-green/10 px-4 py-2 text-sm font-semibold text-brand-green">
-                                    მეგობარი
-                                </span>
+                                <div className="flex flex-col items-center gap-3">
+                                    <span className="inline-flex items-center rounded-full bg-brand-green/10 px-4 py-2 text-sm font-semibold text-brand-green">
+                                        მეგობარი
+                                    </span>
+                                    <button
+                                        onClick={handleUnfriend}
+                                        disabled={actionPending}
+                                        className="rounded-xl bg-red-50 px-6 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100 disabled:opacity-50"
+                                    >
+                                        {actionPending ? 'მიმდინარეობს...' : 'მეგობრობის გაუქმება'}
+                                    </button>
+                                </div>
                             )}
 
                             {canRequest && (
@@ -77,9 +88,18 @@ export default function PublicProfilePage() {
                             )}
 
                             {isPendingSent && (
-                                <span className="inline-flex items-center rounded-full bg-black/5 px-4 py-2 text-sm font-semibold text-brand-ink/50">
-                                    მეგობრობის მოთხოვნა გაგზავნილია
-                                </span>
+                                <div className="flex flex-col items-center gap-3">
+                                    <span className="inline-flex items-center rounded-full bg-black/5 px-4 py-2 text-sm font-semibold text-brand-ink/50">
+                                        მეგობრობის მოთხოვნა გაგზავნილია
+                                    </span>
+                                    <button
+                                        onClick={handleCancelRequest}
+                                        disabled={actionPending}
+                                        className="rounded-xl bg-red-50 px-6 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100 disabled:opacity-50"
+                                    >
+                                        {actionPending ? 'მიმდინარეობს...' : 'მოთხოვნის გაუქმება'}
+                                    </button>
+                                </div>
                             )}
 
                             {isPendingReceived && (
