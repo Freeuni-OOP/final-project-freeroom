@@ -1,5 +1,6 @@
 package ge.freeroom.freeroom.controllers;
 
+import ge.freeroom.freeroom.config.AdminUsersConfig;
 import ge.freeroom.freeroom.entities.User;
 import ge.freeroom.freeroom.repositories.UserRepository;
 import ge.freeroom.freeroom.service.FriendService;
@@ -45,12 +46,16 @@ public class UserControllerTest {
     @MockitoBean
     private RateLimiter rateLimiter;
 
+    @MockitoBean
+    private AdminUsersConfig adminUsersConfig;
+
     @Test
     void getUser_ReturnsOk() throws Exception {
         User mockUser = new User();
         mockUser.setId("test-uid");
 
         when(userService.getOrCreateUser(any())).thenReturn(mockUser);
+        when(adminUsersConfig.isAdmin(any())).thenReturn(false);
 
         mockMvc.perform(get("/user"))
                 .andExpect(status().isOk());
@@ -62,6 +67,7 @@ public class UserControllerTest {
         User mockUser = new User();
         mockUser.setId("test-uid");
         when(userService.getOrCreateUser(any())).thenReturn(mockUser);
+        when(adminUsersConfig.isAdmin(any())).thenReturn(false);
 
         mockMvc.perform(get("/user"))
                 .andExpect(status().isOk())
@@ -99,5 +105,16 @@ public class UserControllerTest {
                 .andExpect(status().isTooManyRequests());
 
         verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void syncUser_ReturnsOk() throws Exception {
+        User mockUser = new User();
+        mockUser.setId("test-uid");
+        when(userService.getOrCreateUser(any())).thenReturn(mockUser);
+        when(adminUsersConfig.isAdmin(any())).thenReturn(false);
+
+        mockMvc.perform(post("/user/sync"))
+                .andExpect(status().isOk());
     }
 }

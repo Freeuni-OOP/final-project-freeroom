@@ -1,6 +1,7 @@
 package ge.freeroom.freeroom.controllers;
 
 import com.google.firebase.auth.FirebaseToken;
+import ge.freeroom.freeroom.config.AdminUsersConfig;
 import ge.freeroom.freeroom.dto.*;
 import ge.freeroom.freeroom.entities.User;
 import ge.freeroom.freeroom.service.FriendService;
@@ -27,25 +28,27 @@ public class UserController {
     private final UserService userService;
     private final UserRepository userRepository;
     private final RateLimiter rateLimiter;
+    private final AdminUsersConfig adminUsersConfig;
 
-    public UserController(UserService userService, UserRepository userRepository, RateLimiter rateLimiter, FriendService friendService) {
+    public UserController(UserService userService, UserRepository userRepository, RateLimiter rateLimiter, FriendService friendService, AdminUsersConfig adminUsersConfig) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.rateLimiter = rateLimiter;
+        this.adminUsersConfig = adminUsersConfig;
     }
 
     @GetMapping
-    public ResponseEntity<User> getUser(HttpServletRequest request) {
+    public ResponseEntity<UserResponseDto> getUser(HttpServletRequest request) {
         FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
         User user = userService.getOrCreateUser(token);
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(new UserResponseDto(user, adminUsersConfig.isAdmin(user.getEmail())));
     }
 
     @PostMapping("/sync")
-    public ResponseEntity<User> syncUser(HttpServletRequest request) {
+    public ResponseEntity<UserResponseDto> syncUser(HttpServletRequest request) {
         FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
         User user = userService.getOrCreateUser(token);
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(new UserResponseDto(user, adminUsersConfig.isAdmin(user.getEmail())));
     }
 
     @PatchMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
