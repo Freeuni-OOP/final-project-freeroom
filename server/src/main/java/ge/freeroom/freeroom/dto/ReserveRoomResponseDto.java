@@ -17,4 +17,6 @@ public class ReserveRoomResponseDto {
     private Integer roomNumber;
     private LocalDateTime startTime;
     private LocalDateTime expectedEndTime;
+    private Long maxAllowedDurationMinutes;
+    private LocalDateTime nextLectureStart;
 }

@@ -1,4 +1,8 @@
+import { useAuth } from '@/context';
+import { getUniversity } from '@/utils';
 import { useState, useEffect } from 'react';
+import { useNotification } from '@/context';
+import { RELATIONSHIP_STATUS } from '@/utils';
 import useDebounce from '@/hooks/useDebounce';
 import {
     getFriends,
@@ -13,6 +17,8 @@ const formatTime = (isoString) =>
     new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
 const useFriendsPanel = () => {
+    const { user } = useAuth();
+    const university = getUniversity(user?.email);
     const [activeTab, setActiveTab] = useState('friends');
     const [requestSubTab, setRequestSubTab] = useState('send');
     const [searchQuery, setSearchQuery] = useState('');
@@ -23,6 +29,7 @@ const useFriendsPanel = () => {
     const [isLoadingRequests, setIsLoadingRequests] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
     const [actionPending, setActionPending] = useState(new Set());
+    const { showNotification } = useNotification();
 
     const debouncedQuery = useDebounce(searchQuery, 400);
 
@@ -94,11 +101,13 @@ const useFriendsPanel = () => {
             await sendFriendRequest(receiverId);
             setSearchResults((prev) =>
                 prev.map((u) =>
-                    u.id === receiverId ? { ...u, relationshipStatus: 'PENDING_SENT' } : u
+                    u.id === receiverId ? { ...u, relationshipStatus: RELATIONSHIP_STATUS.PENDING_SENT } : u
                 )
             );
+            showNotification({ message: 'მეგობრობის მოთხოვნა გაგზავნილია', type: 'success' });
         } catch (e) {
             console.error(e);
+            showNotification({ message: 'მოთხოვნის გაგზავნა ვერ მოხერხდა.', type: 'error' });
         } finally {
             removePending(receiverId);
         }
@@ -112,8 +121,10 @@ const useFriendsPanel = () => {
                 prev.filter((r) => r.requestId !== requestId)
             );
             await loadFriends();
+            showNotification({ message: 'თქვენ ახლა მეგობრები ხართ.', type: 'success' });
         } catch (e) {
             console.error(e);
+            showNotification({ message: 'დადასტურება ვერ მოხერხდა.', type: 'error'})
         } finally {
             removePending(requestId);
         }
@@ -130,12 +141,14 @@ const useFriendsPanel = () => {
             );
             setSearchResults((prev) =>
                 prev.map((u) =>
-                    u.id === senderId ? { ...u, relationshipStatus: 'FRIENDS' } : u
+                    u.id === senderId ? { ...u, relationshipStatus: RELATIONSHIP_STATUS.FRIENDS } : u
                 )
             );
             await loadFriends();
+            showNotification({ message: 'თქვენ ახლა მეგობრები ხართ.', type: 'success' });
         } catch (e) {
             console.error(e);
+            showNotification({ message: 'დადასტურება ვერ მოხერხდა.', type: 'error'})
         } finally {
             removePending(senderId);
         }
@@ -148,8 +161,10 @@ const useFriendsPanel = () => {
             setIncomingRequests((prev) =>
                 prev.filter((r) => r.requestId !== requestId)
             );
+            showNotification({ message: 'მეგობრობის მოთხოვნა უარყოფილია', type: 'success' });
         } catch (e) {
             console.error(e);
+            showNotification({ message: 'უარყოფა ვერ მოხერხდა.', type: 'error'})
         } finally {
             removePending(requestId);
         }
@@ -185,6 +200,7 @@ const useFriendsPanel = () => {
         handleAccept,
         handleAcceptFromSearch,
         handleReject,
+        university,
     };
 };
 

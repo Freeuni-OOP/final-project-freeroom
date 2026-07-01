@@ -80,9 +80,12 @@ const useFloorView = () => {
       loadRoomsMap();
   }, [loadRoomsMap]);
 
+  const FRIEND_BADGE_CLASS = 'friend-occupancy-badge';
+
   const applyRoomColors = (floor) => {
     const container = svgContainerRef.current;
     if (!container) return;
+    const svgNS = 'http://www.w3.org/2000/svg';
 
     container.querySelectorAll('g[id^="room-"]').forEach((group) => {
       const roomId = parseInt(group.id.replace('room-', ''), 10);
@@ -92,6 +95,73 @@ const useFloorView = () => {
       const roomData = roomsDataRef.current[floor]?.[roomId];
       const occupied = roomData?.status === 'occupied';
       rect.style.fill = occupied ? '#ef4444' : '';
+
+      group.querySelectorAll(`.${FRIEND_BADGE_CLASS}`).forEach((el) => el.remove());
+
+      const occupancy = roomData?.currentOccupancy;
+      if (!occupancy?.isFriendOccupancy) return;
+
+      const bbox = rect.getBBox();
+      const cx = bbox.x + bbox.width - 12;
+      const cy = bbox.y + 12;
+      const radius = 11;
+
+      const badgeGroup = document.createElementNS(svgNS, 'g');
+      badgeGroup.classList.add(FRIEND_BADGE_CLASS);
+      badgeGroup.style.pointerEvents = 'none';
+
+      if (occupancy.reserverPhotoUrl) {
+        const clipId = `friend-clip-${floor}-${roomId}`;
+        const defs = document.createElementNS(svgNS, 'defs');
+        const clipPath = document.createElementNS(svgNS, 'clipPath');
+        clipPath.setAttribute('id', clipId);
+        const clipCircle = document.createElementNS(svgNS, 'circle');
+        clipCircle.setAttribute('cx', cx);
+        clipCircle.setAttribute('cy', cy);
+        clipCircle.setAttribute('r', radius);
+        clipPath.appendChild(clipCircle);
+        defs.appendChild(clipPath);
+        badgeGroup.appendChild(defs);
+
+        const image = document.createElementNS(svgNS, 'image');
+        image.setAttributeNS('http://www.w3.org/1999/xlink', 'href', occupancy.reserverPhotoUrl);
+        image.setAttribute('href', occupancy.reserverPhotoUrl);
+        image.setAttribute('x', cx - radius);
+        image.setAttribute('y', cy - radius);
+        image.setAttribute('width', radius * 2);
+        image.setAttribute('height', radius * 2);
+        image.setAttribute('clip-path', `url(#${clipId})`);
+        image.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+        badgeGroup.appendChild(image);
+      } else {
+        const circle = document.createElementNS(svgNS, 'circle');
+        circle.setAttribute('cx', cx);
+        circle.setAttribute('cy', cy);
+        circle.setAttribute('r', radius);
+        circle.setAttribute('fill', '#facc15');
+        badgeGroup.appendChild(circle);
+
+        const text = document.createElementNS(svgNS, 'text');
+        text.setAttribute('x', cx);
+        text.setAttribute('y', cy + 4);
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('font-size', '9');
+        text.setAttribute('font-weight', 'bold');
+        text.setAttribute('fill', '#1f1f1f');
+        text.textContent = occupancy.reserverDisplayName?.[0]?.toUpperCase() ?? '?';
+        badgeGroup.appendChild(text);
+      }
+
+      const ring = document.createElementNS(svgNS, 'circle');
+      ring.setAttribute('cx', cx);
+      ring.setAttribute('cy', cy);
+      ring.setAttribute('r', radius);
+      ring.setAttribute('fill', 'none');
+      ring.setAttribute('stroke', 'white');
+      ring.setAttribute('stroke-width', '1.5');
+      badgeGroup.appendChild(ring);
+
+      group.appendChild(badgeGroup);
     });
   };
 

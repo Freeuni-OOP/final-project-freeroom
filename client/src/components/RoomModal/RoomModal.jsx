@@ -5,6 +5,7 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
     roomData: modalData,
     handleReserve,
     handleCancel,
+    availableDurations,
     isChatOpen,
     setIsChatOpen,
     messages,
@@ -14,7 +15,10 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
     handleSendMessage,
     handleRequestJoin,
     handleApproveUser,
-    handleRejectUser
+    handleRejectUser,
+    chatContainerRef,
+    isLoadingOlder,
+    handleScroll
   } = useRoomModal(roomId, roomData, onClose, onReserveSuccess);
 
   if (!roomId || !modalData) return null;
@@ -56,7 +60,17 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                                 <div className="grid grid-cols-2 gap-4 mb-4">
                                   <div>
                                     <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">დაჯავშნა</p>
-                                    <p className="font-medium text-gray-900">{modalData.reservedBy ?? '—'}</p>
+                                    <div className="flex items-center gap-2">
+                                      {modalData.reservedByPhotoUrl && (
+                                          <img
+                                              src={modalData.reservedByPhotoUrl}
+                                              alt={modalData.reservedBy}
+                                              referrerPolicy="no-referrer"
+                                              className="h-6 w-6 rounded-full object-cover ring-1 ring-black/10"
+                                          />
+                                      )}
+                                      <p className="font-medium text-gray-900">{modalData.reservedBy ?? '—'}</p>
+                                    </div>
                                   </div>
                                   <div>
                                     <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">თავისუფლდება</p>
@@ -82,7 +96,17 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                                 <div className="grid grid-cols-2 gap-4 mb-4">
                                   <div>
                                     <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">დაჯავშნა</p>
-                                    <p className="font-medium text-gray-900">{modalData.reservedBy ?? '—'}</p>
+                                    <div className="flex items-center gap-2">
+                                      {modalData.reservedByPhotoUrl && (
+                                          <img
+                                              src={modalData.reservedByPhotoUrl}
+                                              alt={modalData.reservedBy}
+                                              referrerPolicy="no-referrer"
+                                              className="h-6 w-6 rounded-full object-cover ring-1 ring-black/10"
+                                          />
+                                      )}
+                                      <p className="font-medium text-gray-900">{modalData.reservedBy ?? '—'}</p>
+                                    </div>
                                   </div>
                                   <div>
                                     <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">თავისუფლდება</p>
@@ -125,10 +149,10 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                                     <p className="font-medium text-gray-900">{modalData.startTime} - {modalData.endTime}</p>
                                   </div>
                                   {modalData.groupNumber && (
-                                    <div>
-                                      <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">ჯგუფი</p>
-                                      <p className="font-medium text-gray-900">{modalData.groupNumber}</p>
-                                    </div>
+                                      <div>
+                                        <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">ჯგუფი</p>
+                                        <p className="font-medium text-gray-900">{modalData.groupNumber}</p>
+                                      </div>
                                   )}
                                 </div>
                               </>
@@ -160,26 +184,26 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                     {modalData.isFree && (
                         <div className="space-y-2">
                           <p className="text-sm text-gray-600 mb-1">დაჯავშნის ხანგრძლივობა:</p>
-                          <div className="flex gap-2">
-                            <button
-                                onClick={() => { handleReserve(30); }}
-                                className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-semibold py-3 rounded-lg"
-                            >
-                              30 წუთი
-                            </button>
-                            <button
-                                onClick={() => { handleReserve(60); }}
-                                className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-semibold py-3 rounded-lg"
-                            >
-                              1 საათი
-                            </button>
-                            <button
-                                onClick={() => { handleReserve(120); }}
-                                className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-semibold py-3 rounded-lg"
-                            >
-                              2 საათი
-                            </button>
-                          </div>
+                          {availableDurations.length > 0 ? (
+                              <div className="flex gap-2">
+                                {availableDurations.map((duration) => (
+                                    <button
+                                        key={duration}
+                                        onClick={() => { handleReserve(duration); }}
+                                        className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-semibold py-3 rounded-lg"
+                                    >
+                                      {duration === 30 && '30 წუთი'}
+                                      {duration === 60 && '1 საათი'}
+                                      {duration === 120 && '2 საათი'}
+                                      {![30, 60, 120].includes(duration) && `${duration} წუთი (დარჩენილი დრო)`}
+                                    </button>
+                                ))}
+                              </div>
+                          ) : (
+                              <p className="text-sm text-amber-600 italic bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                                ⏰ შემდეგი ლექცია მალე იწყება.
+                              </p>
+                          )}
                         </div>
                     )}
                   </div>
@@ -203,7 +227,17 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                       </div>
                   ) : isAuthorized ? (
                       <>
-                        <div className="flex-1 overflow-y-auto space-y-3 pr-1 mb-3">
+                        <div
+                            ref={chatContainerRef}
+                            onScroll={handleScroll}
+                            className="flex-1 overflow-y-auto space-y-3 pr-1 mb-3 scroll-smooth"
+                        >
+                          {isLoadingOlder && (
+                              <div className="flex justify-center items-center py-2 text-xs text-gray-400 animate-pulse bg-gray-50 rounded-lg border border-dashed">
+                                ⏳ ძველი შეტყობინებები იტვირთება...
+                              </div>
+                          )}
+
                           {messages.map((msg) => (
                               <div
                                   key={msg.id}

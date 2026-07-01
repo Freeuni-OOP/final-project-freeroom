@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
 import {
     reserveRoom,
     cancelOccupancy,
@@ -9,6 +11,10 @@ import {
     rejectJoinRequest
 } from '@/services/api/endpoints.js';
 import { useNotification } from '@/context';
+import { ROOM_STATUS } from '@/utils';
+
+const ENV_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+const CLEAN_BASE_URL = ENV_BASE_URL.endsWith('/') ? ENV_BASE_URL.slice(0, -1) : ENV_BASE_URL;
 
 const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
     const { showNotification } = useNotification();
@@ -16,88 +22,227 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
     const [messages, setMessages] = useState([]);
     const [isAuthorized, setIsAuthorized] = useState(null);
     const [messageText, setMessageText] = useState('');
+    const [hasMore, setHasMore] = useState(true);
+    const [isLoadingOlder, setIsLoadingOlder] = useState(false);
     const [prevRoomId, setPrevRoomId] = useState(roomId);
+    const [reloadTrigger, setReloadTrigger] = useState(0);
+
+    const chatContainerRef = useRef(null);
+    const isFetchingOlder = useRef(false);
+    const isMountedRef = useRef(true);
+
+    useEffect(() => {
+        isMountedRef.current = true;
+        return () => {
+            isMountedRef.current = false;
+        };
+    }, []);
 
     if (roomId !== prevRoomId) {
         setPrevRoomId(roomId);
         setIsAuthorized(null);
         setMessages([]);
+        setHasMore(true);
     }
 
-    const formatTime = (iso) => {
-        if (!iso) return null;
-        return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    };
-
-    const isMyOccupancy = roomData?.currentOccupancy?.isMyOccupancy ?? false;
-
-    const modalData = roomId
-        ? {
-            id: roomId,
-            isFree: roomData?.status !== 'occupied',
-            isReserved: roomData?.currentOccupancy != null,
-            lectureName: roomData?.currentLecture?.title ?? null,
-            lecturer: roomData?.currentLecture?.organizer ?? null,
-            startTime: formatTime(roomData?.currentLecture?.startAt),
-            endTime: formatTime(roomData?.currentLecture?.endAt),
-            groupNumber: roomData?.currentLecture?.groupNumber ?? null,
-            reservedBy: isMyOccupancy
-                ? (roomData?.currentOccupancy?.reserverDisplayName ?? 'თქვენ')
-                : "Not Your Friend",
-            reservedUntil: formatTime(roomData?.currentOccupancy?.expectedEndAt),
-            nextLectureTitle: roomData?.nextLecture?.title ?? null,
-            nextLectureStart: formatTime(roomData?.nextLecture?.startAt),
-            nextLectureEnd:   formatTime(roomData?.nextLecture?.endAt),
-            isMyOccupancy,
-            capacity: roomData?.capacity ?? null,
-        }
-        : null;
-
-    const loadChat = useCallback(async () => {
+    useEffect(() => {
         if (!roomId) return;
+
+        let isMounted = true;
+
+        getChatMessages(roomId)
+            .then((data) => {
+                if (isMounted) {
+                    setMessages(data.sort((a, b) => a.id - b.id));
+                    setIsAuthorized(true);
+                }
+            })
+            .catch((err) => {
+                if (isMounted) {
+                    console.error(err);
+                    setIsAuthorized(false);
+                    setMessages([]);
+                }
+            });
+
+        return () => {
+            isMounted = false;
+        };
+    }, [roomId, reloadTrigger]);
+
+    useEffect(() => {
+        if (isChatOpen && chatContainerRef.current && !isFetchingOlder.current) {
+            setTimeout(() => {
+                if (chatContainerRef.current && !isFetchingOlder.current) {
+                    chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+                }
+            }, 50);
+        }
+    }, [isChatOpen, messages]);
+
+    useEffect(() => {
+        let stompClient = null;
+
+        if (roomId && isChatOpen) {
+            const token = localStorage.getItem('token');
+            const socketUrl = token ? `${CLEAN_BASE_URL}/ws?token=${token}` : `${CLEAN_BASE_URL}/ws`;
+            const socket = new SockJS(socketUrl);
+
+            stompClient = new Client({
+                webSocketFactory: () => socket,
+                onConnect: () => {
+                    if (isMountedRef.current) {
+                        setReloadTrigger((prev) => prev + 1);
+                    }
+
+                    stompClient.subscribe(`/topic/room/${roomId}`, (message) => {
+                        const newMsg = JSON.parse(message.body);
+                        if (isMountedRef.current) {
+                            setMessages((prev) => {
+                                if (prev.some(m => m.id === newMsg.id)) return prev;
+                                return [...prev, newMsg].sort((a, b) => a.id - b.id);
+                            });
+                        }
+                    });
+
+                    stompClient.subscribe(`/topic/room/${roomId}/reload`, () => {
+                        if (isMountedRef.current) {
+                            setReloadTrigger((prev) => prev + 1);
+                        }
+                    });
+                },
+                onStompError: (err) => {
+                    console.error(err);
+                    showNotification({
+                        message: 'ჩატთან კავშირი შეწყდა. შეტყობინებები დროებით ვერ განახლდება.',
+                        type: 'error'
+                    });
+                },
+                onWebSocketClose: () => {
+                    if (isMountedRef.current && isChatOpen) {
+                        showNotification({
+                            message: 'სერვერთან კავშირი დაკარგულია. მიმდინარეობს ხელახლა დაკავშირება...',
+                            type: 'info'
+                        });
+                    }
+                }
+            });
+            stompClient.activate();
+        }
+
+        return () => {
+            if (stompClient) stompClient.deactivate();
+        };
+    }, [roomId, isChatOpen]);
+
+    const loadOlderMessages = async () => {
+        if (!roomId || isFetchingOlder.current || !hasMore || messages.length === 0) return;
+        isFetchingOlder.current = true;
+        setIsLoadingOlder(true);
+        const container = chatContainerRef.current;
+        const prevScrollHeight = container ? container.scrollHeight : 0;
+
         try {
-            const data = await getChatMessages(roomId);
-            setMessages(data);
-            setIsAuthorized(true);
+            const oldestId = messages[0].id;
+            const data = await getChatMessages(roomId, oldestId);
+
+            if (!isMountedRef.current) return;
+
+            if (data.length < 20) setHasMore(false);
+            if (data.length > 0) {
+                setMessages(prev => {
+                    const existingIds = new Set(prev.map(m => m.id));
+                    const uniqueOlder = data.filter(m => !existingIds.has(m.id));
+                    return [...uniqueOlder, ...prev].sort((a, b) => a.id - b.id);
+                });
+                requestAnimationFrame(() => {
+                    if (chatContainerRef.current) {
+                        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight - prevScrollHeight;
+                    }
+                    setTimeout(() => {
+                        isFetchingOlder.current = false;
+                    }, 50);
+                });
+            } else {
+                isFetchingOlder.current = false;
+            }
         } catch (err) {
-            if (err.response?.status === 403 || err.response?.status === 500) {
-                setIsAuthorized(false);
-                setMessages([]);
+            console.error(err);
+            isFetchingOlder.current = false;
+        } finally {
+            if (isMountedRef.current) {
+                setIsLoadingOlder(false);
             }
         }
-    }, [roomId]);
+    };
 
-    useEffect(() => {
-        if (roomId) {
-            const timeout = setTimeout(() => {
-                loadChat();
-            }, 0);
-            return () => clearTimeout(timeout);
-        }
-    }, [roomId, loadChat]);
+    const handleScroll = () => {
+        if (chatContainerRef.current?.scrollTop === 0) loadOlderMessages();
+    };
 
-    useEffect(() => {
-        if (roomId && isChatOpen && isAuthorized) {
-            const timeout = setTimeout(loadChat, 0);
-            const interval = setInterval(loadChat, 4000);
-            return () => {
-                clearTimeout(timeout);
-                clearInterval(interval);
-            };
+    const formatTime = (iso) => iso ? new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : null;
+
+    const timeUntilNextLecture = (roomData?.nextLecture?.startAt && roomData?.serverNow)
+        ? Math.floor((new Date(roomData.nextLecture.startAt) - new Date(roomData.serverNow)) / 60000)
+        : null;
+
+    const getAvailableDurations = () => {
+        if (timeUntilNextLecture === null) return [30, 60, 120];
+        if (timeUntilNextLecture <= 0) return [];
+
+        const presets = [30, 60, 120].filter((d) => d <= timeUntilNextLecture);
+
+        if (!presets.includes(timeUntilNextLecture) && timeUntilNextLecture < 120) {
+            presets.push(timeUntilNextLecture);
         }
-    }, [roomId, isChatOpen, loadChat, isAuthorized]);
+
+        return presets.length > 0 ? presets : [timeUntilNextLecture];
+    };
+
+    const availableDurations = getAvailableDurations();
+
+    const modalData = roomId ? {
+        id: roomId,
+        isFree: roomData?.status !== ROOM_STATUS.OCCUPIED,
+        isReserved: roomData?.currentOccupancy != null,
+        lectureName: roomData?.currentLecture?.title ?? null,
+        lecturer: roomData?.currentLecture?.organizer ?? null,
+        startTime: formatTime(roomData?.currentLecture?.startAt),
+        endTime: formatTime(roomData?.currentLecture?.endAt),
+        groupNumber: roomData?.currentLecture?.groupNumber ?? null,
+        reservedBy: roomData?.currentOccupancy?.isMyOccupancy
+            ? 'თქვენ'
+            : roomData?.currentOccupancy?.isFriendOccupancy
+                ? roomData?.currentOccupancy?.reserverDisplayName
+                : 'სხვა სტუდენტი',
+        reservedByPhotoUrl: roomData?.currentOccupancy?.isFriendOccupancy
+            ? roomData?.currentOccupancy?.reserverPhotoUrl
+            : null,
+        isFriendOccupancy: roomData?.currentOccupancy?.isFriendOccupancy ?? false,
+        reservedUntil: formatTime(roomData?.currentOccupancy?.expectedEndAt),
+        nextLectureTitle: roomData?.nextLecture?.title ?? null,
+        nextLectureStart: formatTime(roomData?.nextLecture?.startAt),
+        nextLectureEnd: formatTime(roomData?.nextLecture?.endAt),
+        isMyOccupancy: roomData?.currentOccupancy?.isMyOccupancy ?? false,
+        capacity: roomData?.capacity ?? null,
+    } : null;
 
     const handleReserve = async (durationMinutes) => {
-        if(!modalData?.isFree) {
+        if (!modalData?.isFree) {
             showNotification({ message: 'ოთახი დაკავებულია', type: 'error' });
             return;
         }
+        if (timeUntilNextLecture !== null && durationMinutes > timeUntilNextLecture) {
+            showNotification({ message: 'არჩეული ხანგრძლივობა სცილდება შემდეგ ლექციამდე დარჩენილ დროს', type: 'error' });
+            return;
+        }
         try {
-            await reserveRoom(roomData.id, durationMinutes);
+            await reserveRoom(roomId, durationMinutes);
             onClose();
             onReserveSuccess();
             showNotification({ message: `ოთახი ${roomId} დაჯავშნილია ${durationMinutes} წუთით`, type: 'success' });
         } catch (err) {
+            console.error(err);
             showNotification({ message: err.response?.data?.error || 'დაჯავშნა ვერ მოხერხდა', type: 'error' });
         }
     };
@@ -108,11 +253,12 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
             return;
         }
         try {
-            await cancelOccupancy(roomData.id);
+            await cancelOccupancy(roomId);
             onClose();
             onReserveSuccess();
             showNotification({ message: `ოთახი ${roomId} გათავისუფლდა`, type: 'success' });
         } catch (err) {
+            console.error(err);
             showNotification({ message: err.response?.data?.message || 'გაუქმება ვერ მოხერხდა', type: 'error' });
         }
     };
@@ -121,9 +267,11 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         if (!messageText.trim()) return;
         try {
             await sendChatMessage(roomId, messageText);
-            setMessageText('');
-            loadChat();
+            if (isMountedRef.current) {
+                setMessageText('');
+            }
         } catch (err) {
+            console.error(err);
             showNotification({ message: err.response?.data?.message || 'შეტყობინება ვერ გაიგზავნა', type: 'error' });
         }
     };
@@ -133,6 +281,7 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
             await requestJoinRoom(roomId);
             showNotification({ message: 'მოთხოვნა გაიგზავნა წარმატებით', type: 'success' });
         } catch (err) {
+            console.error(err);
             showNotification({ message: err.response?.data?.message || 'მოთხოვნა ვერ გაიგზავნა. მოთხოვნის გაგზავნა შესაძლებელია წუთში ერთხელ.', type: 'error' });
         }
     };
@@ -141,8 +290,11 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         try {
             await approveJoinRequest(roomId, targetUserId);
             showNotification({ message: 'მომხმარებელი წარმატებით დაემატა', type: 'success' });
-            loadChat();
+            if (isMountedRef.current) {
+                setReloadTrigger((prev) => prev + 1);
+            }
         } catch (err) {
+            console.error(err);
             showNotification({ message: err.response?.data?.message || 'დამტკიცება ვერ მოხერხდა', type: 'error' });
         }
     };
@@ -151,8 +303,11 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         try {
             await rejectJoinRequest(roomId, targetUserId);
             showNotification({ message: 'მოთხოვნა უარყოფილია', type: 'info' });
-            loadChat();
+            if (isMountedRef.current) {
+                setReloadTrigger((prev) => prev + 1);
+            }
         } catch (err) {
+            console.error(err);
             showNotification({ message: err.response?.data?.message || 'უარყოფა ვერ მოხერხდა', type: 'error' });
         }
     };
@@ -161,6 +316,8 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         roomData: modalData,
         handleReserve,
         handleCancel,
+        availableDurations,
+        timeUntilNextLecture,
         isChatOpen,
         setIsChatOpen,
         messages,
@@ -170,7 +327,10 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         handleSendMessage,
         handleRequestJoin,
         handleApproveUser,
-        handleRejectUser
+        handleRejectUser,
+        chatContainerRef,
+        isLoadingOlder,
+        handleScroll
     };
 };
 

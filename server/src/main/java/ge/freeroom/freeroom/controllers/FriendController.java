@@ -65,4 +65,20 @@ public class FriendController {
     public ResponseEntity<List<FriendDto>> getFriends(Principal principal) {
         return ResponseEntity.ok(friendService.getFriends(principal.getName()));
     }
+
+    @DeleteMapping("/{friendId}")
+    public ResponseEntity<Void> removeFriend(
+            @PathVariable String friendId,
+            Principal principal) {
+        friendService.removeFriend(principal.getName(), friendId);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/requests/{userId}")
+    public ResponseEntity<Void> cancelFriendRequest(
+            @PathVariable String userId,
+            Principal principal) {
+        friendService.cancelFriendRequest(principal.getName(), userId);
+        return ResponseEntity.ok().build();
+    }
 }

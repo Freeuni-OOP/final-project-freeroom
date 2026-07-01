@@ -6,18 +6,13 @@ import ge.freeroom.freeroom.entities.NotificationPreference;
 import ge.freeroom.freeroom.entities.Room;
 import ge.freeroom.freeroom.entities.RoomOccupancy;
 import ge.freeroom.freeroom.entities.User;
-import ge.freeroom.freeroom.repositories.LectureRepository;
-import ge.freeroom.freeroom.repositories.RoomOccupancyRepository;
-import ge.freeroom.freeroom.repositories.RoomRepository;
-import ge.freeroom.freeroom.repositories.UserRepository;
+import ge.freeroom.freeroom.repositories.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,6 +22,7 @@ public class RoomAvailabilityService {
     private final LectureRepository lectureRepository;
     private final UserRepository userRepository;
     private final RoomOccupancyRepository roomOccupancyRepository;
+    private final FriendshipRepository friendshipRepository;
 
     private final EmailService emailService;
 
@@ -36,13 +32,16 @@ public class RoomAvailabilityService {
     @Autowired
     private TimeService timeService;
 
-    public RoomAvailabilityService(RoomRepository roomRepository, LectureRepository lectureRepository, UserRepository userRepository, RoomOccupancyRepository roomOccupancyRepository, EmailService emailService, TimeService timeService) {
+    public RoomAvailabilityService(RoomRepository roomRepository, LectureRepository lectureRepository,
+                                   UserRepository userRepository, RoomOccupancyRepository roomOccupancyRepository,
+                                   EmailService emailService, TimeService timeService, FriendshipRepository friendshipRepository) {
         this.roomRepository = roomRepository;
         this.lectureRepository = lectureRepository;
         this.userRepository = userRepository;
         this.roomOccupancyRepository = roomOccupancyRepository;
         this.emailService = emailService;
         this.timeService = timeService;
+        this.friendshipRepository = friendshipRepository;
     }
 
     public List<RoomMapDto> getAllRoomsMap(String currentUserId){
@@ -54,6 +53,8 @@ public class RoomAvailabilityService {
 
         LocalDateTime now = timeService.now();
         List<Lecture> activeLectures = roomIds.isEmpty() ? List.of() : lectureRepository.findActiveLecturesByRoomIds(roomIds, now);
+
+        Set<String> friendIds = new HashSet<>(friendshipRepository.findFriendIdsByUserId(currentUserId));
 
         Map<Long, Lecture> activeLectureByRoomId = activeLectures.stream()
                 .collect(Collectors.toMap(l -> l.getRoom().getId(), l -> l, (a,b) -> a));
@@ -76,6 +77,7 @@ public class RoomAvailabilityService {
             dto.setRoomNumber(room.getRoomNumber());
             dto.setCapacity(room.getCapacity());
             dto.setFloorNumber(room.getFloor().getNumber());
+            dto.setServerNow(now);
 
             Lecture lecture = activeLectureByRoomId.get(room.getId());
             RoomOccupancy occupancy = activeOccupancyByRoomId.get(room.getId());
@@ -101,11 +103,24 @@ public class RoomAvailabilityService {
                 RoomOccupancySummaryDto rosd = new RoomOccupancySummaryDto();
                 rosd.setStartAt(occupancy.getStartAt());
                 rosd.setExpectedEndAt(occupancy.getExpectedEndAt());
-                rosd.setReserverDisplayName(occupancy.getUser().getDisplayName());
-                rosd.setIsMyOccupancy(occupancy.getUser().getId().equals(currentUserId));
+
+                String occupantId = occupancy.getUser().getId();
+                boolean isMine = occupantId.equals(currentUserId);
+                boolean isFriend = friendIds.contains(occupantId);
+
+                rosd.setIsMyOccupancy(isMine);
+                rosd.setIsFriendOccupancy(isFriend);
+
+                if (isMine || isFriend) {
+                    rosd.setReserverDisplayName(occupancy.getUser().getDisplayName());
+                    rosd.setReserverPhotoUrl(occupancy.getUser().getPhotoUrl());
+                } else {
+                    rosd.setReserverDisplayName(null);
+                    rosd.setReserverPhotoUrl(null);
+                }
 
                 dto.setCurrentOccupancy(rosd);
-            }else {
+            } else {
                 dto.setStatus("free");
                 dto.setCurrentLecture(null);
                 dto.setCurrentOccupancy(null);
@@ -181,13 +196,25 @@ public class RoomAvailabilityService {
             }
         }
 
-        long minutes = (durationMinutes != null) ? durationMinutes : 60;
+        long minutes = (durationMinutes != null) ? Math.max(1, Math.min(480, durationMinutes)) : 60;
+        LocalDateTime expectedEnd = nowTime.plusMinutes(minutes);
+
+        List<Lecture> nextLectures = lectureRepository.findNextLecturesByRoomId(roomId, nowTime);
+        Lecture nextLecture = nextLectures.isEmpty() ? null : nextLectures.get(0);
+
+        if (nextLecture != null && expectedEnd.isAfter(nextLecture.getStartAt())) {
+            long maxAllowedMinutes = java.time.Duration.between(nowTime, nextLecture.getStartAt()).toMinutes();
+            throw new IllegalStateException(
+                    "ამ ხანგრძლივობით დაჯავშნა შეუძლებელია - შემდეგი ლექცია იწყება " +
+                            maxAllowedMinutes + " წუთში."
+            );
+        }
 
         RoomOccupancy occupancy = new RoomOccupancy();
         occupancy.setRoom(room);
         occupancy.setUser(user);
         occupancy.setStartAt(nowTime);
-        occupancy.setExpectedEndAt(nowTime.plusMinutes(minutes));
+        occupancy.setExpectedEndAt(expectedEnd);
         occupancy.setEndAt(null);
 
         RoomOccupancy saved = roomOccupancyRepository.save(occupancy);
@@ -198,6 +225,10 @@ public class RoomAvailabilityService {
         response.setRoomNumber(saved.getRoom().getRoomNumber());
         response.setStartTime(saved.getStartAt());
         response.setExpectedEndTime(saved.getExpectedEndAt());
+        if (nextLecture != null) {
+            response.setNextLectureStart(nextLecture.getStartAt());
+            response.setMaxAllowedDurationMinutes(java.time.Duration.between(nowTime, nextLecture.getStartAt()).toMinutes());
+        }
 
         if (chatService != null) {
             chatService.initializeRoomBooker(roomId, userId);
@@ -227,6 +258,10 @@ public class RoomAvailabilityService {
 
         RoomOccupancy occ = occupancyOpt.get();
 
+        if (!occ.getUser().getId().equals(userId)) {
+            throw new org.springframework.security.access.AccessDeniedException("You can only cancel your own occupancy");
+        }
+
         if (occ.getExpectedEndAt().isBefore(now) || occ.getExpectedEndAt().isEqual(now)) {
             occ.setEndAt(occ.getExpectedEndAt());
             roomOccupancyRepository.save(occ);
@@ -234,10 +269,6 @@ public class RoomAvailabilityService {
                 chatService.clearRoomChat(roomId);
             }
             throw new IllegalStateException("No active occupancy for this room");
-        }
-
-        if (!occ.getUser().getId().equals(userId)) {
-            throw new org.springframework.security.access.AccessDeniedException("You can only cancel your own occupancy");
         }
 
         occ.setEndAt(timeService.now());

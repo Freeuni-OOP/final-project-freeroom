@@ -1,24 +1,24 @@
 package ge.freeroom.freeroom.controllers;
 
 import com.google.firebase.auth.FirebaseToken;
-import ge.freeroom.freeroom.dto.NotificationPreferenceResponseDto;
-import ge.freeroom.freeroom.dto.TelegramLinkResponseDto;
-import ge.freeroom.freeroom.dto.UpdateNotificationPreferenceRequest;
+import ge.freeroom.freeroom.dto.*;
 import ge.freeroom.freeroom.entities.User;
+import ge.freeroom.freeroom.service.FriendService;
 import ge.freeroom.freeroom.service.UserService;
 import ge.freeroom.freeroom.security.RateLimiter;
 import ge.freeroom.freeroom.repositories.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 import java.util.Set;
 import java.util.List;
 import ge.freeroom.freeroom.entities.Subject;
-import ge.freeroom.freeroom.dto.LectureSummaryDto;
 
 @RestController
 @RequestMapping("/user")
@@ -28,7 +28,7 @@ public class UserController {
     private final UserRepository userRepository;
     private final RateLimiter rateLimiter;
 
-    public UserController(UserService userService, UserRepository userRepository, RateLimiter rateLimiter) {
+    public UserController(UserService userService, UserRepository userRepository, RateLimiter rateLimiter, FriendService friendService) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.rateLimiter = rateLimiter;
@@ -41,6 +41,13 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
+    @PostMapping("/sync")
+    public ResponseEntity<User> syncUser(HttpServletRequest request) {
+        FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
+        User user = userService.getOrCreateUser(token);
+        return ResponseEntity.ok(user);
+    }
+
     @PatchMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<User> updateUser(
             HttpServletRequest request,
@@ -48,7 +55,15 @@ public class UserController {
             @RequestParam(value = "bio", required = false) String bio,
             @RequestParam(value = "file", required = false) MultipartFile file) throws Exception {
 
+        if (bio != null && bio.length() > 300) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bio cannot exceed 300 characters");
+        }
+
         FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
+
+        if (!rateLimiter.allow("profile:" + token.getUid(), 10, 60000)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+        }
 
         User updatedUser = userService.updateUserProfile(token.getUid(), displayName, bio, file);
         return ResponseEntity.ok(updatedUser);
@@ -88,6 +103,9 @@ public class UserController {
 
     @PostMapping("/telegram-link")
     public ResponseEntity<TelegramLinkResponseDto> generateTelegramLink(Principal principal) {
+        if (!rateLimiter.allow("telegram:" + principal.getName(), 3, 60000)) {
+            return ResponseEntity.status(429).build();
+        }
         String uid = principal.getName();
         User user = userRepository.findById(uid)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -123,5 +141,12 @@ public class UserController {
     public ResponseEntity<List<LectureSummaryDto>> getUserCalendar(HttpServletRequest request) {
         FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
         return ResponseEntity.ok(userService.getUserCalendar(token.getUid()));
+    }
+
+    @GetMapping("/{userId}/profile")
+    public ResponseEntity<PublicProfileDto> getPublicProfile(
+            @PathVariable String userId,
+            Principal principal) {
+        return ResponseEntity.ok(userService.getPublicProfile(principal.getName(), userId));
     }
 }

@@ -233,4 +233,24 @@ public class FriendService {
         dto.setCreatedAt(req.getCreatedAt());
         return dto;
     }
+
+    @Transactional
+    public void removeFriend(String currentUserId, String friendId) {
+        Friendship friendship = friendshipRepository.findByUsers(currentUserId, friendId)
+                .orElseThrow(() -> new IllegalStateException("თქვენ არ ხართ მეგობრები"));
+
+        friendshipRepository.delete(friendship);
+    }
+
+    @Transactional
+    public void cancelFriendRequest(String currentUserId, String receiverId) {
+        FriendRequest request = friendRequestRepository.findPendingBetweenUsers(currentUserId, receiverId)
+                .orElseThrow(() -> new IllegalStateException("აქტიური მოთხოვნა ვერ მოიძებნა"));
+
+        if (!request.getSender().getId().equals(currentUserId)) {
+            throw new AccessDeniedException("ამ მოთხოვნის გაუქმება თქვენ არ შეგიძლიათ");
+        }
+
+        friendRequestRepository.delete(request);
+    }
 }

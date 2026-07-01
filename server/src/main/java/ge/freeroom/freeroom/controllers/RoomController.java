@@ -6,14 +6,13 @@ import ge.freeroom.freeroom.dto.ReserveRoomResponseDto;
 import ge.freeroom.freeroom.dto.RoomMapDto;
 import ge.freeroom.freeroom.service.LectureSyncService;
 import ge.freeroom.freeroom.service.RoomAvailabilityService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.Map;
 import java.util.List;
 
 @RestController
@@ -21,20 +20,9 @@ import java.util.List;
 public class RoomController {
 
     @Autowired
-    private JdbcTemplate jdbcTemplate;
-
-
-    @Autowired
     private RoomAvailabilityService roomAvailabilityService;
 
     public RoomController() {
-    }
-
-    @GetMapping("/rooms")
-    public List<Map<String, Object>> getAllRooms() {
-        String sql = "SELECT * FROM room";
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql);
-        return rows;
     }
 
     @GetMapping("/rooms/map")
@@ -44,7 +32,7 @@ public class RoomController {
     }
 
     @PostMapping("/reserve")
-    public ResponseEntity<ReserveRoomResponseDto> addRoom(@RequestBody ReserveRoomRequestDto request, Principal principal) {
+    public ResponseEntity<ReserveRoomResponseDto> addRoom(@Valid @RequestBody ReserveRoomRequestDto request, Principal principal) {
         String userId = principal.getName();
         Long roomId = request.getRoomDbId();
         Integer roomNumber = request.getRoomNumber();

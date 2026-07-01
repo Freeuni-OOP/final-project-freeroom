@@ -32,14 +32,19 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
 
         // Looks for the "Authorization" header in the incoming request
         String header = request.getHeader("Authorization");
+        String token = null;
 
-        if (header == null || !header.startsWith("Bearer ")) {
+        if (header != null && header.startsWith("Bearer ")) {
+            // Extract the actual token string
+            token = header.replace("Bearer ", "");
+        } else if (request.getRequestURI().contains("/ws")) {
+            token = request.getParameter("token");
+        }
+
+        if (token == null) {
             filterChain.doFilter(request, response);
             return;
         }
-
-        // Extract the actual token string
-        String token = header.replace("Bearer ", "");
 
         try {
             FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(token);
