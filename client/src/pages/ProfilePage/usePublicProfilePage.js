@@ -104,7 +104,7 @@ const usePublicProfilePage = () => {
     };
 
     const handleAccept = async () => {
-        if(!profile) return;
+        if(!profile || !requestId) return;
         setActionPending(true);
         try {
             await acceptFriendRequest(requestId);
@@ -119,7 +119,7 @@ const usePublicProfilePage = () => {
     };
 
     const handleReject = async () => {
-        if(!profile) return;
+        if(!profile || !requestId) return;
         setActionPending(true);
         try {
             await rejectFriendRequest(requestId);
@@ -149,7 +149,7 @@ const usePublicProfilePage = () => {
     };
 
     const handleCancelRequest = async () => {
-        if(!profile) return;
+        if(!profile || !requestId) return;
         setActionPending(true);
         try {
             await cancelFriendRequest(profile.id);
