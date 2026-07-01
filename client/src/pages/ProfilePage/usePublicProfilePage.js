@@ -10,6 +10,8 @@ import {
     sendFriendRequest,
     acceptFriendRequest,
     rejectFriendRequest,
+    removeFriend,
+    cancelFriendRequest,
 } from '@/services/api/endpoints';
 
 const getInitial = (name) => {
@@ -128,6 +130,36 @@ const usePublicProfilePage = () => {
         }
     };
 
+    const handleUnfriend = async () => {
+        if(!profile) return;
+        setActionPending(true);
+        try {
+            await removeFriend(profile.id);
+            setProfile((prev) => ({...prev, relationshipStatus: RELATIONSHIP_STATUS.NONE}))
+            showNotification({ message: 'მეგობრობა გაუქმებულია', type: 'success' });
+        } catch(e) {
+            console.error(e);
+            showNotification({ message: 'მეგობრობის გაუქმება ვერ მოხერხდა.', type: 'error'})
+        } finally {
+            setActionPending(false);
+        }
+    };
+
+    const handleCancelRequest = async () => {
+        if(!profile) return;
+        setActionPending(true);
+        try {
+            await cancelFriendRequest(profile.id);
+            setProfile((prev) => ({...prev, relationshipStatus: RELATIONSHIP_STATUS.NONE}))
+            showNotification({ message: 'მეგობრობის მოთხოვნა გაუქმებულია', type: 'success' });
+        } catch(e) {
+            console.error(e);
+            showNotification({ message: 'მეგობრობის მოთხოვნის გაუქმება ვერ მოხერხდა.', type: 'error'})
+        } finally {
+            setActionPending(false);
+        }
+    };
+
     return {
         profile,
         isLoading,
@@ -143,6 +175,8 @@ const usePublicProfilePage = () => {
         handleSendRequest,
         handleAccept,
         handleReject,
+        handleUnfriend,
+        handleCancelRequest,
         university,
     };
 };
