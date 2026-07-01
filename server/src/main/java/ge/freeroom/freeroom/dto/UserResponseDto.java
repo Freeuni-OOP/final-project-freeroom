@@ -10,7 +10,7 @@ import lombok.Setter;
 public class UserResponseDto {
     @JsonUnwrapped
     private User user;
-    private boolean isAdmin;
+    private Boolean isAdmin;
 
     public UserResponseDto(User user, boolean isAdmin) {
         this.user = user;
