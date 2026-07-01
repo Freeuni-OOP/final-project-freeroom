@@ -15,7 +15,7 @@ const getInitial = (name) => {
     return source ? source[0].toUpperCase() : '?';
 };
 
-const usePublicProfile = () => {
+const usePublicProfilePage = () => {
     const { userId } = useParams();
     const navigate = useNavigate();
     const { showNotification } = useNotification();
@@ -142,4 +142,4 @@ const usePublicProfile = () => {
     };
 };
 
-export default usePublicProfile;
+export default usePublicProfilePage;

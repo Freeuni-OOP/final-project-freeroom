@@ -1,5 +1,5 @@
 import NotFoundPage from '@/pages/NotFoundPage';
-import usePublicProfile from './usePublicProfile';
+import usePublicProfilePage from './usePublicProfilePage.js';
 
 export default function PublicProfilePage() {
     const {
@@ -17,7 +17,7 @@ export default function PublicProfilePage() {
         handleSendRequest,
         handleAccept,
         handleReject,
-    } = usePublicProfile();
+    } = usePublicProfilePage();
 
     if (notFound) {
         return <NotFoundPage />;
