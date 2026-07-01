@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth, useNotification } from '@/context';
+import { useNotification } from '@/context';
+import { RELATIONSHIP_STATUS } from '@/utils';
 import {
     getPublicProfile,
     getIncomingFriendRequests,
@@ -8,7 +9,6 @@ import {
     acceptFriendRequest,
     rejectFriendRequest,
 } from '@/services/api/endpoints';
-import { RELATIONSHIP_STATUS } from '@/utils';
 
 const getInitial = (name) => {
     const source = name?.trim() || '';
@@ -80,4 +80,66 @@ const usePublicProfile = () => {
             isMounted = false;
         };
     }, [userId, navigate, showNotification]);
-}
+
+
+    const handleSendRequest = async () => {
+        if(!profile) return;
+        setActionPending(true);
+        try {
+            await sendFriendRequest(profile.id);
+            setProfile( (prev) => ({...prev, relationshipStatus: RELATIONSHIP_STATUS.PENDING_SENT}));
+        } catch(e) {
+            console.error(e);
+            showNotification({ message: 'მოთხოვნის გაგზავნა ვერ მოხერხდა.', type: 'error' });
+        } finally {
+            setActionPending(false);
+        }
+    };
+
+    const handleAccept = async () => {
+        if(!profile) return;
+        setActionPending(true);
+        try {
+            await acceptFriendRequest(requestId);
+            setProfile((prev) => ({...prev, relationshipStatus: RELATIONSHIP_STATUS.FRIENDS}))
+        } catch(e) {
+            console.error(e);
+            showNotification({ message: 'დადასტურება ვერ მოხერხდა.', type: 'error'})
+        } finally {
+            setActionPending(false);
+        }
+    };
+
+    const handleReject = async () => {
+        if(!profile) return;
+        setActionPending(true);
+        try {
+            await rejectFriendRequest(requestId);
+            setProfile((prev) => ({...prev, relationshipStatus: RELATIONSHIP_STATUS.NONE}))
+        } catch(e) {
+            console.error(e);
+            showNotification({ message: 'უარყოფა ვერ მოხერხდა.', type: 'error'})
+        } finally {
+            setActionPending(false);
+        }
+    };
+
+    return {
+        profile,
+        isLoading,
+        notFound,
+        showPhoto: Boolean(profile?.photoUrl) && !photoFailed,
+        initial: getInitial(profile?.displayName),
+        handlePhotoError: () => setPhotoFailed(true),
+        actionPending,
+        canRequest: profile?.relationshipStatus === RELATIONSHIP_STATUS.NONE,
+        isPendingSent: profile?.relationshipStatus === RELATIONSHIP_STATUS.PENDING_SENT,
+        isPendingReceived: profile?.relationshipStatus === RELATIONSHIP_STATUS.PENDING_RECEIVED,
+        isFriends: profile?.relationshipStatus === RELATIONSHIP_STATUS.FRIENDS,
+        handleSendRequest,
+        handleAccept,
+        handleReject,
+    };
+};
+
+export default usePublicProfile;
