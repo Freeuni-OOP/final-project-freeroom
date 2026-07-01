@@ -35,6 +35,9 @@ const usePublicProfilePage = () => {
 
     const fetchedUserIdRef = useRef(null);
 
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isReportOpen, setIsReportOpen] = useState(false);
+
     useEffect(() => {
         if(!userId || fetchedUserIdRef.current === userId) return;
 
@@ -163,6 +166,14 @@ const usePublicProfilePage = () => {
         }
     };
 
+    const toggleMenu = () => setIsMenuOpen((prev) => !prev);
+    const closeMenu = () => setIsMenuOpen(false);
+    const openReport = () => {
+        setIsMenuOpen(false);
+        setIsReportOpen(true);
+    };
+    const closeReport = () => setIsReportOpen(false);
+
     return {
         profile,
         isLoading,
@@ -181,6 +192,12 @@ const usePublicProfilePage = () => {
         handleUnfriend,
         handleCancelRequest,
         university,
+        isMenuOpen,
+        isReportOpen,
+        toggleMenu,
+        closeMenu,
+        openReport,
+        closeReport,
     };
 };
 

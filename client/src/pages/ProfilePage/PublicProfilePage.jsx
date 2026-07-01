@@ -1,6 +1,7 @@
 import NotFoundPage from '@/pages/NotFoundPage';
 import usePublicProfilePage from './usePublicProfilePage.js';
 import {UNIVERSITY} from "@/utils";
+import { ReportModal } from '@/components';
 
 export default function PublicProfilePage() {
     const {
@@ -21,6 +22,12 @@ export default function PublicProfilePage() {
         handleUnfriend,
         handleCancelRequest,
         university,
+        isMenuOpen,
+        isReportOpen,
+        toggleMenu,
+        closeMenu,
+        openReport,
+        closeReport,
     } = usePublicProfilePage();
 
     if (notFound) {
@@ -29,7 +36,32 @@ export default function PublicProfilePage() {
 
     return (
         <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
-            <section className="flex flex-col items-center rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-black/5 sm:p-10">
+            <section className="relative flex flex-col items-center rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-black/5 sm:p-10">
+                {!isLoading && profile && (
+                    <div className="absolute right-4 top-4">
+                        <button
+                            onClick={toggleMenu}
+                            className="flex h-8 w-8 items-center justify-center rounded-full text-brand-ink/60 transition-colors hover:bg-black/5 hover:text-brand-ink/90"
+                        >
+                            <span className="text-2xl leading-none">⋮</span>
+                        </button>
+
+                        {isMenuOpen && (
+                            <>
+                                <div className="fixed inset-0 z-10" onClick={closeMenu} />
+                                <div className="absolute right-0 top-10 z-20 w-40 overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-black/5">
+                                    <button
+                                        onClick={openReport}
+                                        className="w-full px-4 py-3 text-left text-sm font-medium text-red-500 hover:bg-red-50"
+                                    >
+                                        რეპორტი
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                )}
+
                 {isLoading ? (
                     <div className="h-24 w-24 rounded-full bg-black/5 animate-pulse ring-4 ring-black/5" />
                 ) : showPhoto ? (
@@ -136,6 +168,10 @@ export default function PublicProfilePage() {
                     <h2 className="mb-4 text-lg font-bold text-brand-ink">ჩემს შესახებ</h2>
                     <p className="whitespace-pre-wrap text-sm text-brand-ink/70">{profile.bio}</p>
                 </section>
+            )}
+
+            {isReportOpen && (
+                <ReportModal userId={profile.id} onClose={closeReport} />
             )}
         </div>
     );
