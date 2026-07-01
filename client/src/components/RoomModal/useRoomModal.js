@@ -182,6 +182,25 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
 
     const formatTime = (iso) => iso ? new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : null;
 
+    const timeUntilNextLecture = (roomData?.nextLecture?.startAt && roomData?.serverNow)
+        ? Math.floor((new Date(roomData.nextLecture.startAt) - new Date(roomData.serverNow)) / 60000)
+        : null;
+
+    const getAvailableDurations = () => {
+        if (timeUntilNextLecture === null) return [30, 60, 120];
+        if (timeUntilNextLecture <= 0) return [];
+
+        const presets = [30, 60, 120].filter((d) => d <= timeUntilNextLecture);
+
+        if (!presets.includes(timeUntilNextLecture) && timeUntilNextLecture < 120) {
+            presets.push(timeUntilNextLecture);
+        }
+
+        return presets.length > 0 ? presets : [timeUntilNextLecture];
+    };
+
+    const availableDurations = getAvailableDurations();
+
     const modalData = roomId ? {
         id: roomId,
         isFree: roomData?.status !== ROOM_STATUS.OCCUPIED,
@@ -211,6 +230,10 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
     const handleReserve = async (durationMinutes) => {
         if (!modalData?.isFree) {
             showNotification({ message: 'ოთახი დაკავებულია', type: 'error' });
+            return;
+        }
+        if (timeUntilNextLecture !== null && durationMinutes > timeUntilNextLecture) {
+            showNotification({ message: 'არჩეული ხანგრძლივობა სცილდება შემდეგ ლექციამდე დარჩენილ დროს', type: 'error' });
             return;
         }
         try {
@@ -293,6 +316,8 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         roomData: modalData,
         handleReserve,
         handleCancel,
+        availableDurations,
+        timeUntilNextLecture,
         isChatOpen,
         setIsChatOpen,
         messages,

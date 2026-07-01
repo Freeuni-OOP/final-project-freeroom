@@ -103,6 +103,9 @@ public class UserController {
 
     @PostMapping("/telegram-link")
     public ResponseEntity<TelegramLinkResponseDto> generateTelegramLink(Principal principal) {
+        if (!rateLimiter.allow("telegram:" + principal.getName(), 3, 60000)) {
+            return ResponseEntity.status(429).build();
+        }
         String uid = principal.getName();
         User user = userRepository.findById(uid)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));

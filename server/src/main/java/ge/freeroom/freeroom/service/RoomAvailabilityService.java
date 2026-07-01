@@ -77,6 +77,7 @@ public class RoomAvailabilityService {
             dto.setRoomNumber(room.getRoomNumber());
             dto.setCapacity(room.getCapacity());
             dto.setFloorNumber(room.getFloor().getNumber());
+            dto.setServerNow(now);
 
             Lecture lecture = activeLectureByRoomId.get(room.getId());
             RoomOccupancy occupancy = activeOccupancyByRoomId.get(room.getId());
@@ -195,13 +196,25 @@ public class RoomAvailabilityService {
             }
         }
 
-        long minutes = (durationMinutes != null) ? durationMinutes : 60;
+        long minutes = (durationMinutes != null) ? Math.max(1, Math.min(480, durationMinutes)) : 60;
+        LocalDateTime expectedEnd = nowTime.plusMinutes(minutes);
+
+        List<Lecture> nextLectures = lectureRepository.findNextLecturesByRoomId(roomId, nowTime);
+        Lecture nextLecture = nextLectures.isEmpty() ? null : nextLectures.get(0);
+
+        if (nextLecture != null && expectedEnd.isAfter(nextLecture.getStartAt())) {
+            long maxAllowedMinutes = java.time.Duration.between(nowTime, nextLecture.getStartAt()).toMinutes();
+            throw new IllegalStateException(
+                    "ამ ხანგრძლივობით დაჯავშნა შეუძლებელია - შემდეგი ლექცია იწყება " +
+                            maxAllowedMinutes + " წუთში."
+            );
+        }
 
         RoomOccupancy occupancy = new RoomOccupancy();
         occupancy.setRoom(room);
         occupancy.setUser(user);
         occupancy.setStartAt(nowTime);
-        occupancy.setExpectedEndAt(nowTime.plusMinutes(minutes));
+        occupancy.setExpectedEndAt(expectedEnd);
         occupancy.setEndAt(null);
 
         RoomOccupancy saved = roomOccupancyRepository.save(occupancy);
@@ -212,6 +225,10 @@ public class RoomAvailabilityService {
         response.setRoomNumber(saved.getRoom().getRoomNumber());
         response.setStartTime(saved.getStartAt());
         response.setExpectedEndTime(saved.getExpectedEndAt());
+        if (nextLecture != null) {
+            response.setNextLectureStart(nextLecture.getStartAt());
+            response.setMaxAllowedDurationMinutes(java.time.Duration.between(nowTime, nextLecture.getStartAt()).toMinutes());
+        }
 
         if (chatService != null) {
             chatService.initializeRoomBooker(roomId, userId);
@@ -241,6 +258,10 @@ public class RoomAvailabilityService {
 
         RoomOccupancy occ = occupancyOpt.get();
 
+        if (!occ.getUser().getId().equals(userId)) {
+            throw new org.springframework.security.access.AccessDeniedException("You can only cancel your own occupancy");
+        }
+
         if (occ.getExpectedEndAt().isBefore(now) || occ.getExpectedEndAt().isEqual(now)) {
             occ.setEndAt(occ.getExpectedEndAt());
             roomOccupancyRepository.save(occ);
@@ -248,10 +269,6 @@ public class RoomAvailabilityService {
                 chatService.clearRoomChat(roomId);
             }
             throw new IllegalStateException("No active occupancy for this room");
-        }
-
-        if (!occ.getUser().getId().equals(userId)) {
-            throw new org.springframework.security.access.AccessDeniedException("You can only cancel your own occupancy");
         }
 
         occ.setEndAt(timeService.now());

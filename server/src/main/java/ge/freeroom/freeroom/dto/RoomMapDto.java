@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -18,4 +20,5 @@ public class RoomMapDto {
     private LectureSummaryDto currentLecture; // null if free
     private RoomOccupancySummaryDto currentOccupancy; // null if free
     private LectureSummaryDto nextLecture; // null if no upcoming lecture that day
+    private LocalDateTime serverNow;
 }
