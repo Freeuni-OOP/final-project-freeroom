@@ -1,4 +1,7 @@
+import { useAuth } from '@/context';
+import { getUniversity } from '@/utils';
 import { useState, useEffect } from 'react';
+import { RELATIONSHIP_STATUS } from '@/utils';
 import useDebounce from '@/hooks/useDebounce';
 import {
     getFriends,
@@ -13,6 +16,8 @@ const formatTime = (isoString) =>
     new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
 const useFriendsPanel = () => {
+    const { user } = useAuth();
+    const university = getUniversity(user?.email);
     const [activeTab, setActiveTab] = useState('friends');
     const [requestSubTab, setRequestSubTab] = useState('send');
     const [searchQuery, setSearchQuery] = useState('');
@@ -94,7 +99,7 @@ const useFriendsPanel = () => {
             await sendFriendRequest(receiverId);
             setSearchResults((prev) =>
                 prev.map((u) =>
-                    u.id === receiverId ? { ...u, relationshipStatus: 'PENDING_SENT' } : u
+                    u.id === receiverId ? { ...u, relationshipStatus: RELATIONSHIP_STATUS.PENDING_SENT } : u
                 )
             );
         } catch (e) {
@@ -130,7 +135,7 @@ const useFriendsPanel = () => {
             );
             setSearchResults((prev) =>
                 prev.map((u) =>
-                    u.id === senderId ? { ...u, relationshipStatus: 'FRIENDS' } : u
+                    u.id === senderId ? { ...u, relationshipStatus: RELATIONSHIP_STATUS.FRIENDS } : u
                 )
             );
             await loadFriends();
@@ -185,6 +190,7 @@ const useFriendsPanel = () => {
         handleAccept,
         handleAcceptFromSearch,
         handleReject,
+        university,
     };
 };
 

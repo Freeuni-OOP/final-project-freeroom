@@ -1,10 +1,9 @@
 package ge.freeroom.freeroom.controllers;
 
 import com.google.firebase.auth.FirebaseToken;
-import ge.freeroom.freeroom.dto.NotificationPreferenceResponseDto;
-import ge.freeroom.freeroom.dto.TelegramLinkResponseDto;
-import ge.freeroom.freeroom.dto.UpdateNotificationPreferenceRequest;
+import ge.freeroom.freeroom.dto.*;
 import ge.freeroom.freeroom.entities.User;
+import ge.freeroom.freeroom.service.FriendService;
 import ge.freeroom.freeroom.service.UserService;
 import ge.freeroom.freeroom.security.RateLimiter;
 import ge.freeroom.freeroom.repositories.UserRepository;
@@ -20,7 +19,6 @@ import java.security.Principal;
 import java.util.Set;
 import java.util.List;
 import ge.freeroom.freeroom.entities.Subject;
-import ge.freeroom.freeroom.dto.LectureSummaryDto;
 
 @RestController
 @RequestMapping("/user")
@@ -30,7 +28,7 @@ public class UserController {
     private final UserRepository userRepository;
     private final RateLimiter rateLimiter;
 
-    public UserController(UserService userService, UserRepository userRepository, RateLimiter rateLimiter) {
+    public UserController(UserService userService, UserRepository userRepository, RateLimiter rateLimiter, FriendService friendService) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.rateLimiter = rateLimiter;
@@ -143,5 +141,12 @@ public class UserController {
     public ResponseEntity<List<LectureSummaryDto>> getUserCalendar(HttpServletRequest request) {
         FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
         return ResponseEntity.ok(userService.getUserCalendar(token.getUid()));
+    }
+
+    @GetMapping("/{userId}/profile")
+    public ResponseEntity<PublicProfileDto> getPublicProfile(
+            @PathVariable String userId,
+            Principal principal) {
+        return ResponseEntity.ok(userService.getPublicProfile(principal.getName(), userId));
     }
 }

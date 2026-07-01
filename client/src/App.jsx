@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
-import { LandingPage, ProfilePage, FloorsPage, NotFoundPage, PrivacyPage, SubjectsPage, CalendarPage } from '@/pages';
+import { LandingPage, ProfilePage, PublicProfilePage, FloorsPage, NotFoundPage, PrivacyPage, SubjectsPage, CalendarPage } from '@/pages';
 import { ProtectedRoute, Layout } from '@/components';
 import { NotificationProvider } from '@/context/NotificationContext';
 
@@ -12,6 +12,7 @@ function App() {
                     <Route element={<Layout />}>
                         <Route path="/floors" element={<FloorsPage />} />
                         <Route path="/profile" element={<ProfilePage />} />
+                        <Route path="/profile/:userId" element={<PublicProfilePage />} />
                         <Route path="/privacy" element={<PrivacyPage />} />
                         <Route path="/subjects" element={<SubjectsPage />} />
                         <Route path="/calendar" element={<CalendarPage />} />
