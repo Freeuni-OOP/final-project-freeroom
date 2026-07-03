@@ -1,5 +1,6 @@
 package ge.freeroom.freeroom.controllers;
 
+import ge.freeroom.freeroom.security.RateLimiter;
 import ge.freeroom.freeroom.service.FriendService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,9 @@ public class FriendControllerTest {
 
     @MockitoBean
     private FriendService friendService;
+
+    @MockitoBean
+    private RateLimiter rateLimiter;
 
     @Test
     void removeFriend_ReturnsOk_AndDelegatesToService() throws Exception {

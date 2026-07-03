@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ChatService {
@@ -30,9 +29,6 @@ public class ChatService {
 
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private TimeService timeService;
 
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
@@ -71,10 +67,6 @@ public class ChatService {
     }
 
     public void sendJoinRequest(Long roomId, String requesterId) {
-        Optional<Chat> lastRequest = chatRepository.findFirstByRoomIdAndAuthorUser_IdAndMessageTypeOrderBySendingTimeDesc(roomId, requesterId, MessageType.REQUEST);
-        if (lastRequest.isPresent() && lastRequest.get().getSendingTime().isAfter(timeService.now().minusMinutes(1))) {
-            throw new IllegalStateException("Rate limit exceeded. You can only request once per minute.");
-        }
         User user = userRepository.findById(requesterId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
@@ -91,6 +83,10 @@ public class ChatService {
         if (!adminAccess.isAdmin()) {
             throw new SecurityException("Only admins can approve requests.");
         }
+
+        chatRepository.findFirstByRoomIdAndAuthorUser_IdAndMessageTypeOrderBySendingTimeDesc(roomId, targetUserId, MessageType.REQUEST)
+                .orElseThrow(() -> new IllegalStateException("No pending join request from this user"));
+
         if (!roomAccessRepository.existsByRoomIdAndUserId(roomId, targetUserId)) {
             RoomAccess newAccess = new RoomAccess(roomId, targetUserId, false);
             roomAccessRepository.save(newAccess);
