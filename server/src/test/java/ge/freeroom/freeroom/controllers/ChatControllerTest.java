@@ -1,5 +1,6 @@
 package ge.freeroom.freeroom.controllers;
 
+import ge.freeroom.freeroom.security.RateLimiter;
 import ge.freeroom.freeroom.service.ChatService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,8 +11,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -29,8 +32,13 @@ public class ChatControllerTest {
     @MockitoBean
     private ChatService chatService;
 
+    @MockitoBean
+    private RateLimiter rateLimiter;
+
     @Test
     void sendMessage_ReturnsOk_WhenValid() throws Exception {
+        when(rateLimiter.allow(anyString(), anyInt(), anyLong())).thenReturn(true);
+
         mockMvc.perform(post("/chat/send")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"roomId\":1,\"message\":\"hello\"}")

@@ -39,9 +39,6 @@ class ChatServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private TimeService timeService;
-
-    @Mock
     private SimpMessagingTemplate messagingTemplate;
 
     @InjectMocks
@@ -119,32 +116,12 @@ class ChatServiceTest {
     }
 
     @Test
-    void sendJoinRequest_WhenRateLimitExceeded_ThrowsIllegalStateException() {
-        Long roomId = 1L;
-        String userId = "spammer-id";
-        Chat recentRequest = new Chat();
-        recentRequest.setSendingTime(LocalDateTime.now().minusSeconds(30));
-
-        when(chatRepository.findFirstByRoomIdAndAuthorUser_IdAndMessageTypeOrderBySendingTimeDesc(roomId, userId, MessageType.REQUEST))
-                .thenReturn(Optional.of(recentRequest));
-        when(timeService.now()).thenReturn(LocalDateTime.now());
-
-        assertThrows(IllegalStateException.class, () -> chatService.sendJoinRequest(roomId, userId));
-        verify(chatRepository, never()).save(any(Chat.class));
-    }
-
-    @Test
-    void sendJoinRequest_WhenRequestIsOutsideRateLimitWindow_SavesRequest() {
+    void sendJoinRequest_SavesRequest() {
         Long roomId = 1L;
         String userId = "valid-requester-id";
         User user = new User();
-        Chat oldRequest = new Chat();
-        oldRequest.setSendingTime(LocalDateTime.now().minusMinutes(2));
 
-        when(chatRepository.findFirstByRoomIdAndAuthorUser_IdAndMessageTypeOrderBySendingTimeDesc(roomId, userId, MessageType.REQUEST))
-                .thenReturn(Optional.of(oldRequest));
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(timeService.now()).thenReturn(LocalDateTime.now());
 
         chatService.sendJoinRequest(roomId, userId);
 
@@ -171,8 +148,11 @@ class ChatServiceTest {
         String targetUserId = "target-user-id";
         RoomAccess adminAccess = new RoomAccess(roomId, adminId, true);
         User adminUser = new User();
+        Chat pendingRequest = new Chat();
 
         when(roomAccessRepository.findByRoomIdAndUserId(roomId, adminId)).thenReturn(Optional.of(adminAccess));
+        when(chatRepository.findFirstByRoomIdAndAuthorUser_IdAndMessageTypeOrderBySendingTimeDesc(roomId, targetUserId, MessageType.REQUEST))
+                .thenReturn(Optional.of(pendingRequest));
         when(roomAccessRepository.existsByRoomIdAndUserId(roomId, targetUserId)).thenReturn(false);
         when(userRepository.findById(adminId)).thenReturn(Optional.of(adminUser));
 

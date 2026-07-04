@@ -2,7 +2,6 @@ package ge.freeroom.freeroom.controllers;
 
 import ge.freeroom.freeroom.entities.User;
 import ge.freeroom.freeroom.repositories.UserRepository;
-import ge.freeroom.freeroom.service.FriendService;
 import ge.freeroom.freeroom.service.UserService;
 import ge.freeroom.freeroom.security.RateLimiter;
 import org.junit.jupiter.api.Test;
@@ -35,9 +34,6 @@ public class UserControllerTest {
 
     @MockitoBean
     private UserService userService;
-
-    @MockitoBean
-    private FriendService friendService;
 
     @MockitoBean
     private UserRepository userRepository;

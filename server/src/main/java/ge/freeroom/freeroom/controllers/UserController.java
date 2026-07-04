@@ -3,7 +3,6 @@ package ge.freeroom.freeroom.controllers;
 import com.google.firebase.auth.FirebaseToken;
 import ge.freeroom.freeroom.dto.*;
 import ge.freeroom.freeroom.entities.User;
-import ge.freeroom.freeroom.service.FriendService;
 import ge.freeroom.freeroom.service.UserService;
 import ge.freeroom.freeroom.security.RateLimiter;
 import ge.freeroom.freeroom.repositories.UserRepository;
@@ -28,28 +27,28 @@ public class UserController {
     private final UserRepository userRepository;
     private final RateLimiter rateLimiter;
 
-    public UserController(UserService userService, UserRepository userRepository, RateLimiter rateLimiter, FriendService friendService) {
+    public UserController(UserService userService, UserRepository userRepository, RateLimiter rateLimiter) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.rateLimiter = rateLimiter;
     }
 
     @GetMapping
-    public ResponseEntity<User> getUser(HttpServletRequest request) {
+    public ResponseEntity<UserProfileDto> getUser(HttpServletRequest request) {
         FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
         User user = userService.getOrCreateUser(token);
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(toProfileDto(user));
     }
 
     @PostMapping("/sync")
-    public ResponseEntity<User> syncUser(HttpServletRequest request) {
+    public ResponseEntity<UserProfileDto> syncUser(HttpServletRequest request) {
         FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
         User user = userService.getOrCreateUser(token);
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(toProfileDto(user));
     }
 
     @PatchMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<User> updateUser(
+    public ResponseEntity<UserProfileDto> updateUser(
             HttpServletRequest request,
             @RequestParam(value = "displayName", required = false) String displayName,
             @RequestParam(value = "bio", required = false) String bio,
@@ -66,7 +65,17 @@ public class UserController {
         }
 
         User updatedUser = userService.updateUserProfile(token.getUid(), displayName, bio, file);
-        return ResponseEntity.ok(updatedUser);
+        return ResponseEntity.ok(toProfileDto(updatedUser));
+    }
+
+    private UserProfileDto toProfileDto(User user) {
+        UserProfileDto dto = new UserProfileDto();
+        dto.setId(user.getId());
+        dto.setEmail(user.getEmail());
+        dto.setDisplayName(user.getDisplayName());
+        dto.setPhotoUrl(user.getPhotoUrl());
+        dto.setBio(user.getBio());
+        return dto;
     }
 
     @PatchMapping("/notification-preference")

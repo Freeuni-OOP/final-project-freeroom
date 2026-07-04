@@ -6,8 +6,10 @@ import ge.freeroom.freeroom.dto.JoinRoomRequestDto;
 import ge.freeroom.freeroom.dto.ApproveJoinRequestDto;
 import ge.freeroom.freeroom.dto.RejectJoinRequestDto;
 import ge.freeroom.freeroom.service.ChatService;
+import ge.freeroom.freeroom.security.RateLimiter;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.util.List;
@@ -16,8 +18,13 @@ import java.util.List;
 @RequestMapping("/chat")
 public class ChatController {
 
-    @Autowired
-    private ChatService chatService;
+    private final ChatService chatService;
+    private final RateLimiter rateLimiter;
+
+    public ChatController(ChatService chatService, RateLimiter rateLimiter) {
+        this.chatService = chatService;
+        this.rateLimiter = rateLimiter;
+    }
 
     @GetMapping("/{roomId}")
     public List<ChatMessageDto> getMessages(
@@ -28,13 +35,21 @@ public class ChatController {
     }
 
     @PostMapping("/send")
-    public void sendMessage(@Valid @RequestBody SendMessageRequestDto request, Principal principal) {
+    public ResponseEntity<Void> sendMessage(@Valid @RequestBody SendMessageRequestDto request, Principal principal) {
+        if (!rateLimiter.allow("chat:" + principal.getName(), 20, 60000)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+        }
         chatService.sendMessage(request.roomId(), principal.getName(), request.message());
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/request-join")
-    public void requestJoin(@Valid @RequestBody JoinRoomRequestDto request, Principal principal) {
+    public ResponseEntity<Void> requestJoin(@Valid @RequestBody JoinRoomRequestDto request, Principal principal) {
+        if (!rateLimiter.allow("joinreq:" + principal.getName(), 5, 60000)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+        }
         chatService.sendJoinRequest(request.roomId(), principal.getName());
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/approve")

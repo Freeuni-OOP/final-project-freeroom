@@ -4,7 +4,9 @@ import ge.freeroom.freeroom.dto.FriendDto;
 import ge.freeroom.freeroom.dto.FriendRequestDto;
 import ge.freeroom.freeroom.dto.SendFriendRequestDto;
 import ge.freeroom.freeroom.dto.UserSearchResultDto;
+import ge.freeroom.freeroom.security.RateLimiter;
 import ge.freeroom.freeroom.service.FriendService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,9 +17,11 @@ import java.util.List;
 @RequestMapping("/friends")
 public class FriendController {
     private final FriendService friendService;
+    private final RateLimiter rateLimiter;
 
-    public FriendController(FriendService friendService) {
+    public FriendController(FriendService friendService, RateLimiter rateLimiter) {
         this.friendService = friendService;
+        this.rateLimiter = rateLimiter;
     }
 
     @GetMapping("/search")
@@ -31,6 +35,9 @@ public class FriendController {
     public ResponseEntity<Void> sendFriendRequest(
             @RequestBody SendFriendRequestDto body,
             Principal principal) {
+        if (!rateLimiter.allow("friendreq:" + principal.getName(), 10, 60000)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+        }
         friendService.sendFriendRequest(principal.getName(), body.getReceiverId());
         return ResponseEntity.ok().build();
     }

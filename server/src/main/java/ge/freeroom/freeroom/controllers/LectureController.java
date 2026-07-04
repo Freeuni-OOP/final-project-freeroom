@@ -25,18 +25,18 @@ public class LectureController {
     }
 
     @GetMapping("/lectures")
-    public List<Lecture> getAllLectures() {
-        return lectureRepository.findAll();
+    public List<LectureDto> getAllLectures() {
+        return lectureRepository.findAll().stream().map(this::toDto).toList();
     }
 
     @GetMapping("/lectures/floor/{floorNumber}")
-    public List<Lecture> getLecturesByFloor(@PathVariable int floorNumber) {
-        return lectureRepository.findByRoomFloorNumberOrderByStartAtAsc(floorNumber);
+    public List<LectureDto> getLecturesByFloor(@PathVariable int floorNumber) {
+        return lectureRepository.findByRoomFloorNumberOrderByStartAtAsc(floorNumber).stream().map(this::toDto).toList();
     }
 
     @GetMapping("/lectures/room/{roomNumber}")
-    public List<Lecture> getLecturesByRoom(@PathVariable Integer roomNumber) {
-        return lectureRepository.findByRoomRoomNumberOrderByStartAtAsc(roomNumber);
+    public List<LectureDto> getLecturesByRoom(@PathVariable Integer roomNumber) {
+        return lectureRepository.findByRoomRoomNumberOrderByStartAtAsc(roomNumber).stream().map(this::toDto).toList();
     }
 
     @GetMapping("/lectures/search")
