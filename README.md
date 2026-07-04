@@ -50,14 +50,12 @@ MIT License. Free for educational and research use.
 ### The Easy Way (Docker)
 Got Docker? Perfect. You can spin up the entire app in one command.
 
-1. Copy `.env.example` to `.env` and fill in your keys.
+1. Copy `.env.example` to `.env` and fill in your credentials (ask the team for the values).
 2. Create a `secrets` folder in the project root.
 3. Drop `clientSecret.json` and `serviceAccountKey.json` into that `secrets` folder.
 4. Run `docker compose up --build`.
 
-(All of this in root folder)
-
-After you build you can just run it without `--build` flag. i.e. `docker compose up`.
+After the first build you can skip `--build` for faster starts: `docker compose up`.
 
 Open `http://localhost:3000` when the terminal calms down. That's it.
 
