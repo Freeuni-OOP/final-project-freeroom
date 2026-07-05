@@ -32,6 +32,8 @@ export const getNotificationPreference = () => axiosInstance.get('/user/notifica
 
 export const updateNotificationPreference = (preference) => axiosInstance.patch('/user/notification-preference', { preference });
 
+export const updateOccupancyVisibility = (visibility) => axiosInstance.patch('/user/occupancy-visibility', { visibility });
+
 export const generateTelegramLink = () => axiosInstance.post('/user/telegram-link');
 
 export const getSavedSubjects = () => axiosInstance.get('/user/subjects');

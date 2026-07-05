@@ -16,6 +16,7 @@ public class RoomOccupancySummaryDto {
     private LocalDateTime expectedEndAt;
     private Boolean isMyOccupancy;
     private Boolean isFriendOccupancy;
+    private Boolean isPublicOccupancy;
 
     // (NOT SHOWING PUBLICLY FOR PRIVACY) :
     private String reserverDisplayName; // for Friend invite or something in future

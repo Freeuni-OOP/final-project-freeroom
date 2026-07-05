@@ -107,12 +107,19 @@ public class RoomAvailabilityService {
                 String occupantId = occupancy.getUser().getId();
                 boolean isMine = occupantId.equals(currentUserId);
                 boolean isFriend = friendIds.contains(occupantId);
+                ge.freeroom.freeroom.entities.OccupancyVisibility visibility = occupancy.getUser().getOccupancyVisibility();
+                if (visibility == null) visibility = ge.freeroom.freeroom.entities.OccupancyVisibility.FRIENDS;
+
+                boolean isPublic = (visibility == ge.freeroom.freeroom.entities.OccupancyVisibility.PUBLIC);
 
                 rosd.setIsMyOccupancy(isMine);
                 rosd.setIsFriendOccupancy(isFriend);
+                rosd.setIsPublicOccupancy(isPublic);
                 rosd.setPublicNote(occupancy.getPublicNote());
 
-                if (isMine || isFriend) {
+                boolean canViewDetails = isMine || isPublic || (visibility == ge.freeroom.freeroom.entities.OccupancyVisibility.FRIENDS && isFriend);
+
+                if (canViewDetails) {
                     rosd.setReserverDisplayName(occupancy.getUser().getDisplayName());
                     rosd.setReserverPhotoUrl(occupancy.getUser().getPhotoUrl());
                     rosd.setReserverId(occupantId);

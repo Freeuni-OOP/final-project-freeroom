@@ -99,7 +99,7 @@ const useFloorView = () => {
       group.querySelectorAll(`.${FRIEND_BADGE_CLASS}`).forEach((el) => el.remove());
 
       const occupancy = roomData?.currentOccupancy;
-      if (!occupancy?.isFriendOccupancy) return;
+      if (!occupancy || (!occupancy.isFriendOccupancy && !occupancy.isMyOccupancy && !occupancy.isPublicOccupancy)) return;
 
       const bbox = rect.getBBox();
       const cx = bbox.x + bbox.width - 12;

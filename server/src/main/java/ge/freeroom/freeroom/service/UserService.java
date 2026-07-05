@@ -197,12 +197,21 @@ public class UserService {
 
         profileDto.setRelationshipStatus(computeRelationshipStatus(currentUserId, targetUserId));
 
-        roomOccupancyRepository.findActiveOccupancyByUserId(targetUserId, timeService.now())
-                .ifPresent(occ -> {
-                    if (occ.getRoom() != null) {
-                        profileDto.setActiveRoomNumber(occ.getRoom().getRoomNumber());
-                    }
-                });
+        ge.freeroom.freeroom.entities.OccupancyVisibility visibility = targetUser.getOccupancyVisibility();
+        if (visibility == null) visibility = ge.freeroom.freeroom.entities.OccupancyVisibility.FRIENDS;
+
+        boolean canViewOccupancy = currentUserId.equals(targetUserId) || 
+                                   (visibility == ge.freeroom.freeroom.entities.OccupancyVisibility.PUBLIC) ||
+                                   (visibility == ge.freeroom.freeroom.entities.OccupancyVisibility.FRIENDS && profileDto.getRelationshipStatus() == ge.freeroom.freeroom.entities.RelationshipStatus.FRIENDS);
+
+        if (canViewOccupancy) {
+            roomOccupancyRepository.findActiveOccupancyByUserId(targetUserId, timeService.now())
+                    .ifPresent(occ -> {
+                        if (occ.getRoom() != null) {
+                            profileDto.setActiveRoomNumber(occ.getRoom().getRoomNumber());
+                        }
+                    });
+        }
 
         return profileDto;
     }

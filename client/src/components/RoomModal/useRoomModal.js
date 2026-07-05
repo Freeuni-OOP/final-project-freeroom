@@ -222,13 +222,13 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         groupNumber: roomData?.currentLecture?.groupNumber ?? null,
         reservedBy: roomData?.currentOccupancy?.isMyOccupancy
             ? 'თქვენ'
-            : roomData?.currentOccupancy?.isFriendOccupancy
+            : (roomData?.currentOccupancy?.isFriendOccupancy || roomData?.currentOccupancy?.isPublicOccupancy)
                 ? roomData?.currentOccupancy?.reserverDisplayName
                 : 'სხვა სტუდენტი',
-        reservedByPhotoUrl: roomData?.currentOccupancy?.isFriendOccupancy
+        reservedByPhotoUrl: (roomData?.currentOccupancy?.isFriendOccupancy || roomData?.currentOccupancy?.isPublicOccupancy)
             ? roomData?.currentOccupancy?.reserverPhotoUrl
             : null,
-        reserverId: (roomData?.currentOccupancy?.isFriendOccupancy || roomData?.currentOccupancy?.isMyOccupancy)
+        reserverId: (roomData?.currentOccupancy?.isFriendOccupancy || roomData?.currentOccupancy?.isMyOccupancy || roomData?.currentOccupancy?.isPublicOccupancy)
             ? roomData?.currentOccupancy?.reserverId
             : null,
         isFriendOccupancy: roomData?.currentOccupancy?.isFriendOccupancy ?? false,

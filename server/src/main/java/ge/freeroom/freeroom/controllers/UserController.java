@@ -85,6 +85,7 @@ public class UserController {
         dto.setPhotoUrl(user.getPhotoUrl());
         dto.setBio(user.getBio());
         dto.setAdmin(adminUsersConfig.isAdmin(user.getEmail()));
+        dto.setOccupancyVisibility(user.getOccupancyVisibility());
 
         roomOccupancyRepository.findActiveOccupancyByUserId(user.getId(), timeService.now())
                 .ifPresent(occ -> {
@@ -113,6 +114,27 @@ public class UserController {
         NotificationPreferenceResponseDto response = new NotificationPreferenceResponseDto();
         response.setPreference(user.getNotificationPreference());
         response.setTelegramLinked(user.getTelegramChatId() != null);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/occupancy-visibility")
+    public ResponseEntity<OccupancyVisibilityResponseDto> updateOccupancyVisibility(
+            @RequestBody UpdateOccupancyVisibilityRequestDto request,
+            Principal principal) {
+        if (!rateLimiter.allow("pref:" + principal.getName(), 10, 60000)) {
+            return ResponseEntity.status(429).build();
+        }
+        String uid = principal.getName();
+        User user = userRepository.findById(uid)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (request.getVisibility() != null) {
+            user.setOccupancyVisibility(request.getVisibility());
+            userRepository.save(user);
+        }
+
+        OccupancyVisibilityResponseDto response = new OccupancyVisibilityResponseDto();
+        response.setVisibility(user.getOccupancyVisibility());
         return ResponseEntity.ok(response);
     }
 

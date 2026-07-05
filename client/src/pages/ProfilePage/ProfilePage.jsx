@@ -26,7 +26,9 @@ export default function ProfilePage() {
         telegramLinked,
         preferenceLoading,
         handlePreferenceChange,
-        handleTelegramLink
+        handleTelegramLink,
+        occupancyVisibility,
+        handleVisibilityChange
     } = useProfilePage();
 
     return (
@@ -127,6 +129,39 @@ export default function ProfilePage() {
             </section>
 
             <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 sm:p-8">
+                <h2 className="mb-4 text-lg font-bold text-brand-ink">ჯავშნის ხილვადობა</h2>
+                <div className="flex flex-col gap-4">
+                    <p className="text-sm text-brand-ink/60 mb-2">
+                        აირჩიეთ ვის შეეძლება თქვენი დაჯავშნილი ოთახის ნახვა
+                    </p>
+                    {isLoading ? (
+                        <div className="text-sm text-brand-ink/50 animate-pulse py-3">იტვირთება...</div>
+                    ) : (
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => handleVisibilityChange('NONE')}
+                                className={`flex-1 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors ${occupancyVisibility === 'NONE' ? 'border-brand-accent bg-brand-accent/10 text-brand-accent-text' : 'border-black/10 text-brand-ink/60 hover:border-brand-accent/40'}`}
+                            >
+                                არავინ
+                            </button>
+                            <button
+                                onClick={() => handleVisibilityChange('FRIENDS')}
+                                className={`flex-1 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors ${occupancyVisibility === 'FRIENDS' ? 'border-brand-accent bg-brand-accent/10 text-brand-accent-text' : 'border-black/10 text-brand-ink/60 hover:border-brand-accent/40'}`}
+                            >
+                                მეგობრები
+                            </button>
+                            <button
+                                onClick={() => handleVisibilityChange('PUBLIC')}
+                                className={`flex-1 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors ${occupancyVisibility === 'PUBLIC' ? 'border-brand-accent bg-brand-accent/10 text-brand-accent-text' : 'border-black/10 text-brand-ink/60 hover:border-brand-accent/40'}`}
+                            >
+                                ყველა
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </section>
+
+            <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 sm:p-8">
                 <h2 className="text-lg font-bold text-brand-ink mb-6">პროფილის რედაქტირება</h2>
 
                 {isLoading ? (
@@ -213,13 +248,12 @@ export default function ProfilePage() {
                             <button
                                 onClick={handleSaveProfile}
                                 disabled={isSaving || isUploading}
-                                className={`rounded-xl px-6 py-2 text-sm font-semibold transition disabled:opacity-50 ${
-                                    university === UNIVERSITY.FREEUNI
-                                        ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
-                                        : university === UNIVERSITY.AGRUNI
-                                            ? 'bg-green-600 hover:bg-green-700 text-white'
-                                            : 'bg-brand-ink hover:bg-brand-ink/90 text-white'
-                                }`}
+                                className={`rounded-xl px-6 py-2 text-sm font-semibold transition disabled:opacity-50 ${university === UNIVERSITY.FREEUNI
+                                    ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                                    : university === UNIVERSITY.AGRUNI
+                                        ? 'bg-green-600 hover:bg-green-700 text-white'
+                                        : 'bg-brand-ink hover:bg-brand-ink/90 text-white'
+                                    }`}
                             >
                                 {isSaving ? 'ინახება...' : 'ცვლილებების შენახვა'}
                             </button>

@@ -1,5 +1,6 @@
 package ge.freeroom.freeroom.dto;
 
+import ge.freeroom.freeroom.entities.OccupancyVisibility;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,4 +17,5 @@ public class UserProfileDto {
     private boolean isAdmin;
 
     private Integer activeRoomNumber;
+    private OccupancyVisibility occupancyVisibility;
 }

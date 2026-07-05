@@ -43,6 +43,10 @@ public class User {
     @Column(nullable = false, columnDefinition = "varchar(255) default 'NONE'")
     private NotificationPreference notificationPreference = NotificationPreference.NONE;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(255) default 'FRIENDS'")
+    private OccupancyVisibility occupancyVisibility = OccupancyVisibility.FRIENDS;
+
     @Column(nullable = true)
     private Long telegramChatId;
 
