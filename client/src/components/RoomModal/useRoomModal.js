@@ -76,6 +76,7 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
 
     useEffect(() => {
         if (roomData?.currentOccupancy?.publicNote !== undefined && roomId === prevRoomId) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setNoteText(roomData.currentOccupancy.publicNote || '');
         }
     }, [roomData?.currentOccupancy?.publicNote, roomId, prevRoomId]);

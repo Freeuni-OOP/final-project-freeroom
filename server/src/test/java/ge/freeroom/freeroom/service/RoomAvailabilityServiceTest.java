@@ -134,7 +134,7 @@ public class RoomAvailabilityServiceTest {
         user.setId("uid");
         user.setNotificationPreference(NotificationPreference.NONE);
         when(userRepository.findById("uid")).thenReturn(Optional.of(user));
-        assertThrows(IllegalStateException.class, () -> roomAvailabilityService.reserveRoom("uid", 1L, 60L));
+        assertThrows(IllegalStateException.class, () -> roomAvailabilityService.reserveRoom("uid", 1L, 60L, null));
 
         verify(emailService, never()).sendReservationConfirmation(any(), anyInt(), any());
     }
@@ -146,7 +146,7 @@ public class RoomAvailabilityServiceTest {
         user.setNotificationPreference(NotificationPreference.TELEGRAM);
         user.setTelegramChatId(null);
         when(userRepository.findById("uid")).thenReturn(Optional.of(user));
-        assertThrows(IllegalStateException.class, () -> roomAvailabilityService.reserveRoom("uid", 1L, 60L));
+        assertThrows(IllegalStateException.class, () -> roomAvailabilityService.reserveRoom("uid", 1L, 60L, null));
     }
 
     @Test
@@ -176,7 +176,7 @@ public class RoomAvailabilityServiceTest {
         saved.setExpectedEndAt(LocalDateTime.now().plusMinutes(60));
         when(roomOccupancyRepository.save(any(RoomOccupancy.class))).thenReturn(saved);
 
-        ReserveRoomResponseDto result = roomAvailabilityService.reserveRoom("uid", 1L, 60L);
+        ReserveRoomResponseDto result = roomAvailabilityService.reserveRoom("uid", 1L, 60L, null);
         assertNotNull(result);
     }
 
@@ -204,7 +204,7 @@ public class RoomAvailabilityServiceTest {
         saved.setExpectedEndAt(LocalDateTime.now().plusMinutes(60));
         when(roomOccupancyRepository.save(any())).thenReturn(saved);
 
-        roomAvailabilityService.reserveRoom("uid", 1L, 60L);
+        roomAvailabilityService.reserveRoom("uid", 1L, 60L, null);
 
         verify(emailService, times(1)).sendReservationConfirmation(
                 eq("test@freeuni.edu.ge"),
@@ -238,7 +238,7 @@ public class RoomAvailabilityServiceTest {
         saved.setExpectedEndAt(LocalDateTime.now().plusMinutes(60));
         when(roomOccupancyRepository.save(any())).thenReturn(saved);
 
-        roomAvailabilityService.reserveRoom("uid", 1L, 60L);
+        roomAvailabilityService.reserveRoom("uid", 1L, 60L, null);
 
         verify(emailService, never()).sendReservationConfirmation(any(), anyInt(), any());
     }
@@ -281,7 +281,7 @@ public class RoomAvailabilityServiceTest {
         when(lectureRepository.findNextLecturesByRoomId(eq(1L), any())).thenReturn(List.of(nextLecture));
 
         IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
-                roomAvailabilityService.reserveRoom("uid", 1L, 60L));
+                roomAvailabilityService.reserveRoom("uid", 1L, 60L, null));
 
         assertTrue(exception.getMessage().contains("45"));
         verify(roomOccupancyRepository, never()).save(any());
@@ -310,7 +310,7 @@ public class RoomAvailabilityServiceTest {
         saved.setExpectedEndAt(now.plusMinutes(45));
         when(roomOccupancyRepository.save(any(RoomOccupancy.class))).thenReturn(saved);
 
-        ReserveRoomResponseDto result = roomAvailabilityService.reserveRoom("uid", 1L, 45L);
+        ReserveRoomResponseDto result = roomAvailabilityService.reserveRoom("uid", 1L, 45L, null);
 
         assertNotNull(result);
         verify(roomOccupancyRepository, times(1)).save(any(RoomOccupancy.class));
@@ -336,7 +336,7 @@ public class RoomAvailabilityServiceTest {
         saved.setExpectedEndAt(now.plusMinutes(120));
         when(roomOccupancyRepository.save(any(RoomOccupancy.class))).thenReturn(saved);
 
-        ReserveRoomResponseDto result = roomAvailabilityService.reserveRoom("uid", 1L, 120L);
+        ReserveRoomResponseDto result = roomAvailabilityService.reserveRoom("uid", 1L, 120L, null);
 
         assertNotNull(result);
         assertNull(result.getNextLectureStart());
@@ -366,7 +366,7 @@ public class RoomAvailabilityServiceTest {
         saved.setExpectedEndAt(now.plusMinutes(30));
         when(roomOccupancyRepository.save(any(RoomOccupancy.class))).thenReturn(saved);
 
-        ReserveRoomResponseDto result = roomAvailabilityService.reserveRoom("uid", 1L, 30L);
+        ReserveRoomResponseDto result = roomAvailabilityService.reserveRoom("uid", 1L, 30L, null);
 
         assertEquals(lectureStart, result.getNextLectureStart());
         assertEquals(90L, result.getMaxAllowedDurationMinutes());
@@ -401,7 +401,7 @@ public class RoomAvailabilityServiceTest {
         saved.setExpectedEndAt(fixedNow.plusMinutes(1));
         when(roomOccupancyRepository.save(any(RoomOccupancy.class))).thenReturn(saved);
 
-        roomAvailabilityService.reserveRoom("uid", 1L, -10L);
+        roomAvailabilityService.reserveRoom("uid", 1L, -10L, null);
 
         ArgumentCaptor<RoomOccupancy> captor = ArgumentCaptor.forClass(RoomOccupancy.class);
         verify(roomOccupancyRepository).save(captor.capture());
@@ -428,7 +428,7 @@ public class RoomAvailabilityServiceTest {
         saved.setExpectedEndAt(fixedNow.plusMinutes(480));
         when(roomOccupancyRepository.save(any(RoomOccupancy.class))).thenReturn(saved);
 
-        roomAvailabilityService.reserveRoom("uid", 1L, 9999L);
+        roomAvailabilityService.reserveRoom("uid", 1L, 9999L, null);
 
         ArgumentCaptor<RoomOccupancy> captor = ArgumentCaptor.forClass(RoomOccupancy.class);
         verify(roomOccupancyRepository).save(captor.capture());
@@ -455,7 +455,7 @@ public class RoomAvailabilityServiceTest {
         saved.setExpectedEndAt(fixedNow.plusMinutes(60));
         when(roomOccupancyRepository.save(any(RoomOccupancy.class))).thenReturn(saved);
 
-        roomAvailabilityService.reserveRoom("uid", 1L, null);
+        roomAvailabilityService.reserveRoom("uid", 1L, null, null);
 
         ArgumentCaptor<RoomOccupancy> captor = ArgumentCaptor.forClass(RoomOccupancy.class);
         verify(roomOccupancyRepository).save(captor.capture());
