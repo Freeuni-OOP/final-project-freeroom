@@ -114,9 +114,11 @@ public class RoomAvailabilityService {
                 if (isMine || isFriend) {
                     rosd.setReserverDisplayName(occupancy.getUser().getDisplayName());
                     rosd.setReserverPhotoUrl(occupancy.getUser().getPhotoUrl());
+                    rosd.setReserverId(occupantId);
                 } else {
                     rosd.setReserverDisplayName(null);
                     rosd.setReserverPhotoUrl(null);
+                    rosd.setReserverId(null);
                 }
 
                 dto.setCurrentOccupancy(rosd);

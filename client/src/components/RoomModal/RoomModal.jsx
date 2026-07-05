@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import useRoomModal from './useRoomModal';
 
 export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess }) {
@@ -60,17 +61,31 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                                 <div className="grid grid-cols-2 gap-4 mb-4">
                                   <div>
                                     <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">დაჯავშნა</p>
-                                    <div className="flex items-center gap-2">
-                                      {modalData.reservedByPhotoUrl && (
-                                          <img
-                                              src={modalData.reservedByPhotoUrl}
-                                              alt={modalData.reservedBy}
-                                              referrerPolicy="no-referrer"
-                                              className="h-6 w-6 rounded-full object-cover ring-1 ring-black/10"
-                                          />
-                                      )}
-                                      <p className="font-medium text-gray-900">{modalData.reservedBy ?? '—'}</p>
-                                    </div>
+                                    {modalData.reserverId ? (
+                                        <Link to={`/profile/${modalData.reserverId}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer">
+                                          {modalData.reservedByPhotoUrl && (
+                                              <img
+                                                  src={modalData.reservedByPhotoUrl}
+                                                  alt={modalData.reservedBy}
+                                                  referrerPolicy="no-referrer"
+                                                  className="h-6 w-6 rounded-full object-cover ring-1 ring-black/10"
+                                              />
+                                          )}
+                                          <p className="font-medium text-gray-900">{modalData.reservedBy ?? '—'}</p>
+                                        </Link>
+                                    ) : (
+                                        <div className="flex items-center gap-2">
+                                          {modalData.reservedByPhotoUrl && (
+                                              <img
+                                                  src={modalData.reservedByPhotoUrl}
+                                                  alt={modalData.reservedBy}
+                                                  referrerPolicy="no-referrer"
+                                                  className="h-6 w-6 rounded-full object-cover ring-1 ring-black/10"
+                                              />
+                                          )}
+                                          <p className="font-medium text-gray-900">{modalData.reservedBy ?? '—'}</p>
+                                        </div>
+                                    )}
                                   </div>
                                   <div>
                                     <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">თავისუფლდება</p>
@@ -96,17 +111,31 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                                 <div className="grid grid-cols-2 gap-4 mb-4">
                                   <div>
                                     <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">დაჯავშნა</p>
-                                    <div className="flex items-center gap-2">
-                                      {modalData.reservedByPhotoUrl && (
-                                          <img
-                                              src={modalData.reservedByPhotoUrl}
-                                              alt={modalData.reservedBy}
-                                              referrerPolicy="no-referrer"
-                                              className="h-6 w-6 rounded-full object-cover ring-1 ring-black/10"
-                                          />
-                                      )}
-                                      <p className="font-medium text-gray-900">{modalData.reservedBy ?? '—'}</p>
-                                    </div>
+                                    {modalData.reserverId ? (
+                                        <Link to={`/profile/${modalData.reserverId}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer">
+                                          {modalData.reservedByPhotoUrl && (
+                                              <img
+                                                  src={modalData.reservedByPhotoUrl}
+                                                  alt={modalData.reservedBy}
+                                                  referrerPolicy="no-referrer"
+                                                  className="h-6 w-6 rounded-full object-cover ring-1 ring-black/10"
+                                              />
+                                          )}
+                                          <p className="font-medium text-gray-900">{modalData.reservedBy ?? '—'}</p>
+                                        </Link>
+                                    ) : (
+                                        <div className="flex items-center gap-2">
+                                          {modalData.reservedByPhotoUrl && (
+                                              <img
+                                                  src={modalData.reservedByPhotoUrl}
+                                                  alt={modalData.reservedBy}
+                                                  referrerPolicy="no-referrer"
+                                                  className="h-6 w-6 rounded-full object-cover ring-1 ring-black/10"
+                                              />
+                                          )}
+                                          <p className="font-medium text-gray-900">{modalData.reservedBy ?? '—'}</p>
+                                        </div>
+                                    )}
                                   </div>
                                   <div>
                                     <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">თავისუფლდება</p>

@@ -218,6 +218,9 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         reservedByPhotoUrl: roomData?.currentOccupancy?.isFriendOccupancy
             ? roomData?.currentOccupancy?.reserverPhotoUrl
             : null,
+        reserverId: (roomData?.currentOccupancy?.isFriendOccupancy || roomData?.currentOccupancy?.isMyOccupancy)
+            ? roomData?.currentOccupancy?.reserverId
+            : null,
         isFriendOccupancy: roomData?.currentOccupancy?.isFriendOccupancy ?? false,
         reservedUntil: formatTime(roomData?.currentOccupancy?.expectedEndAt),
         nextLectureTitle: roomData?.nextLecture?.title ?? null,
