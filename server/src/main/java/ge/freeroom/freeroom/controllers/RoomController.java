@@ -4,10 +4,9 @@ import ge.freeroom.freeroom.dto.CancelOccupancyResponseDto;
 import ge.freeroom.freeroom.dto.ReserveRoomRequestDto;
 import ge.freeroom.freeroom.dto.ReserveRoomResponseDto;
 import ge.freeroom.freeroom.dto.RoomMapDto;
-import ge.freeroom.freeroom.service.LectureSyncService;
+import ge.freeroom.freeroom.security.RateLimiter;
 import ge.freeroom.freeroom.service.RoomAvailabilityService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,10 +18,12 @@ import java.util.List;
 @RequestMapping(produces = "application/json")
 public class RoomController {
 
-    @Autowired
-    private RoomAvailabilityService roomAvailabilityService;
+    private final RoomAvailabilityService roomAvailabilityService;
+    private final RateLimiter rateLimiter;
 
-    public RoomController() {
+    public RoomController(RoomAvailabilityService roomAvailabilityService, RateLimiter rateLimiter) {
+        this.roomAvailabilityService = roomAvailabilityService;
+        this.rateLimiter = rateLimiter;
     }
 
     @GetMapping("/rooms/map")
@@ -33,6 +34,9 @@ public class RoomController {
 
     @PostMapping("/reserve")
     public ResponseEntity<ReserveRoomResponseDto> addRoom(@Valid @RequestBody ReserveRoomRequestDto request, Principal principal) {
+        if (!rateLimiter.allow("reserve:" + principal.getName(), 5, 60000)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+        }
         String userId = principal.getName();
         Long roomId = request.getRoomDbId();
         Integer roomNumber = request.getRoomNumber();

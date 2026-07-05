@@ -4,7 +4,6 @@ import com.google.firebase.auth.FirebaseToken;
 import ge.freeroom.freeroom.config.AdminUsersConfig;
 import ge.freeroom.freeroom.dto.*;
 import ge.freeroom.freeroom.entities.User;
-import ge.freeroom.freeroom.service.FriendService;
 import ge.freeroom.freeroom.service.UserService;
 import ge.freeroom.freeroom.security.RateLimiter;
 import ge.freeroom.freeroom.repositories.UserRepository;
@@ -52,7 +51,7 @@ public class UserController {
     }
 
     @PatchMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<User> updateUser(
+    public ResponseEntity<UserProfileDto> updateUser(
             HttpServletRequest request,
             @RequestParam(value = "displayName", required = false) String displayName,
             @RequestParam(value = "bio", required = false) String bio,
@@ -69,7 +68,17 @@ public class UserController {
         }
 
         User updatedUser = userService.updateUserProfile(token.getUid(), displayName, bio, file);
-        return ResponseEntity.ok(updatedUser);
+        return ResponseEntity.ok(toProfileDto(updatedUser));
+    }
+
+    private UserProfileDto toProfileDto(User user) {
+        UserProfileDto dto = new UserProfileDto();
+        dto.setId(user.getId());
+        dto.setEmail(user.getEmail());
+        dto.setDisplayName(user.getDisplayName());
+        dto.setPhotoUrl(user.getPhotoUrl());
+        dto.setBio(user.getBio());
+        return dto;
     }
 
     @PatchMapping("/notification-preference")
