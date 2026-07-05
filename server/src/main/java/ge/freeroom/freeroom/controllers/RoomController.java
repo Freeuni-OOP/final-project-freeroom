@@ -4,6 +4,7 @@ import ge.freeroom.freeroom.dto.CancelOccupancyResponseDto;
 import ge.freeroom.freeroom.dto.ReserveRoomRequestDto;
 import ge.freeroom.freeroom.dto.ReserveRoomResponseDto;
 import ge.freeroom.freeroom.dto.RoomMapDto;
+import ge.freeroom.freeroom.dto.UpdatePublicNoteRequestDto;
 import ge.freeroom.freeroom.security.RateLimiter;
 import ge.freeroom.freeroom.service.RoomAvailabilityService;
 import jakarta.validation.Valid;
@@ -49,7 +50,9 @@ public class RoomController {
             roomId = roomNumber.longValue();
         }
 
-        ReserveRoomResponseDto response = roomAvailabilityService.reserveRoom(userId, roomId, durationMinutes);
+        String publicNote = request.getPublicNote();
+
+        ReserveRoomResponseDto response = roomAvailabilityService.reserveRoom(userId, roomId, durationMinutes, publicNote);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -60,5 +63,15 @@ public class RoomController {
         String userId = principal.getName();
         CancelOccupancyResponseDto response = roomAvailabilityService.cancelOccupancy(userId, roomId);
         return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/rooms/{roomId}/note")
+    public ResponseEntity<Void> updatePublicNote(
+            @PathVariable Long roomId,
+            @Valid @RequestBody UpdatePublicNoteRequestDto request,
+            Principal principal) {
+        String userId = principal.getName();
+        roomAvailabilityService.updatePublicNote(userId, roomId, request.getPublicNote());
+        return ResponseEntity.ok().build();
     }
 }

@@ -8,7 +8,8 @@ import {
     sendChatMessage,
     requestJoinRoom,
     approveJoinRequest,
-    rejectJoinRequest
+    rejectJoinRequest,
+    updatePublicNote
 } from '@/services/api/endpoints.js';
 import { useNotification } from '@/context';
 import { ROOM_STATUS } from '@/utils';
@@ -22,6 +23,7 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
     const [messages, setMessages] = useState([]);
     const [isAuthorized, setIsAuthorized] = useState(null);
     const [messageText, setMessageText] = useState('');
+    const [noteText, setNoteText] = useState('');
     const [hasMore, setHasMore] = useState(true);
     const [isLoadingOlder, setIsLoadingOlder] = useState(false);
     const [prevRoomId, setPrevRoomId] = useState(roomId);
@@ -42,6 +44,7 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         setPrevRoomId(roomId);
         setIsAuthorized(null);
         setMessages([]);
+        setNoteText(roomData?.currentOccupancy?.publicNote || '');
         setHasMore(true);
     }
 
@@ -69,6 +72,12 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
             isMounted = false;
         };
     }, [roomId, reloadTrigger]);
+
+    useEffect(() => {
+        if (roomData?.currentOccupancy?.publicNote !== undefined && roomId === prevRoomId) {
+            setNoteText(roomData.currentOccupancy.publicNote || '');
+        }
+    }, [roomData?.currentOccupancy?.publicNote, roomId, prevRoomId]);
 
     useEffect(() => {
         if (isChatOpen && chatContainerRef.current && !isFetchingOlder.current) {
@@ -227,6 +236,7 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         nextLectureStart: formatTime(roomData?.nextLecture?.startAt),
         nextLectureEnd: formatTime(roomData?.nextLecture?.endAt),
         isMyOccupancy: roomData?.currentOccupancy?.isMyOccupancy ?? false,
+        publicNote: roomData?.currentOccupancy?.publicNote ?? null,
         capacity: roomData?.capacity ?? null,
     } : null;
 
@@ -240,7 +250,7 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
             return;
         }
         try {
-            await reserveRoom(roomId, durationMinutes);
+            await reserveRoom(roomId, durationMinutes, noteText);
             onClose();
             onReserveSuccess();
             showNotification({ message: `ოთახი ${roomId} დაჯავშნილია ${durationMinutes} წუთით`, type: 'success' });
@@ -315,6 +325,18 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         }
     };
 
+    const handleUpdateNote = async () => {
+        if (!modalData?.isMyOccupancy) return;
+        try {
+            await updatePublicNote(roomId, noteText);
+            showNotification({ message: 'სტატუსი განახლდა', type: 'success' });
+            onReserveSuccess();
+        } catch (err) {
+            console.error(err);
+            showNotification({ message: 'სტატუსის განახლება ვერ მოხერხდა', type: 'error' });
+        }
+    };
+
     return {
         roomData: modalData,
         handleReserve,
@@ -333,7 +355,10 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         handleRejectUser,
         chatContainerRef,
         isLoadingOlder,
-        handleScroll
+        handleScroll,
+        noteText,
+        setNoteText,
+        handleUpdateNote
     };
 };
 

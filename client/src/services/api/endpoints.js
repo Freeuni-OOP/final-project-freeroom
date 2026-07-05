@@ -4,7 +4,9 @@ export const getProfile = () => axiosInstance.get('/user');
 
 export const getRoomsMap = () => axiosInstance.get('/rooms/map');
 
-export const reserveRoom = (roomDbId, durationMinutes) => axiosInstance.post('/reserve', { roomDbId, durationMinutes });
+export const reserveRoom = (roomDbId, durationMinutes, publicNote) => axiosInstance.post('/reserve', { roomDbId, durationMinutes, publicNote });
+
+export const updatePublicNote = (roomId, publicNote) => axiosInstance.patch(`/rooms/${roomId}/note`, { publicNote });
 
 export const cancelOccupancy = (roomId) => axiosInstance.post(`/rooms/${roomId}/cancel`);
 

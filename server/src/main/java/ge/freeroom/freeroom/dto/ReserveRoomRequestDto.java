@@ -17,4 +17,6 @@ public class ReserveRoomRequestDto {
     @Min(1)
     @Max(480)
     private Long durationMinutes;
+    @jakarta.validation.constraints.Size(max = 40)
+    private String publicNote;
 }

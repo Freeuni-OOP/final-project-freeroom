@@ -195,8 +195,14 @@ const useFloorView = () => {
             cursorPos.x = e.clientX;
             cursorPos.y = e.clientY;
             const roomData = roomsDataRef.current[selectedFloor]?.[roomId];
-            const text = roomData?.currentLecture?.title
-                                      ?? (roomData?.currentOccupancy != null ? 'დაკავებული' : 'თავისუფალი');
+            let text = 'თავისუფალი';
+            if (roomData?.currentLecture?.title) {
+                text = roomData.currentLecture.title;
+            } else if (roomData?.currentOccupancy != null) {
+                text = roomData.currentOccupancy.publicNote 
+                    ? `დაკავებული - ${roomData.currentOccupancy.publicNote}`
+                    : 'დაკავებული';
+            }
             tooltipTimerRef.current = setTimeout(() => {
               setTooltip({ visible: true, x: cursorPos.x, y: cursorPos.y, text });
             }, 500);

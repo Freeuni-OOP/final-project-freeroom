@@ -110,6 +110,7 @@ public class RoomAvailabilityService {
 
                 rosd.setIsMyOccupancy(isMine);
                 rosd.setIsFriendOccupancy(isFriend);
+                rosd.setPublicNote(occupancy.getPublicNote());
 
                 if (isMine || isFriend) {
                     rosd.setReserverDisplayName(occupancy.getUser().getDisplayName());
@@ -150,7 +151,7 @@ public class RoomAvailabilityService {
     }
 
     @Transactional
-    public ReserveRoomResponseDto reserveRoom(String userId, Long roomId, Long durationMinutes) {
+    public ReserveRoomResponseDto reserveRoom(String userId, Long roomId, Long durationMinutes, String publicNote) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found. Please sync your account first."));
 
@@ -218,6 +219,7 @@ public class RoomAvailabilityService {
         occupancy.setStartAt(nowTime);
         occupancy.setExpectedEndAt(expectedEnd);
         occupancy.setEndAt(null);
+        occupancy.setPublicNote(publicNote);
 
         RoomOccupancy saved = roomOccupancyRepository.save(occupancy);
 
@@ -288,5 +290,24 @@ public class RoomAvailabilityService {
         }
 
         return response;
+    }
+
+    @Transactional
+    public void updatePublicNote(String userId, Long roomId, String publicNote) {
+        Optional<RoomOccupancy> occupancyOpt = roomOccupancyRepository
+                .findFirstByRoomIdAndEndAtIsNull(roomId);
+
+        if (occupancyOpt.isEmpty()) {
+            throw new IllegalStateException("No active occupancy for this room");
+        }
+
+        RoomOccupancy occ = occupancyOpt.get();
+
+        if (!occ.getUser().getId().equals(userId)) {
+            throw new org.springframework.security.access.AccessDeniedException("You can only edit your own occupancy note");
+        }
+
+        occ.setPublicNote(publicNote);
+        roomOccupancyRepository.save(occ);
     }
 }

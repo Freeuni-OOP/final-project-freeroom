@@ -40,6 +40,9 @@ public class RoomOccupancy {
     @Column(name = "end_at")
     private LocalDateTime endAt; // actual checkout, use endAt == null to check active status
 
+    @Column(name = "public_note", length = 40)
+    private String publicNote;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
