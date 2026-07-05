@@ -8,6 +8,7 @@ export default function PublicProfilePage() {
         profile,
         isLoading,
         notFound,
+        activeRoomNumber,
         showPhoto,
         initial,
         handlePhotoError,
@@ -86,6 +87,12 @@ export default function PublicProfilePage() {
                 ) : (
                     <>
                         <h1 className="mt-5 text-2xl font-bold text-brand-ink">{profile.displayName}</h1>
+
+                        {activeRoomNumber && (
+                            <span className="mt-2 inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 ring-1 ring-inset ring-green-600/20">
+                                ოთახი: {activeRoomNumber}
+                            </span>
+                        )}
 
                         <div className="mt-4">
                             {isFriends && (

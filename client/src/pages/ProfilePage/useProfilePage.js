@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context';
 import { fetchProfile, updateProfile } from '@/services/api/userService';
-import { getNotificationPreference, updateNotificationPreference, generateTelegramLink } from '@/services/api/endpoints';
+import { getNotificationPreference, updateNotificationPreference, generateTelegramLink, updateOccupancyVisibility } from '@/services/api/endpoints';
 import { useNotification } from '@/context';
 import { getUniversity, NOTIFICATION_PREFERENCE } from '@/utils';
 
@@ -22,6 +22,8 @@ const useProfilePage = () => {
   const [bio, setBio] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
+  const [activeRoomNumber, setActiveRoomNumber] = useState(null);
+  const [occupancyVisibility, setOccupancyVisibility] = useState('FRIENDS');
 
   const [selectedFile, setSelectedFile] = useState(null);
 
@@ -87,6 +89,19 @@ const useProfilePage = () => {
         });
   };
 
+  const handleVisibilityChange = (newVisibility) => {
+    const previousVisibility = occupancyVisibility;
+    setOccupancyVisibility(newVisibility);
+    updateOccupancyVisibility(newVisibility)
+        .then(res => {
+            setOccupancyVisibility(res.data.visibility);
+        })
+        .catch(() => {
+            setOccupancyVisibility(previousVisibility);
+            showNotification({ message: 'ხილვადობის შეცვლა ვერ მოხერხდა', type: 'error' });
+        });
+  };
+
   const email = user?.email || '';
   const university = getUniversity(email);
   const fallbackName = university ? `${university}-ს სტუდენტი` : 'სტუდენტი';
@@ -112,6 +127,8 @@ const useProfilePage = () => {
           setBio(data.bio || '');
           setDisplayName(data.displayName || '');
           setPhotoUrl(data.photoUrl || '');
+          setActiveRoomNumber(data.activeRoomNumber || null);
+          if (data.occupancyVisibility) setOccupancyVisibility(data.occupancyVisibility);
           fetchedUserIdRef.current = user.uid;
         }
       } catch (err) {
@@ -149,6 +166,7 @@ const useProfilePage = () => {
         setBio(data.bio || '');
         setDisplayName(data.displayName || '');
         setPhotoUrl(data.photoUrl || '');
+        setActiveRoomNumber(data.activeRoomNumber || null);
         setSelectedFile(null);
         showNotification({ message: 'პროფილი წარმატებით განახლდა!', type: 'success' });
       }
@@ -198,6 +216,7 @@ const useProfilePage = () => {
     handlePhotoError,
     bio,
     setBio,
+    activeRoomNumber,
     isSaving,
     isUploading: isSaving && !!selectedFile,
     isLoading,
@@ -207,7 +226,9 @@ const useProfilePage = () => {
     telegramLinked,
     preferenceLoading,
     handlePreferenceChange,
-    handleTelegramLink
+    handleTelegramLink,
+    occupancyVisibility,
+    handleVisibilityChange
   };
 };
 

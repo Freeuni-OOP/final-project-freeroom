@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import useAdminReportsPage from './useAdminReportsPage';
 
 export default function AdminReportsPage() {
@@ -34,11 +35,15 @@ export default function AdminReportsPage() {
                             <div className="mt-3 grid grid-cols-2 gap-4 text-sm">
                                 <div>
                                     <p className="text-xs font-semibold text-brand-ink/40">დარეპორტებული</p>
-                                    <p className="font-medium text-brand-ink">{report.reportedUserDisplayName}</p>
+                                    <Link to={`/profile/${report.reportedUserId}`} className="font-medium text-brand-ink hover:opacity-80 transition-opacity">
+                                        {report.reportedUserDisplayName}
+                                    </Link>
                                 </div>
                                 <div>
                                     <p className="text-xs font-semibold text-brand-ink/40">დამრეპორტებელი</p>
-                                    <p className="font-medium text-brand-ink">{report.reporterUserDisplayName}</p>
+                                    <Link to={`/profile/${report.reporterUserId}`} className="font-medium text-brand-ink hover:opacity-80 transition-opacity">
+                                        {report.reporterUserDisplayName}
+                                    </Link>
                                 </div>
                             </div>
 

@@ -4,7 +4,9 @@ export const getProfile = () => axiosInstance.get('/user');
 
 export const getRoomsMap = () => axiosInstance.get('/rooms/map');
 
-export const reserveRoom = (roomDbId, durationMinutes) => axiosInstance.post('/reserve', { roomDbId, durationMinutes });
+export const reserveRoom = (roomDbId, durationMinutes, publicNote) => axiosInstance.post('/reserve', { roomDbId, durationMinutes, publicNote });
+
+export const updatePublicNote = (roomId, publicNote) => axiosInstance.patch(`/rooms/${roomId}/note`, { publicNote });
 
 export const cancelOccupancy = (roomId) => axiosInstance.post(`/rooms/${roomId}/cancel`);
 
@@ -29,6 +31,8 @@ export const rejectJoinRequest = (roomId, targetUserId) => axiosInstance.post('/
 export const getNotificationPreference = () => axiosInstance.get('/user/notification-preference');
 
 export const updateNotificationPreference = (preference) => axiosInstance.patch('/user/notification-preference', { preference });
+
+export const updateOccupancyVisibility = (visibility) => axiosInstance.patch('/user/occupancy-visibility', { visibility });
 
 export const generateTelegramLink = () => axiosInstance.post('/user/telegram-link');
 

@@ -12,4 +12,5 @@ public class PublicProfileDto {
     private String photoUrl;
     private String bio;
     private RelationshipStatus relationshipStatus;
+    private Integer activeRoomNumber;
 }

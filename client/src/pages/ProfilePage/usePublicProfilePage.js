@@ -178,6 +178,7 @@ const usePublicProfilePage = () => {
         profile,
         isLoading,
         notFound,
+        activeRoomNumber: profile?.activeRoomNumber,
         showPhoto: Boolean(profile?.photoUrl) && !photoFailed,
         initial: getInitial(profile?.displayName),
         handlePhotoError: () => setPhotoFailed(true),
