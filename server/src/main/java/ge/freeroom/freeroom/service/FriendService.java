@@ -8,6 +8,8 @@ import ge.freeroom.freeroom.repositories.FriendRequestRepository;
 import ge.freeroom.freeroom.repositories.FriendshipRepository;
 import ge.freeroom.freeroom.repositories.RoomOccupancyRepository;
 import ge.freeroom.freeroom.repositories.UserRepository;
+import ge.freeroom.freeroom.websocket.RealtimeEventPublisher;
+import ge.freeroom.freeroom.websocket.dto.FriendEventDto;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -25,18 +27,21 @@ public class FriendService {
     private final UserRepository userRepository;
     private final RoomOccupancyRepository roomOccupancyRepository;
     private final TimeService timeService;
+    private final RealtimeEventPublisher realtimeEventPublisher;
 
     public FriendService(
             FriendRequestRepository friendRequestRepository,
             FriendshipRepository friendshipRepository,
             UserRepository userRepository,
             RoomOccupancyRepository roomOccupancyRepository,
-            TimeService timeService) {
+            TimeService timeService,
+            RealtimeEventPublisher realtimeEventPublisher) {
         this.friendRequestRepository = friendRequestRepository;
         this.friendshipRepository = friendshipRepository;
         this.userRepository = userRepository;
         this.roomOccupancyRepository = roomOccupancyRepository;
         this.timeService = timeService;
+        this.realtimeEventPublisher = realtimeEventPublisher;
     }
 
     public List<UserSearchResultDto> searchUsers(String currentUserId, String query){
@@ -116,6 +121,8 @@ public class FriendService {
         request.setStatus(FriendRequestStatus.PENDING);
 
         friendRequestRepository.save(request);
+
+        realtimeEventPublisher.publishFriendEvent(receiverId, buildEvent("REQUEST_SENT", request.getId(), sender));
     }
 
     @Transactional
@@ -143,6 +150,8 @@ public class FriendService {
         friendship.setUser1(user1);
         friendship.setUser2(user2);
         friendshipRepository.save(friendship);
+
+        realtimeEventPublisher.publishFriendEvent(sender.getId(), buildEvent("REQUEST_ACCEPTED", request.getId(), receiver));
     }
 
     @Transactional
@@ -160,6 +169,8 @@ public class FriendService {
 
         request.setStatus(FriendRequestStatus.REJECTED);
         friendRequestRepository.save(request);
+
+        realtimeEventPublisher.publishFriendEvent(request.getSender().getId(), buildEvent("REQUEST_REJECTED", request.getId(), request.getReceiver()));
     }
 
     public List<FriendDto> getFriends(String currentUserId){
@@ -247,6 +258,9 @@ public class FriendService {
                 .orElseThrow(() -> new IllegalStateException("თქვენ არ ხართ მეგობრები"));
 
         friendshipRepository.delete(friendship);
+
+        User actor = userRepository.findById(currentUserId).orElseThrow();
+        realtimeEventPublisher.publishFriendEvent(friendId, buildEvent("FRIEND_REMOVED", null, actor));
     }
 
     @Transactional
@@ -259,5 +273,11 @@ public class FriendService {
         }
 
         friendRequestRepository.delete(request);
+
+        realtimeEventPublisher.publishFriendEvent(receiverId, buildEvent("REQUEST_CANCELLED", request.getId(), request.getSender()));
+    }
+
+    private FriendEventDto buildEvent(String type, Long requestId, User actor) {
+        return new FriendEventDto(type, requestId, actor.getId(), actor.getDisplayName(), actor.getPhotoUrl(), LocalDateTime.now());
     }
 }
