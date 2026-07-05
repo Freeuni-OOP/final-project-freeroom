@@ -45,6 +45,12 @@ public class UserControllerTest {
     @MockitoBean
     private AdminUsersConfig adminUsersConfig;
 
+    @MockitoBean
+    private ge.freeroom.freeroom.repositories.RoomOccupancyRepository roomOccupancyRepository;
+
+    @MockitoBean
+    private ge.freeroom.freeroom.service.TimeService timeService;
+
     @Test
     void getUser_ReturnsOk() throws Exception {
         User mockUser = new User();
