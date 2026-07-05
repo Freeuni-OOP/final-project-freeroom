@@ -15,7 +15,8 @@ export default function Navbar() {
         showFeatures,
         toggleFeatures,
         closeFeatures,
-        searchContainerRef
+        searchContainerRef,
+        mobileSearchContainerRef
     } = useNavbar();
 
     return (
@@ -138,7 +139,7 @@ export default function Navbar() {
                         }}
                         className="rounded-lg px-4 py-3 text-left text-base font-semibold text-brand-ink/70 hover:bg-black/5 hover:text-brand-ink"
                     >
-                        ფუნქციები
+                        ძებნა
                     </button>
 
                     <div className="mt-auto pt-4 border-t border-black/5">
@@ -153,7 +154,7 @@ export default function Navbar() {
             </div>
 
             {showFeatures && (
-                <div className="sm:hidden fixed bottom-4 left-4 right-4 z-50 max-h-[60vh] overflow-y-auto">
+                <div ref={mobileSearchContainerRef} className="sm:hidden fixed bottom-4 left-4 right-4 z-50 max-h-[60vh] overflow-y-auto bg-white rounded-xl shadow-2xl border border-gray-100 p-2">
                     <div className="flex justify-end mb-1">
                         <button
                             onClick={closeFeatures}
