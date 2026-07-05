@@ -11,4 +11,7 @@ public class UserProfileDto {
     private String displayName;
     private String photoUrl;
     private String bio;
+    
+    @com.fasterxml.jackson.annotation.JsonProperty("isAdmin")
+    private boolean isAdmin;
 }

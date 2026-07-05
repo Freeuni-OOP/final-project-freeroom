@@ -1,6 +1,7 @@
 package ge.freeroom.freeroom.controllers;
 
 import com.google.firebase.auth.FirebaseToken;
+import ge.freeroom.freeroom.config.AdminUsersConfig;
 import ge.freeroom.freeroom.dto.*;
 import ge.freeroom.freeroom.entities.User;
 import ge.freeroom.freeroom.service.UserService;
@@ -26,11 +27,13 @@ public class UserController {
     private final UserService userService;
     private final UserRepository userRepository;
     private final RateLimiter rateLimiter;
+    private final AdminUsersConfig adminUsersConfig;
 
-    public UserController(UserService userService, UserRepository userRepository, RateLimiter rateLimiter) {
+    public UserController(UserService userService, UserRepository userRepository, RateLimiter rateLimiter, AdminUsersConfig adminUsersConfig) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.rateLimiter = rateLimiter;
+        this.adminUsersConfig = adminUsersConfig;
     }
 
     @GetMapping
@@ -75,6 +78,7 @@ public class UserController {
         dto.setDisplayName(user.getDisplayName());
         dto.setPhotoUrl(user.getPhotoUrl());
         dto.setBio(user.getBio());
+        dto.setAdmin(adminUsersConfig.isAdmin(user.getEmail()));
         return dto;
     }
 

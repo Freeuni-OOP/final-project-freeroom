@@ -1,7 +1,17 @@
 import { Routes, Route } from 'react-router-dom';
-import { LandingPage, ProfilePage, PublicProfilePage, FloorsPage, NotFoundPage, PrivacyPage, SubjectsPage, CalendarPage } from '@/pages';
 import { ProtectedRoute, Layout } from '@/components';
 import { NotificationProvider } from '@/context/NotificationContext';
+import {
+    LandingPage,
+    ProfilePage,
+    PublicProfilePage,
+    FloorsPage,
+    NotFoundPage,
+    PrivacyPage,
+    SubjectsPage,
+    CalendarPage,
+    AdminReportsPage
+} from '@/pages';
 
 function App() {
     return (
@@ -13,6 +23,7 @@ function App() {
                         <Route path="/floors" element={<FloorsPage />} />
                         <Route path="/profile" element={<ProfilePage />} />
                         <Route path="/profile/:userId" element={<PublicProfilePage />} />
+                        <Route path="/admin/reports" element={<AdminReportsPage />} />
                         <Route path="/privacy" element={<PrivacyPage />} />
                         <Route path="/subjects" element={<SubjectsPage />} />
                         <Route path="/calendar" element={<CalendarPage />} />

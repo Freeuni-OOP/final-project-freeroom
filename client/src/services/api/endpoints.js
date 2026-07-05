@@ -53,3 +53,7 @@ export const removeFriend = (friendId) => axiosInstance.delete(`/friends/${frien
 export const cancelFriendRequest = (userId) => axiosInstance.delete(`/friends/requests/${userId}`);
 
 export const getPublicProfile = (userId) => axiosInstance.get(`/user/${userId}/profile`);
+
+export const reportUser = (userId, reason, details) => axiosInstance.post(`/users/${userId}/report`, { reason, details })
+
+export const getPendingReports = () => axiosInstance.get('/admin/reports');
