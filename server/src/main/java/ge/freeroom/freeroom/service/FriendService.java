@@ -187,7 +187,14 @@ public class FriendService {
             dto.setPhotoUrl(friend.getPhotoUrl());
 
             RoomOccupancy occ = occupancyByUserId.get(friend.getId());
-            if (occ != null) {
+
+            ge.freeroom.freeroom.entities.OccupancyVisibility visibility = friend.getOccupancyVisibility();
+            if (visibility == null) visibility = ge.freeroom.freeroom.entities.OccupancyVisibility.FRIENDS;
+            
+            boolean canView = (visibility == ge.freeroom.freeroom.entities.OccupancyVisibility.PUBLIC) ||
+                              (visibility == ge.freeroom.freeroom.entities.OccupancyVisibility.FRIENDS);
+
+            if (occ != null && canView) {
                 dto.setHasActiveOccupancy(true);
                 FriendDto.OccupancyInfo info = new FriendDto.OccupancyInfo();
                 info.setRoomNumber(occ.getRoom().getRoomNumber());

@@ -111,13 +111,12 @@ public class RoomAvailabilityService {
                 if (visibility == null) visibility = ge.freeroom.freeroom.entities.OccupancyVisibility.FRIENDS;
 
                 boolean isPublic = (visibility == ge.freeroom.freeroom.entities.OccupancyVisibility.PUBLIC);
+                boolean canViewDetails = isMine || isPublic || (visibility == ge.freeroom.freeroom.entities.OccupancyVisibility.FRIENDS && isFriend);
 
                 rosd.setIsMyOccupancy(isMine);
-                rosd.setIsFriendOccupancy(isFriend);
+                rosd.setIsFriendOccupancy(isFriend && canViewDetails);
                 rosd.setIsPublicOccupancy(isPublic);
                 rosd.setPublicNote(occupancy.getPublicNote());
-
-                boolean canViewDetails = isMine || isPublic || (visibility == ge.freeroom.freeroom.entities.OccupancyVisibility.FRIENDS && isFriend);
 
                 if (canViewDetails) {
                     rosd.setReserverDisplayName(occupancy.getUser().getDisplayName());

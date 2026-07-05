@@ -81,7 +81,7 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                                     className="h-6 w-6 rounded-full object-cover ring-1 ring-black/10"
                                   />
                                 )}
-                                <p className="font-medium text-gray-900">{modalData.reservedBy ?? '—'}</p>
+                                <p className="font-medium text-gray-900">{modalData.reservedBy || 'სხვა სტუდენტი'}</p>
                               </Link>
                             ) : (
                               <div className="flex items-center gap-2">
@@ -93,7 +93,7 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                                     className="h-6 w-6 rounded-full object-cover ring-1 ring-black/10"
                                   />
                                 )}
-                                <p className="font-medium text-gray-900">{modalData.reservedBy ?? '—'}</p>
+                                <p className="font-medium text-gray-900">{modalData.reservedBy || 'სხვა სტუდენტი'}</p>
                               </div>
                             )}
                           </div>
@@ -156,7 +156,7 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                                     className="h-6 w-6 rounded-full object-cover ring-1 ring-black/10"
                                   />
                                 )}
-                                <p className="font-medium text-gray-900">{modalData.reservedBy ?? '—'}</p>
+                                <p className="font-medium text-gray-900">{modalData.reservedBy || 'სხვა სტუდენტი'}</p>
                               </Link>
                             ) : (
                               <div className="flex items-center gap-2">
@@ -168,7 +168,7 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                                     className="h-6 w-6 rounded-full object-cover ring-1 ring-black/10"
                                   />
                                 )}
-                                <p className="font-medium text-gray-900">{modalData.reservedBy ?? '—'}</p>
+                                <p className="font-medium text-gray-900">{modalData.reservedBy || 'სხვა სტუდენტი'}</p>
                               </div>
                             )}
                           </div>
