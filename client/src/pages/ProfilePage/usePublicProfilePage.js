@@ -13,6 +13,7 @@ import {
     removeFriend,
     cancelFriendRequest,
 } from '@/services/api/endpoints';
+import { useRealtime } from '@/context';
 
 const getInitial = (name) => {
     const source = name?.trim() || '';
@@ -37,6 +38,35 @@ const usePublicProfilePage = () => {
 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isReportOpen, setIsReportOpen] = useState(false);
+
+    const { onFriendEvent } = useRealtime();
+
+    useEffect(() => {
+        if (!profile) return;
+
+        const unsubscribe = onFriendEvent((event) => {
+            if (event.actorId !== profile.id) return;
+
+            switch (event.type) {
+                case 'REQUEST_SENT':
+                    setRequestId(event.requestId);
+                    setProfile((prev) => ({ ...prev, relationshipStatus: RELATIONSHIP_STATUS.PENDING_RECEIVED }));
+                    break;
+                case 'REQUEST_ACCEPTED':
+                    setProfile((prev) => ({ ...prev, relationshipStatus: RELATIONSHIP_STATUS.FRIENDS }));
+                    break;
+                case 'REQUEST_REJECTED':
+                case 'REQUEST_CANCELLED':
+                case 'FRIEND_REMOVED':
+                    setProfile((prev) => ({ ...prev, relationshipStatus: RELATIONSHIP_STATUS.NONE }));
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        return unsubscribe;
+    }, [onFriendEvent, profile?.id]);
 
     useEffect(() => {
         if(!userId || fetchedUserIdRef.current === userId) return;
@@ -152,7 +182,7 @@ const usePublicProfilePage = () => {
     };
 
     const handleCancelRequest = async () => {
-        if(!profile || !requestId) return;
+        if(!profile) return;
         setActionPending(true);
         try {
             await cancelFriendRequest(profile.id);

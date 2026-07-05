@@ -2,6 +2,8 @@ package ge.freeroom.freeroom.websocket;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Component
 public class RealtimeEventPublisher {
@@ -12,6 +14,15 @@ public class RealtimeEventPublisher {
     }
 
     public void publishFriendEvent(String targetUserId, Object payload) {
-        messagingTemplate.convertAndSend("/topic/users/" + targetUserId + "/friends", payload);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    messagingTemplate.convertAndSend("/topic/users/" + targetUserId + "/friends", payload);
+                }
+            });
+        } else {
+            messagingTemplate.convertAndSend("/topic/users/" + targetUserId + "/friends", payload);
+        }
     }
 }

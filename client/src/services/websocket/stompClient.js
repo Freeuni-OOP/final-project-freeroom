@@ -4,6 +4,8 @@ import { auth } from '@/services/firebase';
 
 let stompClient = null;
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '');
+
 export const connectStomp = async ({ onConnect }) => {
     const user = auth.currentUser;
     if (!user) return null;
@@ -11,7 +13,7 @@ export const connectStomp = async ({ onConnect }) => {
     const token = await user.getIdToken();
 
     const client = new Client({
-        webSocketFactory: () => new SockJS(`${import.meta.env.VITE_API_BASE_URL}/ws?token=${token}`),
+        webSocketFactory: () => new SockJS(`${API_BASE}/ws?token=${token}`),
         reconnectDelay: 0,
         onConnect: () => onConnect?.(client),
         onStompError: (frame) => console.error('STOMP error', frame),

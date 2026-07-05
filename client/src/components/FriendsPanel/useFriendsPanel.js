@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useNotification } from '@/context';
 import { RELATIONSHIP_STATUS } from '@/utils';
 import useDebounce from '@/hooks/useDebounce';
+import { useRealtime } from '@/context';
 import {
     getFriends,
     getIncomingFriendRequests,
@@ -19,6 +20,7 @@ const formatTime = (isoString) =>
 const useFriendsPanel = () => {
     const { user } = useAuth();
     const university = getUniversity(user?.email);
+    const { onFriendEvent } = useRealtime();
     const [activeTab, setActiveTab] = useState('friends');
     const [requestSubTab, setRequestSubTab] = useState('send');
     const [searchQuery, setSearchQuery] = useState('');
@@ -94,6 +96,42 @@ const useFriendsPanel = () => {
             setSearchResults([]);
         }
     }, [debouncedQuery]);
+
+    useEffect(() => {
+        const unsubscribe = onFriendEvent((event) => {
+            const patchSearch = (status) =>
+                setSearchResults((prev) =>
+                    prev.map((u) => (u.id === event.actorId ? { ...u, relationshipStatus: status } : u))
+                );
+
+            switch (event.type) {
+                case 'REQUEST_SENT':
+                    void loadIncomingRequests();
+                    patchSearch(RELATIONSHIP_STATUS.PENDING_RECEIVED);
+                    break;
+                case 'REQUEST_ACCEPTED':
+                    void loadFriends();
+                    void loadIncomingRequests();
+                    patchSearch(RELATIONSHIP_STATUS.FRIENDS);
+                    break;
+                case 'REQUEST_REJECTED':
+                    patchSearch(RELATIONSHIP_STATUS.NONE);
+                    break;
+                case 'REQUEST_CANCELLED':
+                    void loadIncomingRequests();
+                    patchSearch(RELATIONSHIP_STATUS.NONE);
+                    break;
+                case 'FRIEND_REMOVED':
+                    void loadFriends();
+                    void loadIncomingRequests();
+                    patchSearch(RELATIONSHIP_STATUS.NONE);
+                    break;
+                default:
+                    break;
+            }
+        });
+        return unsubscribe;
+    }, [onFriendEvent]);
 
     const handleSendRequest = async (receiverId) => {
         addPending(receiverId);
