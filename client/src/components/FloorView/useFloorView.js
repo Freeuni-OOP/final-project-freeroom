@@ -192,6 +192,7 @@ const useFloorView = () => {
           const cursorPos = { x: 0, y: 0 };
 
           group.addEventListener('mouseenter', (e) => {
+            if (window.innerWidth < 768) return;
             cursorPos.x = e.clientX;
             cursorPos.y = e.clientY;
             const roomData = roomsDataRef.current[selectedFloor]?.[roomId];

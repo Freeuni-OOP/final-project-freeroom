@@ -19,10 +19,14 @@ const useNavbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [showFeatures, setShowFeatures] = useState(false);
     const searchContainerRef = useRef(null);
+    const mobileSearchContainerRef = useRef(null);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+            if (
+                (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) &&
+                (!mobileSearchContainerRef.current || !mobileSearchContainerRef.current.contains(event.target))
+            ) {
                 setShowFeatures(false);
             }
         };
@@ -69,7 +73,8 @@ const useNavbar = () => {
         showFeatures,
         toggleFeatures,
         closeFeatures,
-        searchContainerRef
+        searchContainerRef,
+        mobileSearchContainerRef
     };
 };
 
