@@ -5,8 +5,10 @@ import ge.freeroom.freeroom.config.AdminUsersConfig;
 import ge.freeroom.freeroom.dto.*;
 import ge.freeroom.freeroom.entities.User;
 import ge.freeroom.freeroom.service.UserService;
+import ge.freeroom.freeroom.service.TimeService;
 import ge.freeroom.freeroom.security.RateLimiter;
 import ge.freeroom.freeroom.repositories.UserRepository;
+import ge.freeroom.freeroom.repositories.RoomOccupancyRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -28,12 +30,16 @@ public class UserController {
     private final UserRepository userRepository;
     private final RateLimiter rateLimiter;
     private final AdminUsersConfig adminUsersConfig;
+    private final RoomOccupancyRepository roomOccupancyRepository;
+    private final TimeService timeService;
 
-    public UserController(UserService userService, UserRepository userRepository, RateLimiter rateLimiter, AdminUsersConfig adminUsersConfig) {
+    public UserController(UserService userService, UserRepository userRepository, RateLimiter rateLimiter, AdminUsersConfig adminUsersConfig, RoomOccupancyRepository roomOccupancyRepository, TimeService timeService) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.rateLimiter = rateLimiter;
         this.adminUsersConfig = adminUsersConfig;
+        this.roomOccupancyRepository = roomOccupancyRepository;
+        this.timeService = timeService;
     }
 
     @GetMapping
@@ -79,6 +85,14 @@ public class UserController {
         dto.setPhotoUrl(user.getPhotoUrl());
         dto.setBio(user.getBio());
         dto.setAdmin(adminUsersConfig.isAdmin(user.getEmail()));
+
+        roomOccupancyRepository.findActiveOccupancyByUserId(user.getId(), timeService.now())
+                .ifPresent(occ -> {
+                    if (occ.getRoom() != null) {
+                        dto.setActiveRoomNumber(occ.getRoom().getRoomNumber());
+                    }
+                });
+
         return dto;
     }
 

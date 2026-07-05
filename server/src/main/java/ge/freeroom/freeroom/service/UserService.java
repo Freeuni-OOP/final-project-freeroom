@@ -28,6 +28,7 @@ public class UserService {
     private final FriendshipRepository friendshipRepository;
     private final FriendRequestRepository friendRequestRepository;
     private final TimeService timeService;
+    private final RoomOccupancyRepository roomOccupancyRepository;
 
     @Value("${supabase.service.key}")
     private String supabaseServiceKey;
@@ -37,13 +38,14 @@ public class UserService {
 
     private final RestClient restClient = RestClient.create();
 
-    public UserService(UserRepository userRepository, SubjectRepository subjectRepository, LectureRepository lectureRepository, FriendshipRepository friendshipRepository, FriendRequestRepository friendRequestRepository, TimeService timeService) {
+    public UserService(UserRepository userRepository, SubjectRepository subjectRepository, LectureRepository lectureRepository, FriendshipRepository friendshipRepository, FriendRequestRepository friendRequestRepository, TimeService timeService, RoomOccupancyRepository roomOccupancyRepository) {
         this.userRepository = userRepository;
         this.subjectRepository = subjectRepository;
         this.lectureRepository = lectureRepository;
         this.friendshipRepository = friendshipRepository;
         this.friendRequestRepository = friendRequestRepository;
         this.timeService = timeService;
+        this.roomOccupancyRepository = roomOccupancyRepository;
     }
 
     @Transactional
@@ -194,6 +196,14 @@ public class UserService {
         profileDto.setBio(targetUser.getBio());
 
         profileDto.setRelationshipStatus(computeRelationshipStatus(currentUserId, targetUserId));
+
+        roomOccupancyRepository.findActiveOccupancyByUserId(targetUserId, timeService.now())
+                .ifPresent(occ -> {
+                    if (occ.getRoom() != null) {
+                        profileDto.setActiveRoomNumber(occ.getRoom().getRoomNumber());
+                    }
+                });
+
         return profileDto;
     }
 

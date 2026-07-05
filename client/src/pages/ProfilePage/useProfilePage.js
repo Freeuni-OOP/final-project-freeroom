@@ -22,6 +22,7 @@ const useProfilePage = () => {
   const [bio, setBio] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
+  const [activeRoomNumber, setActiveRoomNumber] = useState(null);
 
   const [selectedFile, setSelectedFile] = useState(null);
 
@@ -112,6 +113,7 @@ const useProfilePage = () => {
           setBio(data.bio || '');
           setDisplayName(data.displayName || '');
           setPhotoUrl(data.photoUrl || '');
+          setActiveRoomNumber(data.activeRoomNumber || null);
           fetchedUserIdRef.current = user.uid;
         }
       } catch (err) {
@@ -149,6 +151,7 @@ const useProfilePage = () => {
         setBio(data.bio || '');
         setDisplayName(data.displayName || '');
         setPhotoUrl(data.photoUrl || '');
+        setActiveRoomNumber(data.activeRoomNumber || null);
         setSelectedFile(null);
         showNotification({ message: 'პროფილი წარმატებით განახლდა!', type: 'success' });
       }
@@ -198,6 +201,7 @@ const useProfilePage = () => {
     handlePhotoError,
     bio,
     setBio,
+    activeRoomNumber,
     isSaving,
     isUploading: isSaving && !!selectedFile,
     isLoading,

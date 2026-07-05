@@ -16,6 +16,7 @@ export default function ProfilePage() {
         handlePhotoError,
         bio,
         setBio,
+        activeRoomNumber,
         isSaving,
         isUploading,
         isLoading,
@@ -60,6 +61,11 @@ export default function ProfilePage() {
                         {university && (
                             <span className="mt-3 inline-flex items-center rounded-full bg-brand-accent/10 px-3 py-1 text-xs font-semibold text-brand-accent-text">
                                 {university}
+                            </span>
+                        )}
+                        {activeRoomNumber && (
+                            <span className="mt-2 inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 ring-1 ring-inset ring-green-600/20">
+                                ოთახი: {activeRoomNumber}
                             </span>
                         )}
                     </>

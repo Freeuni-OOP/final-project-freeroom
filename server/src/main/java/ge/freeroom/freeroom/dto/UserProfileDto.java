@@ -14,4 +14,6 @@ public class UserProfileDto {
     
     @com.fasterxml.jackson.annotation.JsonProperty("isAdmin")
     private boolean isAdmin;
+
+    private Integer activeRoomNumber;
 }
