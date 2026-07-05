@@ -29,7 +29,7 @@ public class UserController {
     private final RateLimiter rateLimiter;
     private final AdminUsersConfig adminUsersConfig;
 
-    public UserController(UserService userService, UserRepository userRepository, RateLimiter rateLimiter, FriendService friendService, AdminUsersConfig adminUsersConfig) {
+    public UserController(UserService userService, UserRepository userRepository, RateLimiter rateLimiter, AdminUsersConfig adminUsersConfig) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.rateLimiter = rateLimiter;
@@ -37,17 +37,17 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<UserResponseDto> getUser(HttpServletRequest request) {
+    public ResponseEntity<UserProfileDto> getUser(HttpServletRequest request) {
         FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
         User user = userService.getOrCreateUser(token);
-        return ResponseEntity.ok(new UserResponseDto(user, adminUsersConfig.isAdmin(user.getEmail())));
+        return ResponseEntity.ok(toProfileDto(user));
     }
 
     @PostMapping("/sync")
-    public ResponseEntity<UserResponseDto> syncUser(HttpServletRequest request) {
+    public ResponseEntity<UserProfileDto> syncUser(HttpServletRequest request) {
         FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");
         User user = userService.getOrCreateUser(token);
-        return ResponseEntity.ok(new UserResponseDto(user, adminUsersConfig.isAdmin(user.getEmail())));
+        return ResponseEntity.ok(toProfileDto(user));
     }
 
     @PatchMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -78,6 +78,7 @@ public class UserController {
         dto.setDisplayName(user.getDisplayName());
         dto.setPhotoUrl(user.getPhotoUrl());
         dto.setBio(user.getBio());
+        dto.setAdmin(adminUsersConfig.isAdmin(user.getEmail()));
         return dto;
     }
 
