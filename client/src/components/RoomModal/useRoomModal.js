@@ -28,6 +28,7 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
     const [isLoadingOlder, setIsLoadingOlder] = useState(false);
     const [prevRoomId, setPrevRoomId] = useState(roomId);
     const [reloadTrigger, setReloadTrigger] = useState(0);
+    const [loadingAction, setLoadingAction] = useState(null);
 
     const chatContainerRef = useRef(null);
     const isFetchingOlder = useRef(false);
@@ -249,6 +250,7 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
             showNotification({ message: 'არჩეული ხანგრძლივობა სცილდება შემდეგ ლექციამდე დარჩენილ დროს', type: 'error' });
             return;
         }
+        setLoadingAction(`reserve-${durationMinutes}`);
         try {
             await reserveRoom(roomId, durationMinutes, noteText);
             onClose();
@@ -257,6 +259,8 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         } catch (err) {
             console.error(err);
             showNotification({ message: err.response?.data?.error || 'დაჯავშნა ვერ მოხერხდა', type: 'error' });
+        } finally {
+            if (isMountedRef.current) setLoadingAction(null);
         }
     };
 
@@ -265,6 +269,7 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
             showNotification({ message: 'მხოლოდ საკუთარი ჯავშნის გაუქმება შეგიძლიათ', type: 'error' });
             return;
         }
+        setLoadingAction('cancel');
         try {
             await cancelOccupancy(roomId);
             onClose();
@@ -273,11 +278,14 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         } catch (err) {
             console.error(err);
             showNotification({ message: err.response?.data?.message || 'გაუქმება ვერ მოხერხდა', type: 'error' });
+        } finally {
+            if (isMountedRef.current) setLoadingAction(null);
         }
     };
 
     const handleSendMessage = async () => {
         if (!messageText.trim()) return;
+        setLoadingAction('sendMessage');
         try {
             await sendChatMessage(roomId, messageText);
             if (isMountedRef.current) {
@@ -286,20 +294,26 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         } catch (err) {
             console.error(err);
             showNotification({ message: err.response?.data?.message || 'შეტყობინება ვერ გაიგზავნა', type: 'error' });
+        } finally {
+            if (isMountedRef.current) setLoadingAction(null);
         }
     };
 
     const handleRequestJoin = async () => {
+        setLoadingAction('requestJoin');
         try {
             await requestJoinRoom(roomId);
             showNotification({ message: 'მოთხოვნა გაიგზავნა წარმატებით', type: 'success' });
         } catch (err) {
             console.error(err);
             showNotification({ message: err.response?.data?.message || 'მოთხოვნა ვერ გაიგზავნა. მოთხოვნის გაგზავნა შესაძლებელია წუთში ერთხელ.', type: 'error' });
+        } finally {
+            if (isMountedRef.current) setLoadingAction(null);
         }
     };
 
     const handleApproveUser = async (targetUserId) => {
+        setLoadingAction(`approve-${targetUserId}`);
         try {
             await approveJoinRequest(roomId, targetUserId);
             showNotification({ message: 'მომხმარებელი წარმატებით დაემატა', type: 'success' });
@@ -309,10 +323,13 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         } catch (err) {
             console.error(err);
             showNotification({ message: err.response?.data?.message || 'დამტკიცება ვერ მოხერხდა', type: 'error' });
+        } finally {
+            if (isMountedRef.current) setLoadingAction(null);
         }
     };
 
     const handleRejectUser = async (targetUserId) => {
+        setLoadingAction(`reject-${targetUserId}`);
         try {
             await rejectJoinRequest(roomId, targetUserId);
             showNotification({ message: 'მოთხოვნა უარყოფილია', type: 'info' });
@@ -322,11 +339,14 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         } catch (err) {
             console.error(err);
             showNotification({ message: err.response?.data?.message || 'უარყოფა ვერ მოხერხდა', type: 'error' });
+        } finally {
+            if (isMountedRef.current) setLoadingAction(null);
         }
     };
 
     const handleUpdateNote = async () => {
         if (!modalData?.isMyOccupancy) return;
+        setLoadingAction('updateNote');
         try {
             await updatePublicNote(roomId, noteText);
             showNotification({ message: 'სტატუსი განახლდა', type: 'success' });
@@ -334,6 +354,8 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         } catch (err) {
             console.error(err);
             showNotification({ message: 'სტატუსის განახლება ვერ მოხერხდა', type: 'error' });
+        } finally {
+            if (isMountedRef.current) setLoadingAction(null);
         }
     };
 
@@ -358,7 +380,8 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         handleScroll,
         noteText,
         setNoteText,
-        handleUpdateNote
+        handleUpdateNote,
+        loadingAction
     };
 };
 

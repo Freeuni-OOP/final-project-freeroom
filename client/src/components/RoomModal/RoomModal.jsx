@@ -1,6 +1,13 @@
 import { Link } from 'react-router-dom';
 import useRoomModal from './useRoomModal';
 
+const ButtonSpinner = () => (
+  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-current inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+  </svg>
+);
+
 export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess }) {
   const {
     roomData: modalData,
@@ -22,7 +29,8 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
     handleScroll,
     noteText,
     setNoteText,
-    handleUpdateNote
+    handleUpdateNote,
+    loadingAction
   } = useRoomModal(roomId, roomData, onClose, onReserveSuccess);
 
   if (!roomId || !modalData) return null;
@@ -107,18 +115,22 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                             />
                             {noteText !== (modalData.publicNote || '') && (
                               <button
+                                disabled={loadingAction != null}
                                 onClick={handleUpdateNote}
-                                className="bg-brand-accent text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors"
+                                className="bg-brand-accent text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-75 disabled:cursor-wait flex items-center justify-center"
                               >
+                                {loadingAction === 'updateNote' && <ButtonSpinner />}
                                 შენახვა
                               </button>
                             )}
                           </div>
                         </div>
                         <button
+                          disabled={loadingAction != null}
                           onClick={handleCancel}
-                          className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-lg transition-colors mb-2"
+                          className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-lg transition-colors mb-2 disabled:opacity-75 disabled:cursor-wait flex items-center justify-center"
                         >
+                          {loadingAction === 'cancel' && <ButtonSpinner />}
                           გაუქმება
                         </button>
                         <button
@@ -184,9 +196,11 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                           </button>
                         ) : (
                           <button
+                            disabled={loadingAction != null}
                             onClick={handleRequestJoin}
-                            className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-lg transition-colors"
+                            className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-75 disabled:cursor-wait flex items-center justify-center"
                           >
+                            {loadingAction === 'requestJoin' && <ButtonSpinner />}
                             შესვლის მოთხოვნა
                           </button>
                         )}
@@ -259,9 +273,11 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                           {availableDurations.map((duration) => (
                             <button
                               key={duration}
+                              disabled={loadingAction != null}
                               onClick={() => { handleReserve(duration); }}
-                              className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-semibold py-3 rounded-lg"
+                              className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-semibold py-3 rounded-lg disabled:opacity-75 disabled:cursor-wait flex items-center justify-center"
                             >
+                              {loadingAction === `reserve-${duration}` && <ButtonSpinner />}
                               {duration === 30 && '30 წუთი'}
                               {duration === 60 && '1 საათი'}
                               {duration === 120 && '2 საათი'}
@@ -332,15 +348,19 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                         {msg.messageType === 'REQUEST' && (
                           <div className="mt-2 flex gap-2">
                             <button
+                              disabled={loadingAction != null}
                               onClick={() => handleApproveUser(msg.author)}
-                              className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors"
+                              className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors disabled:opacity-75 disabled:cursor-wait flex items-center justify-center"
                             >
+                              {loadingAction === `approve-${msg.author}` && <ButtonSpinner />}
                               დამტკიცება
                             </button>
                             <button
+                              disabled={loadingAction != null}
                               onClick={() => handleRejectUser(msg.author)}
-                              className="flex-1 bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors"
+                              className="flex-1 bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors disabled:opacity-75 disabled:cursor-wait flex items-center justify-center"
                             >
+                              {loadingAction === `reject-${msg.author}` && <ButtonSpinner />}
                               უარყოფა
                             </button>
                           </div>
@@ -362,9 +382,11 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                       onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                     />
                     <button
+                      disabled={loadingAction != null}
                       onClick={handleSendMessage}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-75 disabled:cursor-wait flex items-center justify-center"
                     >
+                      {loadingAction === 'sendMessage' && <ButtonSpinner />}
                       გაგზავნა
                     </button>
                   </div>
@@ -373,9 +395,11 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
                   <p className="text-gray-600 font-medium mb-6">თქვენ არ გაქვთ წვდომა ამ ოთახის ჩეთზე.</p>
                   <button
+                    disabled={loadingAction != null}
                     onClick={handleRequestJoin}
-                    className="bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition-colors"
+                    className="bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition-colors disabled:opacity-75 disabled:cursor-wait flex items-center justify-center"
                   >
+                    {loadingAction === 'requestJoin' && <ButtonSpinner />}
                     შესვლის მოთხოვნა
                   </button>
                 </div>
