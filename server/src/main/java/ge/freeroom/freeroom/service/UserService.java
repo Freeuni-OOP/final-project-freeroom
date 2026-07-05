@@ -99,15 +99,19 @@ public class UserService {
             } else if (bytesRead >= 2 && header[0] == (byte) 0xFF && header[1] == (byte) 0xD8) {
                 fileExt = ".jpg";
                 contentType = "image/jpeg";
-            } else if (bytesRead >= 12 && header[0] == (byte) 0x52 && header[1] == (byte) 0x49 && header[2] == (byte) 0x46 && header[3] == (byte) 0x47 &&
+            } else if (bytesRead >= 12 && header[0] == (byte) 0x52 && header[1] == (byte) 0x49 && header[2] == (byte) 0x46 && header[3] == (byte) 0x46 &&
                     header[8] == (byte) 0x57 && header[9] == (byte) 0x45 && header[10] == (byte) 0x42 && header[11] == (byte) 0x50) {
                 fileExt = ".webp";
                 contentType = "image/webp";
+            } else if (bytesRead >= 6 && header[0] == (byte) 0x47 && header[1] == (byte) 0x49 && header[2] == (byte) 0x46 && header[3] == (byte) 0x38 &&
+                    (header[4] == (byte) 0x37 || header[4] == (byte) 0x39) && header[5] == (byte) 0x61) {
+                fileExt = ".gif";
+                contentType = "image/gif";
             }
         }
 
         if (fileExt == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file signature. Only PNG, JPEG, and WEBP images are allowed.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file signature. Only PNG, JPEG, WEBP, and GIF images are allowed.");
         }
 
         String fileName = System.currentTimeMillis() + fileExt;

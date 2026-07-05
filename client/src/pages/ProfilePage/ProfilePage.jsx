@@ -202,7 +202,7 @@ export default function ProfilePage() {
                                         <p className="text-sm font-medium text-brand-ink/70">
                                             ჩააგდეთ ფაილი აქ ან <span className="text-brand-accent font-semibold underline">აირჩიეთ გალერეიდან</span>
                                         </p>
-                                        <p className="text-xs text-brand-ink/40">PNG, JPG, ან WEBP (მაქს. 5MB)</p>
+                                        <p className="text-xs text-brand-ink/40">PNG, JPG, WEBP ან GIF (მაქს. 5MB)</p>
                                     </>
                                 )}
                             </div>
