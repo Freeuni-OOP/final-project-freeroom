@@ -4,7 +4,11 @@ import ge.freeroom.freeroom.dto.FriendDto;
 import ge.freeroom.freeroom.dto.FriendRequestDto;
 import ge.freeroom.freeroom.dto.UserSearchResultDto;
 import ge.freeroom.freeroom.entities.*;
-import ge.freeroom.freeroom.repositories.*;
+import ge.freeroom.freeroom.repositories.FriendRequestRepository;
+import ge.freeroom.freeroom.repositories.FriendshipRepository;
+import ge.freeroom.freeroom.repositories.RoomOccupancyRepository;
+import ge.freeroom.freeroom.repositories.UserRepository;
+import ge.freeroom.freeroom.websocket.RealtimeEventPublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,13 +29,26 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class FriendServiceTest {
 
-    @Mock FriendRequestRepository friendRequestRepository;
-    @Mock FriendshipRepository friendshipRepository;
-    @Mock UserRepository userRepository;
-    @Mock RoomOccupancyRepository roomOccupancyRepository;
-    @Mock TimeService timeService;
+    @Mock
+    FriendRequestRepository friendRequestRepository;
 
-    @InjectMocks FriendService friendService;
+    @Mock
+    FriendshipRepository friendshipRepository;
+
+    @Mock
+    UserRepository userRepository;
+
+    @Mock
+    RoomOccupancyRepository roomOccupancyRepository;
+
+    @Mock
+    TimeService timeService;
+
+    @Mock
+    RealtimeEventPublisher realtimeEventPublisher;
+
+    @InjectMocks
+    FriendService friendService;
 
     private User userA;
     private User userB;
@@ -46,6 +64,8 @@ class FriendServiceTest {
         userB.setId("uid-b");
         userB.setDisplayName("HakeriKala");
         userB.setPhotoUrl("https://photo.k");
+
+        lenient().when(timeService.now()).thenReturn(LocalDateTime.of(2026, 7, 6, 12, 0));
     }
 
     @Test
@@ -141,6 +161,8 @@ class FriendServiceTest {
 
     @Test
     void sendFriendRequest_receiverNotFound_throws() {
+        when(friendshipRepository.existsByUsers("uid-a", "uid-b")).thenReturn(false);
+        when(friendRequestRepository.findPendingBetweenUsers("uid-a", "uid-b")).thenReturn(Optional.empty());
         when(userRepository.findById("uid-a")).thenReturn(Optional.of(userA));
         when(userRepository.findById("uid-b")).thenReturn(Optional.empty());
 
@@ -181,6 +203,7 @@ class FriendServiceTest {
                         r.getReceiver().getId().equals("uid-b") &&
                         r.getStatus() == FriendRequestStatus.PENDING
         ));
+        verify(realtimeEventPublisher).publishFriendEvent(eq("uid-b"), any());
     }
 
     @Test
@@ -219,6 +242,7 @@ class FriendServiceTest {
 
         assertThat(req.getStatus()).isEqualTo(FriendRequestStatus.ACCEPTED);
         verify(friendshipRepository).save(any(Friendship.class));
+        verify(realtimeEventPublisher).publishFriendEvent(eq("uid-a"), any());
     }
 
     @Test
@@ -252,6 +276,7 @@ class FriendServiceTest {
         assertThat(req.getStatus()).isEqualTo(FriendRequestStatus.REJECTED);
         verify(friendRequestRepository).save(req);
         verifyNoInteractions(friendshipRepository);
+        verify(realtimeEventPublisher).publishFriendEvent(eq("uid-a"), any());
     }
 
     @Test
@@ -263,18 +288,41 @@ class FriendServiceTest {
     }
 
     @Test
-    void getFriends_friendWithNoOccupancy_returnsCorrectDto() {
+    void getFriends_friendWithVisibleOccupancy_returnsCorrectDto() {
         when(friendshipRepository.findFriendIdsByUserId("uid-a")).thenReturn(List.of("uid-b"));
         when(userRepository.findAllById(List.of("uid-b"))).thenReturn(List.of(userB));
+
+        User occupant = new User();
+        occupant.setId("uid-b");
+        occupant.setDisplayName("HakeriKala");
+        occupant.setPhotoUrl("https://photo.k");
+        occupant.setOccupancyVisibility(OccupancyVisibility.PUBLIC);
+
+        Room room = new Room();
+        room.setId(1L);
+        room.setRoomNumber(404);
+        Floor floor = new Floor();
+        floor.setId(1L);
+        floor.setNumber(1);
+        room.setFloor(floor);
+
+        RoomOccupancy occ = new RoomOccupancy();
+        occ.setUser(occupant);
+        occ.setRoom(room);
+        occ.setStartAt(LocalDateTime.of(2026, 7, 6, 11, 0));
+        occ.setExpectedEndAt(LocalDateTime.of(2026, 7, 6, 13, 0));
+
+        when(timeService.now()).thenReturn(LocalDateTime.of(2026, 7, 6, 12, 0));
         when(roomOccupancyRepository.findActiveNonExpiredByUserIds(anyList(), any()))
-                .thenReturn(List.of());
+                .thenReturn(List.of(occ));
 
         List<FriendDto> friends = friendService.getFriends("uid-a");
 
         assertThat(friends).hasSize(1);
         assertThat(friends.get(0).getId()).isEqualTo("uid-b");
-        assertThat(friends.get(0).isHasActiveOccupancy()).isFalse();
-        assertThat(friends.get(0).getCurrentOccupancy()).isNull();
+        assertThat(friends.get(0).isHasActiveOccupancy()).isTrue();
+        assertThat(friends.get(0).getCurrentOccupancy()).isNotNull();
+        assertThat(friends.get(0).getCurrentOccupancy().getRoomNumber()).isEqualTo(404);
     }
 
     @Test
@@ -302,14 +350,6 @@ class FriendServiceTest {
         assertThat(result.get(0).getSenderId()).isEqualTo("uid-a");
     }
 
-    private FriendRequest pendingRequest(User sender, User receiver) {
-        FriendRequest req = new FriendRequest();
-        req.setSender(sender);
-        req.setReceiver(receiver);
-        req.setStatus(FriendRequestStatus.PENDING);
-        return req;
-    }
-
     @Test
     void removeFriend_notFriends_throws() {
         when(friendshipRepository.findByUsers("uid-a", "uid-b")).thenReturn(Optional.empty());
@@ -326,10 +366,12 @@ class FriendServiceTest {
         friendship.setUser1(userA);
         friendship.setUser2(userB);
         when(friendshipRepository.findByUsers("uid-a", "uid-b")).thenReturn(Optional.of(friendship));
+        when(userRepository.findById("uid-a")).thenReturn(Optional.of(userA));
 
         friendService.removeFriend("uid-a", "uid-b");
 
         verify(friendshipRepository).delete(friendship);
+        verify(realtimeEventPublisher).publishFriendEvent(eq("uid-b"), any());
     }
 
     @Test
@@ -361,5 +403,14 @@ class FriendServiceTest {
         friendService.cancelFriendRequest("uid-a", "uid-b");
 
         verify(friendRequestRepository).delete(req);
+        verify(realtimeEventPublisher).publishFriendEvent(eq("uid-b"), any());
+    }
+
+    private FriendRequest pendingRequest(User sender, User receiver) {
+        FriendRequest req = new FriendRequest();
+        req.setSender(sender);
+        req.setReceiver(receiver);
+        req.setStatus(FriendRequestStatus.PENDING);
+        return req;
     }
 }
