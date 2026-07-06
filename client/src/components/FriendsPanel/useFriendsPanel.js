@@ -2,7 +2,7 @@ import { useAuth } from '@/context';
 import { getUniversity } from '@/utils';
 import { useState, useEffect } from 'react';
 import { useNotification } from '@/context';
-import { RELATIONSHIP_STATUS } from '@/utils';
+import { RELATIONSHIP_STATUS, FRIEND_EVENT_TYPE } from '@/utils';
 import useDebounce from '@/hooks/useDebounce';
 import { useRealtime } from '@/context';
 import {
@@ -105,23 +105,23 @@ const useFriendsPanel = () => {
                 );
 
             switch (event.type) {
-                case 'REQUEST_SENT':
+                case FRIEND_EVENT_TYPE.REQUEST_SENT:
                     void loadIncomingRequests();
                     patchSearch(RELATIONSHIP_STATUS.PENDING_RECEIVED);
                     break;
-                case 'REQUEST_ACCEPTED':
+                case FRIEND_EVENT_TYPE.REQUEST_ACCEPTED:
                     void loadFriends();
                     void loadIncomingRequests();
                     patchSearch(RELATIONSHIP_STATUS.FRIENDS);
                     break;
-                case 'REQUEST_REJECTED':
+                case FRIEND_EVENT_TYPE.REQUEST_REJECTED:
                     patchSearch(RELATIONSHIP_STATUS.NONE);
                     break;
-                case 'REQUEST_CANCELLED':
+                case FRIEND_EVENT_TYPE.REQUEST_CANCELLED:
                     void loadIncomingRequests();
                     patchSearch(RELATIONSHIP_STATUS.NONE);
                     break;
-                case 'FRIEND_REMOVED':
+                case FRIEND_EVENT_TYPE.FRIEND_REMOVED:
                     void loadFriends();
                     void loadIncomingRequests();
                     patchSearch(RELATIONSHIP_STATUS.NONE);

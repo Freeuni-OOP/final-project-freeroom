@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useNotification } from '@/context';
-import { RELATIONSHIP_STATUS } from '@/utils';
+import { RELATIONSHIP_STATUS, FRIEND_EVENT_TYPE } from '@/utils';
 import { useAuth } from '@/context';
 import { getUniversity } from '@/utils';
 import {
@@ -48,16 +48,16 @@ const usePublicProfilePage = () => {
             if (event.actorId !== profile.id) return;
 
             switch (event.type) {
-                case 'REQUEST_SENT':
+                case FRIEND_EVENT_TYPE.REQUEST_SENT:
                     setRequestId(event.requestId);
                     setProfile((prev) => ({ ...prev, relationshipStatus: RELATIONSHIP_STATUS.PENDING_RECEIVED }));
                     break;
-                case 'REQUEST_ACCEPTED':
+                case FRIEND_EVENT_TYPE.REQUEST_ACCEPTED:
                     setProfile((prev) => ({ ...prev, relationshipStatus: RELATIONSHIP_STATUS.FRIENDS }));
                     break;
-                case 'REQUEST_REJECTED':
-                case 'REQUEST_CANCELLED':
-                case 'FRIEND_REMOVED':
+                case FRIEND_EVENT_TYPE.REQUEST_REJECTED:
+                case FRIEND_EVENT_TYPE.REQUEST_CANCELLED:
+                case FRIEND_EVENT_TYPE.FRIEND_REMOVED:
                     setProfile((prev) => ({ ...prev, relationshipStatus: RELATIONSHIP_STATUS.NONE }));
                     break;
                 default:

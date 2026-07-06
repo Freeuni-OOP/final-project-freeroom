@@ -2,10 +2,11 @@ import { useEffect, useRef, useMemo, useCallback } from 'react';
 import { useAuth, useNotification } from '@/context';
 import { connectStomp, disconnectStomp } from '@/services/websocket/stompClient';
 import { WebSocketContext } from './websocketContext';
+import { FRIEND_EVENT_TYPE } from '@/utils';
 
 const FRIEND_EVENT_MESSAGES = {
-    REQUEST_SENT: (a) => ({ type: 'info', message: `${a} გამოგიგზავნათ მეგობრობის მოთხოვნა` }),
-    REQUEST_ACCEPTED: (a) => ({ type: 'success', message: `${a} დაეთანხმა თქვენს მოთხოვნას` }),
+    [FRIEND_EVENT_TYPE.REQUEST_SENT]: (a) => ({ type: 'info', message: `${a} გამოგიგზავნათ მეგობრობის მოთხოვნა` }),
+    [FRIEND_EVENT_TYPE.REQUEST_ACCEPTED]: (a) => ({ type: 'success', message: `${a} დაეთანხმა თქვენს მოთხოვნას` }),
 };
 
 const WebSocketProvider = ({ children }) => {

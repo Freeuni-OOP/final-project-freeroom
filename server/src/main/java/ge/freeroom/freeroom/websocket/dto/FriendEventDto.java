@@ -1,5 +1,6 @@
 package ge.freeroom.freeroom.websocket.dto;
 
+import ge.freeroom.freeroom.websocket.events.FriendEventType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class FriendEventDto {
-    private String type;
+    private FriendEventType type;
     private Long requestId;
     private String actorId;
     private String actorDisplayName;
