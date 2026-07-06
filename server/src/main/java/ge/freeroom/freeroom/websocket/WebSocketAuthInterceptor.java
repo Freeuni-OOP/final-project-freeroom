@@ -20,7 +20,7 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
             String destination = accessor.getDestination();
             Principal user = accessor.getUser();
 
-            if (destination != null && destination.startsWith("/topic/users/")) {
+            if (destination != null && destination.startsWith("/topic/users/") && destination.endsWith("/friends")) {
                 String uid = user != null ? user.getName() : null;
                 if (uid == null || !destination.equals("/topic/users/" + uid + "/friends")) {
                     throw new IllegalArgumentException("Not authorized to subscribe to this destination");

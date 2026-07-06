@@ -4,11 +4,15 @@ import com.google.firebase.auth.FirebaseToken;
 import ge.freeroom.freeroom.config.AdminUsersConfig;
 import ge.freeroom.freeroom.dto.*;
 import ge.freeroom.freeroom.entities.User;
+import ge.freeroom.freeroom.repositories.FriendshipRepository;
 import ge.freeroom.freeroom.service.UserService;
 import ge.freeroom.freeroom.service.TimeService;
 import ge.freeroom.freeroom.security.RateLimiter;
 import ge.freeroom.freeroom.repositories.UserRepository;
 import ge.freeroom.freeroom.repositories.RoomOccupancyRepository;
+import ge.freeroom.freeroom.websocket.RealtimeEventPublisher;
+import ge.freeroom.freeroom.websocket.dto.RoomEventDto;
+import ge.freeroom.freeroom.websocket.events.RoomEventType;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -32,14 +36,20 @@ public class UserController {
     private final AdminUsersConfig adminUsersConfig;
     private final RoomOccupancyRepository roomOccupancyRepository;
     private final TimeService timeService;
+    private final RealtimeEventPublisher realtimeEventPublisher;
+    private final FriendshipRepository friendshipRepository;
 
-    public UserController(UserService userService, UserRepository userRepository, RateLimiter rateLimiter, AdminUsersConfig adminUsersConfig, RoomOccupancyRepository roomOccupancyRepository, TimeService timeService) {
+    public UserController(UserService userService, UserRepository userRepository, RateLimiter rateLimiter,
+                          AdminUsersConfig adminUsersConfig, RoomOccupancyRepository roomOccupancyRepository,
+                          TimeService timeService, RealtimeEventPublisher realtimeEventPublisher, FriendshipRepository friendshipRepository) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.rateLimiter = rateLimiter;
         this.adminUsersConfig = adminUsersConfig;
         this.roomOccupancyRepository = roomOccupancyRepository;
         this.timeService = timeService;
+        this.realtimeEventPublisher = realtimeEventPublisher;
+        this.friendshipRepository = friendshipRepository;
     }
 
     @GetMapping
@@ -131,6 +141,22 @@ public class UserController {
         if (request.getVisibility() != null) {
             user.setOccupancyVisibility(request.getVisibility());
             userRepository.save(user);
+
+            boolean hasActiveOccupancy = roomOccupancyRepository
+                    .findActiveOccupancyByUserId(uid, timeService.now())
+                    .isPresent();
+
+            if (hasActiveOccupancy) {
+                realtimeEventPublisher.publishOccupancyRipple(uid, friendshipRepository.findFriendIdsByUserId(uid));
+                roomOccupancyRepository.findActiveOccupancyByUserId(uid, timeService.now())
+                        .ifPresent(occ -> realtimeEventPublisher.publishRoomEvent(new RoomEventDto(
+                                RoomEventType.ROOM_OCCUPANCY_UPDATED,
+                                occ.getRoom().getId(),
+                                occ.getRoom().getRoomNumber(),
+                                occ.getRoom().getFloor().getNumber(),
+                                timeService.now()
+                        )));
+            }
         }
 
         OccupancyVisibilityResponseDto response = new OccupancyVisibilityResponseDto();

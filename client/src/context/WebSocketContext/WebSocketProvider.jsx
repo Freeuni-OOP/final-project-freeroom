@@ -14,6 +14,7 @@ const WebSocketProvider = ({ children }) => {
     const { showNotification } = useNotification();
     const friendListenersRef = useRef(new Set());
     const roomListenersRef = useRef(new Set());
+    const stompClientRef = useRef(null);
 
     const onFriendEvent = useCallback((callback) => {
         friendListenersRef.current.add(callback);
@@ -25,9 +26,20 @@ const WebSocketProvider = ({ children }) => {
         return () => roomListenersRef.current.delete(callback);
     }, []);
 
+    const subscribeToProfile = useCallback((userId, callback) => {
+        if (!stompClientRef.current || !userId) return () => {};
+
+        const subscription = stompClientRef.current.subscribe(`/topic/users/${userId}/profile`, (message) => {
+            callback(JSON.parse(message.body));
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
     useEffect(() => {
         if (!user) {
             disconnectStomp();
+            stompClientRef.current = null;
             return;
         }
 
@@ -50,6 +62,8 @@ const WebSocketProvider = ({ children }) => {
                         const event = JSON.parse(message.body);
                         roomListenersRef.current.forEach((cb) => cb(event));
                     });
+
+                    stompClientRef.current = client;
                 },
             });
         };
@@ -59,10 +73,14 @@ const WebSocketProvider = ({ children }) => {
         return () => {
             cancelled = true;
             disconnectStomp();
+            stompClientRef.current = null;
         };
     }, [user, showNotification]);
 
-    const value = useMemo(() => ({ onFriendEvent, onRoomEvent }), [onFriendEvent, onRoomEvent]);
+    const value = useMemo(
+        () => ({ onFriendEvent, onRoomEvent, subscribeToProfile }),
+        [onFriendEvent, onRoomEvent, subscribeToProfile]
+    );
 
     return <WebSocketContext.Provider value={value}>{children}</WebSocketContext.Provider>;
 };

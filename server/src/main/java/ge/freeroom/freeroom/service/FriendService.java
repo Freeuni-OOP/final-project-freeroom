@@ -279,6 +279,6 @@ public class FriendService {
     }
 
     private FriendEventDto buildEvent(FriendEventType type, Long requestId, User actor) {
-        return new FriendEventDto(type, requestId, actor.getId(), actor.getDisplayName(), actor.getPhotoUrl(), LocalDateTime.now());
+        return new FriendEventDto(type, requestId, actor.getId(), actor.getDisplayName(), actor.getPhotoUrl(), timeService.now());
     }
 }

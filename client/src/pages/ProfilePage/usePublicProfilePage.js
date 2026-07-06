@@ -39,7 +39,7 @@ const usePublicProfilePage = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isReportOpen, setIsReportOpen] = useState(false);
 
-    const { onFriendEvent } = useRealtime();
+    const { onFriendEvent, subscribeToProfile } = useRealtime();
 
     useEffect(() => {
         if (!profile) return;
@@ -67,6 +67,21 @@ const usePublicProfilePage = () => {
 
         return unsubscribe;
     }, [onFriendEvent, profile?.id]);
+
+    useEffect(() => {
+        if (!userId) return;
+
+        const unsubscribe = subscribeToProfile(userId, async () => {
+            try {
+                const res = await getPublicProfile(userId);
+                setProfile(res.data);
+            } catch (e) {
+                console.error(e);
+            }
+        });
+
+        return unsubscribe;
+    }, [userId, subscribeToProfile]);
 
     useEffect(() => {
         if(!userId || fetchedUserIdRef.current === userId) return;

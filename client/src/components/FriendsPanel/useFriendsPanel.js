@@ -126,6 +126,9 @@ const useFriendsPanel = () => {
                     void loadIncomingRequests();
                     patchSearch(RELATIONSHIP_STATUS.NONE);
                     break;
+                case FRIEND_EVENT_TYPE.OCCUPANCY_CHANGED:
+                    void loadFriends();
+                    break;
                 default:
                     break;
             }

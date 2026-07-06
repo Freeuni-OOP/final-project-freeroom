@@ -208,6 +208,8 @@ public class RoomAvailabilityService {
                 if (chatService != null) {
                     chatService.clearRoomChat(roomId);
                 }
+                publishRoomChange(RoomEventType.ROOM_OCCUPANCY_CANCELLED, occ.getRoom());
+                realtimeEventPublisher.publishOccupancyRipple(occ.getUser().getId(), friendshipRepository.findFriendIdsByUserId(occ.getUser().getId()));
             }
         }
 
@@ -260,6 +262,8 @@ public class RoomAvailabilityService {
 
         publishRoomChange(RoomEventType.ROOM_OCCUPANCY_CREATED, room);
 
+        realtimeEventPublisher.publishOccupancyRipple(userId, friendshipRepository.findFriendIdsByUserId(userId));
+
         return response;
     }
 
@@ -305,6 +309,8 @@ public class RoomAvailabilityService {
 
         publishRoomChange(RoomEventType.ROOM_OCCUPANCY_CANCELLED, occ.getRoom());
 
+        realtimeEventPublisher.publishOccupancyRipple(userId, friendshipRepository.findFriendIdsByUserId(userId));
+
         return response;
     }
 
@@ -331,7 +337,7 @@ public class RoomAvailabilityService {
 
     private void publishRoomChange(RoomEventType type, Room room) {
         realtimeEventPublisher.publishRoomEvent(new RoomEventDto(
-                type, room.getId(), room.getRoomNumber(), room.getFloor().getNumber(), LocalDateTime.now()
+                type, room.getId(), room.getRoomNumber(), room.getFloor().getNumber(), timeService.now()
         ));
     }
 }

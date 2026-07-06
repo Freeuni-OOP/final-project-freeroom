@@ -29,6 +29,7 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
     handleScroll,
     noteText,
     setNoteText,
+    hasEditedNoteRef,
     handleUpdateNote,
     loadingAction
   } = useRoomModal(roomId, roomData, onClose, onReserveSuccess);
@@ -109,7 +110,10 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                               type="text"
                               maxLength={40}
                               value={noteText}
-                              onChange={(e) => setNoteText(e.target.value)}
+                              onChange={(e) => {
+                                hasEditedNoteRef.current = true
+                                setNoteText(e.target.value)
+                              }}
                               placeholder="არასავალდებულო"
                               className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-accent bg-white"
                             />
@@ -261,7 +265,11 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                         type="text"
                         maxLength={40}
                         value={noteText}
-                        onChange={(e) => setNoteText(e.target.value)}
+                        onChange={(e) => {
+                          hasEditedNoteRef.current = true
+                          setNoteText(e.target.value)
+                          }
+                        }
                         placeholder="მაგ: ვსწავლობთ კალკულუსს"
                         className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
                       />
