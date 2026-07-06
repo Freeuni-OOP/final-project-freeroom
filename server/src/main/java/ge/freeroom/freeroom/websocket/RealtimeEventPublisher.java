@@ -14,15 +14,23 @@ public class RealtimeEventPublisher {
     }
 
     public void publishFriendEvent(String targetUserId, Object payload) {
+        publishAfterCommit("/topic/users/" + targetUserId + "/friends", payload);
+    }
+
+    public void publishRoomEvent(Object payload) {
+        publishAfterCommit("/topic/rooms", payload);
+    }
+
+    private void publishAfterCommit(String destination, Object payload) {
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    messagingTemplate.convertAndSend("/topic/users/" + targetUserId + "/friends", payload);
+                    messagingTemplate.convertAndSend(destination, payload);
                 }
             });
         } else {
-            messagingTemplate.convertAndSend("/topic/users/" + targetUserId + "/friends", payload);
+            messagingTemplate.convertAndSend(destination, payload);
         }
     }
 }
