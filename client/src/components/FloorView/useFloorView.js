@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import FLOORS from './floorLayout';
 import { getRoomsMap } from '@/services/index.js';
+import { useRealtime } from '@/context';
 
 const MOUSE_WHEEL_THRESHOLD = 50;
 const MOUSE_ZOOM_FACTOR = 0.18;
@@ -20,6 +21,7 @@ const useFloorView = () => {
   const transformRef = useRef(null);
   const wrapperRef = useRef(null);
   const lastScrollTime = useRef(0);
+  const { onRoomEvent } = useRealtime();
 
   const [initialScale] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -235,6 +237,13 @@ const useFloorView = () => {
   useEffect(() => {
     applyRoomColors(selectedFloor);
   }, [roomsData, selectedFloor]);
+
+  useEffect(() => {
+    const unsubscribe = onRoomEvent(() => {
+      void loadRoomsMap();
+    });
+    return unsubscribe;
+  }, [onRoomEvent, loadRoomsMap]);
 
   const selectFloor = (floor) => {
     setSelectedFloor(floor);

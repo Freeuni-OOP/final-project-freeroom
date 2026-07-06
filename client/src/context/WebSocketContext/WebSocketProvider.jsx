@@ -12,11 +12,17 @@ const FRIEND_EVENT_MESSAGES = {
 const WebSocketProvider = ({ children }) => {
     const { user } = useAuth();
     const { showNotification } = useNotification();
-    const listenersRef = useRef(new Set());
+    const friendListenersRef = useRef(new Set());
+    const roomListenersRef = useRef(new Set());
 
     const onFriendEvent = useCallback((callback) => {
-        listenersRef.current.add(callback);
-        return () => listenersRef.current.delete(callback);
+        friendListenersRef.current.add(callback);
+        return () => friendListenersRef.current.delete(callback);
+    }, []);
+
+    const onRoomEvent = useCallback((callback) => {
+        roomListenersRef.current.add(callback);
+        return () => roomListenersRef.current.delete(callback);
     }, []);
 
     useEffect(() => {
@@ -31,12 +37,18 @@ const WebSocketProvider = ({ children }) => {
             await connectStomp({
                 onConnect: (client) => {
                     if (cancelled) return;
+
                     client.subscribe(`/topic/users/${user.uid}/friends`, (message) => {
                         const event = JSON.parse(message.body);
-                        listenersRef.current.forEach((cb) => cb(event));
+                        friendListenersRef.current.forEach((cb) => cb(event));
 
                         const toast = FRIEND_EVENT_MESSAGES[event.type]?.(event.actorDisplayName);
                         if (toast) showNotification(toast);
+                    });
+
+                    client.subscribe('/topic/rooms', (message) => {
+                        const event = JSON.parse(message.body);
+                        roomListenersRef.current.forEach((cb) => cb(event));
                     });
                 },
             });
@@ -50,7 +62,7 @@ const WebSocketProvider = ({ children }) => {
         };
     }, [user, showNotification]);
 
-    const value = useMemo(() => ({ onFriendEvent }), [onFriendEvent]);
+    const value = useMemo(() => ({ onFriendEvent, onRoomEvent }), [onFriendEvent, onRoomEvent]);
 
     return <WebSocketContext.Provider value={value}>{children}</WebSocketContext.Provider>;
 };
