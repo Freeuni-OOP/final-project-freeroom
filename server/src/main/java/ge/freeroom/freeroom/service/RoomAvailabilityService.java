@@ -7,6 +7,9 @@ import ge.freeroom.freeroom.entities.Room;
 import ge.freeroom.freeroom.entities.RoomOccupancy;
 import ge.freeroom.freeroom.entities.User;
 import ge.freeroom.freeroom.repositories.*;
+import ge.freeroom.freeroom.websocket.RealtimeEventPublisher;
+import ge.freeroom.freeroom.websocket.dto.RoomEventDto;
+import ge.freeroom.freeroom.websocket.events.RoomEventType;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +26,7 @@ public class RoomAvailabilityService {
     private final UserRepository userRepository;
     private final RoomOccupancyRepository roomOccupancyRepository;
     private final FriendshipRepository friendshipRepository;
+    private final RealtimeEventPublisher realtimeEventPublisher;
 
     private final EmailService emailService;
 
@@ -34,7 +38,8 @@ public class RoomAvailabilityService {
 
     public RoomAvailabilityService(RoomRepository roomRepository, LectureRepository lectureRepository,
                                    UserRepository userRepository, RoomOccupancyRepository roomOccupancyRepository,
-                                   EmailService emailService, TimeService timeService, FriendshipRepository friendshipRepository) {
+                                   EmailService emailService, TimeService timeService, FriendshipRepository friendshipRepository,
+                                   RealtimeEventPublisher realtimeEventPublisher) {
         this.roomRepository = roomRepository;
         this.lectureRepository = lectureRepository;
         this.userRepository = userRepository;
@@ -42,6 +47,7 @@ public class RoomAvailabilityService {
         this.emailService = emailService;
         this.timeService = timeService;
         this.friendshipRepository = friendshipRepository;
+        this.realtimeEventPublisher = realtimeEventPublisher;
     }
 
     public List<RoomMapDto> getAllRoomsMap(String currentUserId){
@@ -252,6 +258,8 @@ public class RoomAvailabilityService {
             );
         }
 
+        publishRoomChange(RoomEventType.ROOM_OCCUPANCY_CREATED, room);
+
         return response;
     }
 
@@ -295,6 +303,8 @@ public class RoomAvailabilityService {
             chatService.clearRoomChat(roomId);
         }
 
+        publishRoomChange(RoomEventType.ROOM_OCCUPANCY_CANCELLED, occ.getRoom());
+
         return response;
     }
 
@@ -315,5 +325,13 @@ public class RoomAvailabilityService {
 
         occ.setPublicNote(publicNote);
         roomOccupancyRepository.save(occ);
+
+        publishRoomChange(RoomEventType.ROOM_OCCUPANCY_UPDATED, occ.getRoom());
+    }
+
+    private void publishRoomChange(RoomEventType type, Room room) {
+        realtimeEventPublisher.publishRoomEvent(new RoomEventDto(
+                type, room.getId(), room.getRoomNumber(), room.getFloor().getNumber(), LocalDateTime.now()
+        ));
     }
 }
