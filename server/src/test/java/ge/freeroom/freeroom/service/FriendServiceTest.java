@@ -326,6 +326,23 @@ class FriendServiceTest {
     }
 
     @Test
+    void getFriends_friendWithNoOccupancy_returnsCorrectDto() {
+        when(friendshipRepository.findFriendIdsByUserId("uid-a")).thenReturn(List.of("uid-b"));
+        when(userRepository.findAllById(List.of("uid-b"))).thenReturn(List.of(userB));
+
+        when(timeService.now()).thenReturn(LocalDateTime.of(2026, 7, 6, 12, 0));
+        when(roomOccupancyRepository.findActiveNonExpiredByUserIds(anyList(), any()))
+                .thenReturn(List.of());
+
+        List<FriendDto> friends = friendService.getFriends("uid-a");
+
+        assertThat(friends).hasSize(1);
+        assertThat(friends.get(0).getId()).isEqualTo("uid-b");
+        assertThat(friends.get(0).isHasActiveOccupancy()).isFalse();
+        assertThat(friends.get(0).getCurrentOccupancy()).isNull();
+    }
+
+    @Test
     void getIncomingRequests_returnsOnlyPendingForCurrentUser() {
         FriendRequest req = pendingRequest(userA, userB);
         when(friendRequestRepository.findByReceiverIdAndStatus("uid-b", FriendRequestStatus.PENDING))
