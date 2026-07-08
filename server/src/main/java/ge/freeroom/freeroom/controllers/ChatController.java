@@ -1,10 +1,6 @@
 package ge.freeroom.freeroom.controllers;
 
-import ge.freeroom.freeroom.dto.ChatMessageDto;
-import ge.freeroom.freeroom.dto.SendMessageRequestDto;
-import ge.freeroom.freeroom.dto.JoinRoomRequestDto;
-import ge.freeroom.freeroom.dto.ApproveJoinRequestDto;
-import ge.freeroom.freeroom.dto.RejectJoinRequestDto;
+import ge.freeroom.freeroom.dto.*;
 import ge.freeroom.freeroom.service.ChatService;
 import ge.freeroom.freeroom.security.RateLimiter;
 import jakarta.validation.Valid;
@@ -56,12 +52,20 @@ public class ChatController {
     }
 
     @PostMapping("/approve")
-    public void approveUser(@Valid @RequestBody ApproveJoinRequestDto request, Principal principal) {
+    public ResponseEntity<Void> approveUser(@Valid @RequestBody ApproveJoinRequestDto request, Principal principal) {
         chatService.approveJoinRequest(request.roomId(), principal.getName(), request.targetUserId());
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/reject")
-    public void rejectUser(@Valid @RequestBody RejectJoinRequestDto request, Principal principal) {
+    public ResponseEntity<Void> rejectUser(@Valid @RequestBody RejectJoinRequestDto request, Principal principal) {
         chatService.rejectJoinRequest(request.roomId(), principal.getName(), request.targetUserId());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/kick")
+    public ResponseEntity<Void> kickUser(@Valid @RequestBody KickUserRequestDto request, Principal principal) {
+        chatService.kickUser(request.roomId(), principal.getName(), request.targetUserId());
+        return ResponseEntity.ok().build();
     }
 }

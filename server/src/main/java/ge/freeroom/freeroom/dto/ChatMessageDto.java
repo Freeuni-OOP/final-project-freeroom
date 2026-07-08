@@ -8,6 +8,7 @@ public record ChatMessageDto(
         String author,
         String nickname,
         String email,
+        String photoUrl,
         String message,
         MessageType messageType,
         LocalDateTime sendingTime
