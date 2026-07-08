@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo, useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useAuth, useNotification } from '@/context';
 import { connectStomp, disconnectStomp } from '@/services/websocket/stompClient';
 import { WebSocketContext } from './websocketContext';
@@ -15,6 +15,7 @@ const WebSocketProvider = ({ children }) => {
     const friendListenersRef = useRef(new Set());
     const roomListenersRef = useRef(new Set());
     const stompClientRef = useRef(null);
+    const [connected, setConnected] = useState(false);
 
     const onFriendEvent = useCallback((callback) => {
         friendListenersRef.current.add(callback);
@@ -40,7 +41,7 @@ const WebSocketProvider = ({ children }) => {
         if (!user) {
             disconnectStomp();
             stompClientRef.current = null;
-            return;
+            return () => setConnected(false);
         }
 
         let cancelled = false;
@@ -64,6 +65,7 @@ const WebSocketProvider = ({ children }) => {
                     });
 
                     stompClientRef.current = client;
+                    setConnected(true);
                 },
             });
         };
@@ -74,12 +76,13 @@ const WebSocketProvider = ({ children }) => {
             cancelled = true;
             disconnectStomp();
             stompClientRef.current = null;
+            setConnected(false);
         };
     }, [user, showNotification]);
 
     const value = useMemo(
-        () => ({ onFriendEvent, onRoomEvent, subscribeToProfile }),
-        [onFriendEvent, onRoomEvent, subscribeToProfile]
+        () => ({ onFriendEvent, onRoomEvent, subscribeToProfile, connected }),
+        [onFriendEvent, onRoomEvent, subscribeToProfile, connected]
     );
 
     return <WebSocketContext.Provider value={value}>{children}</WebSocketContext.Provider>;
