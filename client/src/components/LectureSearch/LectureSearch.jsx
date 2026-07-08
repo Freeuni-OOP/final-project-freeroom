@@ -5,13 +5,17 @@ export default function LectureSearch() {
     const { query, searchResults, loading, handleSearch, formatTime, university } = useLectureSearch();
 
     return (
-        <div className="p-5 bg-white rounded-lg shadow-md text-gray-800">
-            <h3 className="mb-4 text-xl font-semibold text-slate-800">ლექციების ძებნა</h3>
+        <div
+            className="p-5 bg-white rounded-lg shadow-md text-gray-800"
+            onClick={(e) => e.stopPropagation()}
+        >
+            <h3 className="mb-4 text-xl font-semibold text-slate-800">ძებნა</h3>
 
             <input
                 type="text"
                 placeholder="ჩაწერეთ საგნის დასახელება..."
                 value={query}
+                onClick={(e) => e.stopPropagation()}
                 onChange={(e) => handleSearch(e.target.value)}
                 className="w-full p-3 border border-gray-300 rounded-md text-sm outline-none mb-4 focus:border-brand-accent"
             />
