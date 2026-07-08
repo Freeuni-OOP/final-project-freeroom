@@ -142,21 +142,17 @@ public class UserController {
             user.setOccupancyVisibility(request.getVisibility());
             userRepository.save(user);
 
-            boolean hasActiveOccupancy = roomOccupancyRepository
-                    .findActiveOccupancyByUserId(uid, timeService.now())
-                    .isPresent();
-
-            if (hasActiveOccupancy) {
-                realtimeEventPublisher.publishOccupancyRipple(uid, friendshipRepository.findFriendIdsByUserId(uid));
-                roomOccupancyRepository.findActiveOccupancyByUserId(uid, timeService.now())
-                        .ifPresent(occ -> realtimeEventPublisher.publishRoomEvent(new RoomEventDto(
+            roomOccupancyRepository.findActiveOccupancyByUserId(uid, timeService.now())
+                    .ifPresent(occ -> {
+                        realtimeEventPublisher.publishOccupancyRipple(uid, friendshipRepository.findFriendIdsByUserId(uid));
+                        realtimeEventPublisher.publishRoomEvent(new RoomEventDto(
                                 RoomEventType.ROOM_OCCUPANCY_UPDATED,
                                 occ.getRoom().getId(),
                                 occ.getRoom().getRoomNumber(),
                                 occ.getRoom().getFloor().getNumber(),
                                 timeService.now()
-                        )));
-            }
+                        ));
+                    });
         }
 
         OccupancyVisibilityResponseDto response = new OccupancyVisibilityResponseDto();
