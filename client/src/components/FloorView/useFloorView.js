@@ -78,8 +78,11 @@ const useFloorView = () => {
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-      loadRoomsMap();
+    const fetchRooms = async () => {
+      await loadRoomsMap();
+    };
+
+    fetchRooms();
   }, [loadRoomsMap]);
 
   const FRIEND_BADGE_CLASS = 'friend-occupancy-badge';
@@ -96,7 +99,9 @@ const useFloorView = () => {
 
       const roomData = roomsDataRef.current[floor]?.[roomId];
       const occupied = roomData?.status === 'occupied';
-      rect.style.fill = occupied ? '#ef4444' : '';
+
+      // We use your CSS variable here! It will automatically match the active theme.
+      rect.style.fill = occupied ? '#ef4444' : 'var(--brand-accent)';
 
       group.querySelectorAll(`.${FRIEND_BADGE_CLASS}`).forEach((el) => el.remove());
 
@@ -200,11 +205,11 @@ const useFloorView = () => {
             const roomData = roomsDataRef.current[selectedFloor]?.[roomId];
             let text = 'თავისუფალი';
             if (roomData?.currentLecture?.title) {
-                text = roomData.currentLecture.title;
+              text = roomData.currentLecture.title;
             } else if (roomData?.currentOccupancy != null) {
-                text = roomData.currentOccupancy.publicNote 
-                    ? `დაკავებული - ${roomData.currentOccupancy.publicNote}`
-                    : 'დაკავებული';
+              text = roomData.currentOccupancy.publicNote
+                  ? `დაკავებული - ${roomData.currentOccupancy.publicNote}`
+                  : 'დაკავებული';
             }
             tooltipTimerRef.current = setTimeout(() => {
               setTooltip({ visible: true, x: cursorPos.x, y: cursorPos.y, text });
@@ -256,7 +261,7 @@ const useFloorView = () => {
       roomsData[selectedFloor]?.[roomId]?.status === 'occupied';
 
   const getRoomData = (roomId) =>
-    roomsData[selectedFloor]?.[roomId] ?? null;
+      roomsData[selectedFloor]?.[roomId] ?? null;
 
   return {
     selectedFloor,
@@ -276,4 +281,3 @@ const useFloorView = () => {
 };
 
 export default useFloorView;
-
