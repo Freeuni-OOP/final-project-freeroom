@@ -12,25 +12,28 @@ import {
     CalendarPage,
     AdminReportsPage
 } from '@/pages';
+import WebSocketProvider from "@/context/WebSocketContext/WebSocketProvider.jsx";
 
 function App() {
     return (
         <NotificationProvider>
-            <Routes>
-                <Route path="/" element={<LandingPage />} />
-                <Route element={<ProtectedRoute />}>
-                    <Route element={<Layout />}>
-                        <Route path="/floors" element={<FloorsPage />} />
-                        <Route path="/profile" element={<ProfilePage />} />
-                        <Route path="/profile/:userId" element={<PublicProfilePage />} />
-                        <Route path="/admin/reports" element={<AdminReportsPage />} />
-                        <Route path="/privacy" element={<PrivacyPage />} />
-                        <Route path="/subjects" element={<SubjectsPage />} />
-                        <Route path="/calendar" element={<CalendarPage />} />
+            <WebSocketProvider>
+                <Routes>
+                    <Route path="/" element={<LandingPage />} />
+                    <Route element={<ProtectedRoute />}>
+                        <Route element={<Layout />}>
+                            <Route path="/floors" element={<FloorsPage />} />
+                            <Route path="/profile" element={<ProfilePage />} />
+                            <Route path="/profile/:userId" element={<PublicProfilePage />} />
+                            <Route path="/admin/reports" element={<AdminReportsPage />} />
+                            <Route path="/privacy" element={<PrivacyPage />} />
+                            <Route path="/subjects" element={<SubjectsPage />} />
+                            <Route path="/calendar" element={<CalendarPage />} />
+                        </Route>
                     </Route>
-                </Route>
-                <Route path="*" element={<NotFoundPage />} />
-            </Routes>
+                    <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+            </WebSocketProvider>
         </NotificationProvider>
     );
 }

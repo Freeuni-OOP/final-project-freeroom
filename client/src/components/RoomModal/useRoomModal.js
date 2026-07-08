@@ -33,6 +33,7 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
     const chatContainerRef = useRef(null);
     const isFetchingOlder = useRef(false);
     const isMountedRef = useRef(true);
+    const hasEditedNoteRef = useRef(false);
 
     useEffect(() => {
         isMountedRef.current = true;
@@ -75,11 +76,13 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
     }, [roomId, reloadTrigger]);
 
     useEffect(() => {
-        if (roomData?.currentOccupancy?.publicNote !== undefined && roomId === prevRoomId) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setNoteText(roomData.currentOccupancy.publicNote || '');
-        }
-    }, [roomData?.currentOccupancy?.publicNote, roomId, prevRoomId]);
+        hasEditedNoteRef.current = false;
+    }, [roomId]);
+
+    useEffect(() => {
+        if (roomId !== prevRoomId || hasEditedNoteRef.current) return;
+        setNoteText(roomData?.currentOccupancy?.publicNote || '');
+    }, [roomData?.currentOccupancy?.publicNote, roomData?.currentOccupancy, roomId, prevRoomId]);
 
     useEffect(() => {
         if (isChatOpen && chatContainerRef.current && !isFetchingOlder.current) {
@@ -350,6 +353,7 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         setLoadingAction('updateNote');
         try {
             await updatePublicNote(roomId, noteText);
+            hasEditedNoteRef.current = false;
             showNotification({ message: 'სტატუსი განახლდა', type: 'success' });
             onReserveSuccess();
         } catch (err) {
@@ -382,7 +386,8 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         noteText,
         setNoteText,
         handleUpdateNote,
-        loadingAction
+        loadingAction,
+        hasEditedNoteRef
     };
 };
 

@@ -2,15 +2,13 @@ package ge.freeroom.freeroom.service;
 
 import ge.freeroom.freeroom.dto.CancelOccupancyResponseDto;
 import ge.freeroom.freeroom.dto.ReserveRoomResponseDto;
-import ge.freeroom.freeroom.entities.Lecture;
-import ge.freeroom.freeroom.entities.NotificationPreference;
-import ge.freeroom.freeroom.entities.Room;
-import ge.freeroom.freeroom.entities.RoomOccupancy;
-import ge.freeroom.freeroom.entities.User;
+import ge.freeroom.freeroom.entities.*;
+import ge.freeroom.freeroom.repositories.FriendshipRepository;
 import ge.freeroom.freeroom.repositories.LectureRepository;
 import ge.freeroom.freeroom.repositories.RoomOccupancyRepository;
 import ge.freeroom.freeroom.repositories.RoomRepository;
 import ge.freeroom.freeroom.repositories.UserRepository;
+import ge.freeroom.freeroom.websocket.RealtimeEventPublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,11 +24,11 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class RoomAvailabilityServiceTest {
+class RoomAvailabilityServiceTest {
 
     @Mock
     private RoomOccupancyRepository roomOccupancyRepository;
@@ -53,21 +51,67 @@ public class RoomAvailabilityServiceTest {
     @Mock
     private ChatService chatService;
 
+    @Mock
+    private FriendshipRepository friendshipRepository;
+
+    @Mock
+    private RealtimeEventPublisher realtimeEventPublisher;
+
     @InjectMocks
     private RoomAvailabilityService roomAvailabilityService;
 
-    private RoomOccupancy validOccupancy;
-
     @BeforeEach
     void setUp() {
+        lenient().when(friendshipRepository.findFriendIdsByUserId(anyString())).thenReturn(Collections.emptyList());
+        lenient().doNothing().when(realtimeEventPublisher).publishRoomEvent(any());
+        lenient().doNothing().when(realtimeEventPublisher).publishOccupancyRipple(anyString(), anyList());
+        lenient().doNothing().when(chatService).initializeRoomBooker(anyLong(), anyString());
+        lenient().doNothing().when(chatService).clearRoomChat(anyLong());
+    }
+
+    private User emailUser() {
+        User user = new User();
+        user.setId("uid");
+        user.setEmail("test@freeuni.edu.ge");
+        user.setNotificationPreference(NotificationPreference.EMAIL);
+        return user;
+    }
+
+    private Room basicRoom() {
+        Room room = new Room();
+        room.setId(1L);
+        room.setRoomNumber(101);
+
+        Floor floor = new Floor();
+        floor.setId(1L);
+        floor.setNumber(1);
+        room.setFloor(floor);
+
+        return room;
+    }
+
+    private void stubRoomFreeAndAvailable(Room room, String userId) {
+        lenient().when(roomRepository.findByIdWithLock(room.getId())).thenReturn(Optional.of(room));
+        lenient().when(roomOccupancyRepository.findActiveOccupancyByUserId(eq(userId), any())).thenReturn(Optional.empty());
+        lenient().when(lectureRepository.findActiveLecturesByRoomIds(anyList(), any())).thenReturn(Collections.emptyList());
+        lenient().when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(room.getId())).thenReturn(Optional.empty());
+        lenient().when(lectureRepository.findNextLecturesByRoomId(eq(room.getId()), any())).thenReturn(Collections.emptyList());
+    }
+
+    @Test
+    void cancelOccupancy_Success_WhenUserOwnsOccupancy() {
         User validUser = new User();
         validUser.setId("user123");
 
         Room validRoom = new Room();
         validRoom.setId(1L);
         validRoom.setRoomNumber(404);
+        Floor floor = new Floor();
+        floor.setId(1L);
+        floor.setNumber(4);
+        validRoom.setFloor(floor);
 
-        validOccupancy = new RoomOccupancy();
+        RoomOccupancy validOccupancy = new RoomOccupancy();
         validOccupancy.setId(10L);
         validOccupancy.setUser(validUser);
         validOccupancy.setRoom(validRoom);
@@ -75,15 +119,11 @@ public class RoomAvailabilityServiceTest {
         validOccupancy.setExpectedEndAt(LocalDateTime.now().plusMinutes(50));
         validOccupancy.setEndAt(null);
 
-        lenient().when(timeService.now()).thenReturn(LocalDateTime.now());
-    }
-
-    @Test
-    void cancelOccupancy_Success_WhenUserOwnsOccupancy() {
+        when(timeService.now()).thenReturn(LocalDateTime.of(2026, 7, 6, 12, 0));
         when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(1L))
                 .thenReturn(Optional.of(validOccupancy));
-
         when(roomOccupancyRepository.save(any(RoomOccupancy.class))).thenReturn(validOccupancy);
+        when(friendshipRepository.findFriendIdsByUserId("user123")).thenReturn(Collections.emptyList());
 
         CancelOccupancyResponseDto response = roomAvailabilityService.cancelOccupancy("user123", 1L);
 
@@ -94,6 +134,8 @@ public class RoomAvailabilityServiceTest {
         assertNotNull(validOccupancy.getEndAt());
 
         verify(roomOccupancyRepository, times(1)).save(validOccupancy);
+        verify(chatService, never()).clearRoomChat(anyLong());
+        verify(realtimeEventPublisher).publishOccupancyRipple(eq("user123"), anyList());
     }
 
     @Test
@@ -101,31 +143,44 @@ public class RoomAvailabilityServiceTest {
         when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(1L))
                 .thenReturn(Optional.empty());
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-            roomAvailabilityService.cancelOccupancy("user123", 1L);
-        });
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+                roomAvailabilityService.cancelOccupancy("user123", 1L));
 
         assertEquals("No active occupancy for this room", exception.getMessage());
-
         verify(roomOccupancyRepository, never()).save(any());
     }
 
     @Test
     void cancelOccupancy_ThrowsAccessDenied_WhenUserDoesNotOwnOccupancy() {
-        User maliciousUser = new User();
-        maliciousUser.setId("hackerKala");
+        User owner = new User();
+        owner.setId("owner123");
+
+        Room room = new Room();
+        room.setId(1L);
+        room.setRoomNumber(404);
+        Floor floor = new Floor();
+        floor.setId(1L);
+        floor.setNumber(4);
+        room.setFloor(floor);
+
+        RoomOccupancy occupancy = new RoomOccupancy();
+        occupancy.setId(20L);
+        occupancy.setUser(owner);
+        occupancy.setRoom(room);
+        occupancy.setStartAt(LocalDateTime.now().minusMinutes(120));
+        occupancy.setExpectedEndAt(LocalDateTime.now().plusMinutes(10));
+        occupancy.setEndAt(null);
 
         when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(1L))
-                .thenReturn(Optional.of(validOccupancy));
+                .thenReturn(Optional.of(occupancy));
 
-        AccessDeniedException exception = assertThrows(AccessDeniedException.class, () -> {
-            roomAvailabilityService.cancelOccupancy("hackerKala", 1L);
-        });
+        AccessDeniedException exception = assertThrows(AccessDeniedException.class, () ->
+                roomAvailabilityService.cancelOccupancy("differentUser", 1L));
 
         assertEquals("You can only cancel your own occupancy", exception.getMessage());
-        assertNull(validOccupancy.getEndAt());
-
+        assertNull(occupancy.getEndAt());
         verify(roomOccupancyRepository, never()).save(any());
+        verify(chatService, never()).clearRoomChat(anyLong());
     }
 
     @Test
@@ -133,9 +188,13 @@ public class RoomAvailabilityServiceTest {
         User user = new User();
         user.setId("uid");
         user.setNotificationPreference(NotificationPreference.NONE);
-        when(userRepository.findById("uid")).thenReturn(Optional.of(user));
-        assertThrows(IllegalStateException.class, () -> roomAvailabilityService.reserveRoom("uid", 1L, 60L, null));
 
+        when(userRepository.findById("uid")).thenReturn(Optional.of(user));
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+                roomAvailabilityService.reserveRoom("uid", 1L, 60L, null));
+
+        assertTrue(exception.getMessage().contains("შეტყობინების მეთოდი"));
         verify(emailService, never()).sendReservationConfirmation(any(), anyInt(), any());
     }
 
@@ -145,63 +204,63 @@ public class RoomAvailabilityServiceTest {
         user.setId("uid");
         user.setNotificationPreference(NotificationPreference.TELEGRAM);
         user.setTelegramChatId(null);
+
         when(userRepository.findById("uid")).thenReturn(Optional.of(user));
-        assertThrows(IllegalStateException.class, () -> roomAvailabilityService.reserveRoom("uid", 1L, 60L, null));
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+                roomAvailabilityService.reserveRoom("uid", 1L, 60L, null));
+
+        assertTrue(exception.getMessage().contains("Telegram"));
     }
 
     @Test
     void bookingAllowedWhenEmailSelected() {
-        User user = new User();
-        user.setId("uid");
-        user.setNotificationPreference(NotificationPreference.EMAIL);
+        User user = emailUser();
         when(userRepository.findById("uid")).thenReturn(Optional.of(user));
 
-        Room room = new Room();
-        room.setId(1L);
-        room.setRoomNumber(101);
+        Room room = basicRoom();
+        stubRoomFreeAndAvailable(room, "uid");
 
-        // Fixed: Updated to match the pessimistic lock query method used in the service
-        when(roomRepository.findByIdWithLock(1L)).thenReturn(Optional.of(room));
-
-        when(roomOccupancyRepository.findActiveOccupancyByUserId(eq("uid"), any(LocalDateTime.class))).thenReturn(Optional.empty());
-        when(lectureRepository.findActiveLecturesByRoomIds(any(), any(LocalDateTime.class))).thenReturn(Collections.emptyList());
-
-        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(eq(1L))).thenReturn(Optional.empty());
+        LocalDateTime now = LocalDateTime.of(2026, 7, 6, 12, 0);
+        when(timeService.now()).thenReturn(now);
 
         RoomOccupancy saved = new RoomOccupancy();
         saved.setId(1L);
         saved.setRoom(room);
         saved.setUser(user);
-        saved.setStartAt(LocalDateTime.now());
-        saved.setExpectedEndAt(LocalDateTime.now().plusMinutes(60));
+        saved.setStartAt(now);
+        saved.setExpectedEndAt(now.plusMinutes(60));
         when(roomOccupancyRepository.save(any(RoomOccupancy.class))).thenReturn(saved);
 
         ReserveRoomResponseDto result = roomAvailabilityService.reserveRoom("uid", 1L, 60L, null);
+
         assertNotNull(result);
+        assertEquals(1L, result.getId());
+        assertEquals(1L, result.getRoomId());
+        assertEquals(101, result.getRoomNumber());
+        assertEquals(now, result.getStartTime());
+        assertEquals(now.plusMinutes(60), result.getExpectedEndTime());
+
+        verify(emailService).sendReservationConfirmation(eq("test@freeuni.edu.ge"), eq(101), eq(now.plusMinutes(60)));
     }
 
     @Test
     void emailSentOnReservationWhenPreferenceIsEmail() {
-        User user = new User();
-        user.setId("uid");
-        user.setEmail("test@freeuni.edu.ge");
-        user.setNotificationPreference(NotificationPreference.EMAIL);
+        User user = emailUser();
         when(userRepository.findById("uid")).thenReturn(Optional.of(user));
 
-        Room room = new Room();
-        room.setId(1L);
-        room.setRoomNumber(101);
-        when(roomRepository.findByIdWithLock(1L)).thenReturn(Optional.of(room));
-        when(roomOccupancyRepository.findActiveOccupancyByUserId(eq("uid"), any())).thenReturn(Optional.empty());
-        when(lectureRepository.findActiveLecturesByRoomIds(any(), any())).thenReturn(Collections.emptyList());
-        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(1L)).thenReturn(Optional.empty());
+        Room room = basicRoom();
+        stubRoomFreeAndAvailable(room, "uid");
+
+        LocalDateTime now = LocalDateTime.of(2026, 7, 6, 12, 0);
+        when(timeService.now()).thenReturn(now);
 
         RoomOccupancy saved = new RoomOccupancy();
         saved.setId(1L);
         saved.setRoom(room);
         saved.setUser(user);
-        saved.setStartAt(LocalDateTime.now());
-        saved.setExpectedEndAt(LocalDateTime.now().plusMinutes(60));
+        saved.setStartAt(now);
+        saved.setExpectedEndAt(now.plusMinutes(60));
         when(roomOccupancyRepository.save(any())).thenReturn(saved);
 
         roomAvailabilityService.reserveRoom("uid", 1L, 60L, null);
@@ -222,47 +281,23 @@ public class RoomAvailabilityServiceTest {
         user.setTelegramChatId(123456L);
         when(userRepository.findById("uid")).thenReturn(Optional.of(user));
 
-        Room room = new Room();
-        room.setId(1L);
-        room.setRoomNumber(101);
-        when(roomRepository.findByIdWithLock(1L)).thenReturn(Optional.of(room));
-        when(roomOccupancyRepository.findActiveOccupancyByUserId(eq("uid"), any())).thenReturn(Optional.empty());
-        when(lectureRepository.findActiveLecturesByRoomIds(any(), any())).thenReturn(Collections.emptyList());
-        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(1L)).thenReturn(Optional.empty());
+        Room room = basicRoom();
+        stubRoomFreeAndAvailable(room, "uid");
+
+        LocalDateTime now = LocalDateTime.of(2026, 7, 6, 12, 0);
+        when(timeService.now()).thenReturn(now);
 
         RoomOccupancy saved = new RoomOccupancy();
         saved.setId(1L);
         saved.setRoom(room);
         saved.setUser(user);
-        saved.setStartAt(LocalDateTime.now());
-        saved.setExpectedEndAt(LocalDateTime.now().plusMinutes(60));
+        saved.setStartAt(now);
+        saved.setExpectedEndAt(now.plusMinutes(60));
         when(roomOccupancyRepository.save(any())).thenReturn(saved);
 
         roomAvailabilityService.reserveRoom("uid", 1L, 60L, null);
 
         verify(emailService, never()).sendReservationConfirmation(any(), anyInt(), any());
-    }
-
-    private User emailUser() {
-        User user = new User();
-        user.setId("uid");
-        user.setEmail("test@freeuni.edu.ge");
-        user.setNotificationPreference(NotificationPreference.EMAIL);
-        return user;
-    }
-
-    private Room basicRoom() {
-        Room room = new Room();
-        room.setId(1L);
-        room.setRoomNumber(101);
-        return room;
-    }
-
-    private void stubRoomFreeAndAvailable(Room room) {
-        when(roomRepository.findByIdWithLock(1L)).thenReturn(Optional.of(room));
-        when(roomOccupancyRepository.findActiveOccupancyByUserId(eq("uid"), any())).thenReturn(Optional.empty());
-        when(lectureRepository.findActiveLecturesByRoomIds(any(), any())).thenReturn(Collections.emptyList());
-        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(1L)).thenReturn(Optional.empty());
     }
 
     @Test
@@ -271,9 +306,9 @@ public class RoomAvailabilityServiceTest {
         when(userRepository.findById("uid")).thenReturn(Optional.of(user));
 
         Room room = basicRoom();
-        stubRoomFreeAndAvailable(room);
+        stubRoomFreeAndAvailable(room, "uid");
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.of(2026, 7, 6, 12, 0);
         when(timeService.now()).thenReturn(now);
 
         Lecture nextLecture = new Lecture();
@@ -293,9 +328,9 @@ public class RoomAvailabilityServiceTest {
         when(userRepository.findById("uid")).thenReturn(Optional.of(user));
 
         Room room = basicRoom();
-        stubRoomFreeAndAvailable(room);
+        stubRoomFreeAndAvailable(room, "uid");
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.of(2026, 7, 6, 12, 0);
         when(timeService.now()).thenReturn(now);
 
         Lecture nextLecture = new Lecture();
@@ -313,6 +348,8 @@ public class RoomAvailabilityServiceTest {
         ReserveRoomResponseDto result = roomAvailabilityService.reserveRoom("uid", 1L, 45L, null);
 
         assertNotNull(result);
+        assertEquals(now.plusMinutes(45), result.getNextLectureStart());
+        assertEquals(45L, result.getMaxAllowedDurationMinutes());
         verify(roomOccupancyRepository, times(1)).save(any(RoomOccupancy.class));
     }
 
@@ -322,9 +359,9 @@ public class RoomAvailabilityServiceTest {
         when(userRepository.findById("uid")).thenReturn(Optional.of(user));
 
         Room room = basicRoom();
-        stubRoomFreeAndAvailable(room);
+        stubRoomFreeAndAvailable(room, "uid");
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.of(2026, 7, 6, 12, 0);
         when(timeService.now()).thenReturn(now);
         when(lectureRepository.findNextLecturesByRoomId(eq(1L), any())).thenReturn(Collections.emptyList());
 
@@ -348,9 +385,9 @@ public class RoomAvailabilityServiceTest {
         when(userRepository.findById("uid")).thenReturn(Optional.of(user));
 
         Room room = basicRoom();
-        stubRoomFreeAndAvailable(room);
+        stubRoomFreeAndAvailable(room, "uid");
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.of(2026, 7, 6, 12, 0);
         when(timeService.now()).thenReturn(now);
 
         Lecture nextLecture = new Lecture();
@@ -372,26 +409,15 @@ public class RoomAvailabilityServiceTest {
         assertEquals(90L, result.getMaxAllowedDurationMinutes());
     }
 
-    private void stubHappyPathReservation(User user, Room room, LocalDateTime fixedNow) {
-        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-        when(roomRepository.findByIdWithLock(room.getId())).thenReturn(Optional.of(room));
-        when(roomOccupancyRepository.findActiveOccupancyByUserId(eq(user.getId()), any())).thenReturn(Optional.empty());
-        when(lectureRepository.findActiveLecturesByRoomIds(any(), any())).thenReturn(Collections.emptyList());
-        when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(room.getId())).thenReturn(Optional.empty());
-        when(timeService.now()).thenReturn(fixedNow);
-    }
-
     @Test
     void reserveRoom_negativeDuration_clampedToOneMinute() {
         LocalDateTime fixedNow = LocalDateTime.of(2026, 1, 1, 12, 0);
-        User user = new User();
-        user.setId("uid");
-        user.setNotificationPreference(NotificationPreference.EMAIL);
-        Room room = new Room();
-        room.setId(1L);
-        room.setRoomNumber(101);
+        User user = emailUser();
+        Room room = basicRoom();
 
-        stubHappyPathReservation(user, room, fixedNow);
+        when(userRepository.findById("uid")).thenReturn(Optional.of(user));
+        stubRoomFreeAndAvailable(room, "uid");
+        when(timeService.now()).thenReturn(fixedNow);
 
         RoomOccupancy saved = new RoomOccupancy();
         saved.setId(1L);
@@ -411,14 +437,12 @@ public class RoomAvailabilityServiceTest {
     @Test
     void reserveRoom_durationAbove480_clampedTo480() {
         LocalDateTime fixedNow = LocalDateTime.of(2026, 1, 1, 12, 0);
-        User user = new User();
-        user.setId("uid");
-        user.setNotificationPreference(NotificationPreference.EMAIL);
-        Room room = new Room();
-        room.setId(1L);
-        room.setRoomNumber(101);
+        User user = emailUser();
+        Room room = basicRoom();
 
-        stubHappyPathReservation(user, room, fixedNow);
+        when(userRepository.findById("uid")).thenReturn(Optional.of(user));
+        stubRoomFreeAndAvailable(room, "uid");
+        when(timeService.now()).thenReturn(fixedNow);
 
         RoomOccupancy saved = new RoomOccupancy();
         saved.setId(1L);
@@ -438,14 +462,12 @@ public class RoomAvailabilityServiceTest {
     @Test
     void reserveRoom_nullDuration_defaultsTo60() {
         LocalDateTime fixedNow = LocalDateTime.of(2026, 1, 1, 12, 0);
-        User user = new User();
-        user.setId("uid");
-        user.setNotificationPreference(NotificationPreference.EMAIL);
-        Room room = new Room();
-        room.setId(1L);
-        room.setRoomNumber(101);
+        User user = emailUser();
+        Room room = basicRoom();
 
-        stubHappyPathReservation(user, room, fixedNow);
+        when(userRepository.findById("uid")).thenReturn(Optional.of(user));
+        stubRoomFreeAndAvailable(room, "uid");
+        when(timeService.now()).thenReturn(fixedNow);
 
         RoomOccupancy saved = new RoomOccupancy();
         saved.setId(1L);
@@ -470,6 +492,10 @@ public class RoomAvailabilityServiceTest {
         Room room = new Room();
         room.setId(1L);
         room.setRoomNumber(404);
+        Floor floor = new Floor();
+        floor.setId(1L);
+        floor.setNumber(4);
+        room.setFloor(floor);
 
         LocalDateTime fixedNow = LocalDateTime.of(2026, 1, 1, 12, 0);
         when(timeService.now()).thenReturn(fixedNow);
@@ -485,9 +511,8 @@ public class RoomAvailabilityServiceTest {
         when(roomOccupancyRepository.findFirstByRoomIdAndEndAtIsNull(1L))
                 .thenReturn(Optional.of(expiredOccupancy));
 
-        AccessDeniedException exception = assertThrows(AccessDeniedException.class, () -> {
-            roomAvailabilityService.cancelOccupancy("differentUser", 1L);
-        });
+        AccessDeniedException exception = assertThrows(AccessDeniedException.class, () ->
+                roomAvailabilityService.cancelOccupancy("differentUser", 1L));
 
         assertEquals("You can only cancel your own occupancy", exception.getMessage());
         verify(chatService, never()).clearRoomChat(anyLong());
