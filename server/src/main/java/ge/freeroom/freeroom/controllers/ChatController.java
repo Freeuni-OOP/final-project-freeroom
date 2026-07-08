@@ -11,6 +11,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 import java.security.Principal;
 import java.util.List;
 
@@ -39,7 +41,8 @@ public class ChatController {
         if (!rateLimiter.allow("chat:" + principal.getName(), 20, 60000)) {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
         }
-        chatService.sendMessage(request.roomId(), principal.getName(), request.message());
+        String sanitizedMessage = request.message() != null ? Jsoup.clean(request.message(), Safelist.none()) : null;
+        chatService.sendMessage(request.roomId(), principal.getName(), sanitizedMessage);
         return ResponseEntity.ok().build();
     }
 

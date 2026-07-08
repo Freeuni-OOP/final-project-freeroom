@@ -9,6 +9,8 @@ import ge.freeroom.freeroom.service.UserReportService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 
 import java.security.Principal;
 import java.util.List;
@@ -30,8 +32,11 @@ public class UserReportController {
             @PathVariable String userId,
             @RequestBody CreateReportRequestDto request,
             Principal principal
-            ) {
+    ) {
         String reporterId = principal.getName();
+        if (request.getDetails() != null) {
+            request.setDetails(Jsoup.clean(request.getDetails(), Safelist.none()));
+        }
         UserReportResponseDto response = userReportService.createReport(reporterId, userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -41,7 +46,6 @@ public class UserReportController {
         User currentUser = userRepository.findById(principal.getName())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        // don't give access to others other than ADMINS
         if(!adminUsersConfig.isAdmin(currentUser.getEmail())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }

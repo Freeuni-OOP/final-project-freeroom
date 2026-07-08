@@ -11,6 +11,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 
 import java.security.Principal;
 import java.util.List;
@@ -51,6 +53,9 @@ public class RoomController {
         }
 
         String publicNote = request.getPublicNote();
+        if (publicNote != null) {
+            publicNote = Jsoup.clean(publicNote, Safelist.none());
+        }
 
         ReserveRoomResponseDto response = roomAvailabilityService.reserveRoom(userId, roomId, durationMinutes, publicNote);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -71,7 +76,8 @@ public class RoomController {
             @Valid @RequestBody UpdatePublicNoteRequestDto request,
             Principal principal) {
         String userId = principal.getName();
-        roomAvailabilityService.updatePublicNote(userId, roomId, request.getPublicNote());
+        String sanitizedNote = request.getPublicNote() != null ? Jsoup.clean(request.getPublicNote(), Safelist.none()) : null;
+        roomAvailabilityService.updatePublicNote(userId, roomId, sanitizedNote);
         return ResponseEntity.ok().build();
     }
 }
