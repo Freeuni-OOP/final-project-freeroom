@@ -5,7 +5,7 @@ import './FloorView.css';
 
 const FLOORS = [1, 2, 3, 4];
 
-export default function FloorView() {
+export default function FloorView({ university }) {
   const {
     selectedFloor,
     selectedRoomId,
@@ -18,71 +18,71 @@ export default function FloorView() {
     getRoomData,
     initialScale,
     loadRoomsMap,
-  } = useFloorView();
+  } = useFloorView({ university });
 
   return (
-    <div className="flex flex-col w-full h-full min-h-[480px] bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 shrink-0">
-        <p className="text-sm font-semibold text-gray-500 mr-1">სართული:</p>
-        {FLOORS.map((floor) => (
-          <button
-            key={floor}
-            onClick={() => selectFloor(floor)}
-            className={`w-9 h-9 rounded-full border text-sm font-semibold cursor-pointer flex items-center justify-center transition-all duration-150
-              ${selectedFloor === floor
-                ? 'bg-brand-accent border-brand-accent text-brand-accent-contrast'
-                : 'bg-gray-50 border-gray-200 text-brand-ink hover:border-brand-accent hover:bg-brand-accent/10'
-              }`}
-          >
-            {floor}
-          </button>
-        ))}
-      </div>
-
-      <div ref={wrapperRef} className="flex-1 overflow-hidden relative bg-gray-50">
-        <TransformWrapper
-          ref={transformRef}
-          key={initialScale}
-          initialScale={initialScale}
-          minScale={0.8}
-          maxScale={4}
-          centerOnInit
-          limitToBounds={false}
-          wheel={{ disabled: true }}
-        >
-          {({ resetTransform }) => (
-            <>
-              <TransformComponent wrapperStyle={{ width: '100%', height: '100%' }}>
-                <div className="floor-view__svg-container" ref={svgContainerRef} />
-              </TransformComponent>
+      <div className="flex flex-col w-full h-full min-h-[480px] bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 shrink-0">
+          <p className="text-sm font-semibold text-gray-500 mr-1">სართული:</p>
+          {FLOORS.map((floor) => (
               <button
-                onClick={() => resetTransform()}
-                className="absolute bottom-3 right-3 z-10 px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 bg-white/80 backdrop-blur-sm text-gray-600 shadow-sm hover:bg-white hover:border-brand-accent hover:text-brand-accent transition-all duration-150 cursor-pointer"
+                  key={floor}
+                  onClick={() => selectFloor(floor)}
+                  className={`w-9 h-9 rounded-full border text-sm font-semibold cursor-pointer flex items-center justify-center transition-all duration-150
+              ${selectedFloor === floor
+                      ? 'bg-brand-accent border-brand-accent text-brand-accent-contrast'
+                      : 'bg-gray-50 border-gray-200 text-brand-ink hover:border-brand-accent hover:bg-brand-accent/10'
+                  }`}
               >
-                ცენტრი
+                {floor}
               </button>
-            </>
-          )}
-        </TransformWrapper>
-      </div>
-
-      {selectedRoomId && (
-        <RoomModal
-          roomId={selectedRoomId}
-          roomData={getRoomData(selectedRoomId)}
-          onClose={handleCloseModal}
-          onReserveSuccess={loadRoomsMap}
-        />
-      )}
-
-      {tooltip.visible && (
-        <div
-          className="floor-view__tooltip"
-          style={{ left: tooltip.x + 14, top: tooltip.y - 36 }}
-        >
-          {tooltip.text}
+          ))}
         </div>
-      )}
-    </div>
+
+        <div ref={wrapperRef} className="flex-1 overflow-hidden relative bg-gray-50">
+          <TransformWrapper
+              ref={transformRef}
+              key={initialScale}
+              initialScale={initialScale}
+              minScale={0.8}
+              maxScale={4}
+              centerOnInit
+              limitToBounds={false}
+              wheel={{ disabled: true }}
+          >
+            {({ resetTransform }) => (
+                <>
+                  <TransformComponent wrapperStyle={{ width: '100%', height: '100%' }}>
+                    <div className="floor-view__svg-container" ref={svgContainerRef} />
+                  </TransformComponent>
+                  <button
+                      onClick={() => resetTransform()}
+                      className="absolute bottom-3 right-3 z-10 px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 bg-white/80 backdrop-blur-sm text-gray-600 shadow-sm hover:bg-white hover:border-brand-accent hover:text-brand-accent transition-all duration-150 cursor-pointer"
+                  >
+                    ცენტრი
+                  </button>
+                </>
+            )}
+          </TransformWrapper>
+        </div>
+
+        {selectedRoomId && (
+            <RoomModal
+                roomId={selectedRoomId}
+                roomData={getRoomData(selectedRoomId)}
+                onClose={handleCloseModal}
+                onReserveSuccess={loadRoomsMap}
+            />
+        )}
+
+        {tooltip.visible && (
+            <div
+                className="floor-view__tooltip"
+                style={{ left: tooltip.x + 14, top: tooltip.y - 36 }}
+            >
+              {tooltip.text}
+            </div>
+        )}
+      </div>
   );
 }

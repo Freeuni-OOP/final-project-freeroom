@@ -18,6 +18,7 @@ export const searchLectures = (query) => {
     return axiosInstance.get(`/lectures/search?q=${query}`);
 };
 
+// CHAT ACTIONS
 export const getChatMessages = (roomId, beforeId) => axiosInstance.get(beforeId ? `/chat/${roomId}?beforeId=${beforeId}` : `/chat/${roomId}`).then(res => res.data);
 
 export const sendChatMessage = (roomId, message) => axiosInstance.post('/chat/send', { roomId, message });
@@ -28,6 +29,10 @@ export const approveJoinRequest = (roomId, targetUserId) => axiosInstance.post('
 
 export const rejectJoinRequest = (roomId, targetUserId) => axiosInstance.post('/chat/reject', { roomId, targetUserId });
 
+export const kickUserFromRoom = (roomId, targetUserId) => axiosInstance.post('/chat/kick', { roomId, targetUserId });
+
+
+// USER PREFERENCES & TELEGRAM
 export const getNotificationPreference = () => axiosInstance.get('/user/notification-preference');
 
 export const updateNotificationPreference = (preference) => axiosInstance.patch('/user/notification-preference', { preference });
@@ -36,6 +41,8 @@ export const updateOccupancyVisibility = (visibility) => axiosInstance.patch('/u
 
 export const generateTelegramLink = () => axiosInstance.post('/user/telegram-link');
 
+
+// SUBJECTS & CALENDAR
 export const getSavedSubjects = () => axiosInstance.get('/user/subjects');
 export const addSavedSubject = (subjectId) => axiosInstance.post(`/user/subjects/${subjectId}`);
 export const removeSavedSubject = (subjectId) => axiosInstance.delete(`/user/subjects/${subjectId}`);
@@ -44,6 +51,8 @@ export const getUserCalendar = () => axiosInstance.get('/user/calendar');
 export const getAllSubjects = () => axiosInstance.get('/subjects');
 export const searchSubjects = (query) => axiosInstance.get(`/subjects/search?q=${query}`);
 
+
+// FRIENDS
 export const searchUsers = (query) => axiosInstance.get(`/friends/search?q=${encodeURIComponent(query)}`);
 export const getFriends = () => axiosInstance.get('/friends');
 
@@ -58,6 +67,8 @@ export const cancelFriendRequest = (userId) => axiosInstance.delete(`/friends/re
 
 export const getPublicProfile = (userId) => axiosInstance.get(`/user/${userId}/profile`);
 
+
+// ADMIN & REPORTS
 export const reportUser = (userId, reason, details) => axiosInstance.post(`/users/${userId}/report`, { reason, details })
 
 export const getPendingReports = () => axiosInstance.get('/admin/reports');

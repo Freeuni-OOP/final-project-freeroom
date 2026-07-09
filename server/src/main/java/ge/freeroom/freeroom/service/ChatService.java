@@ -66,9 +66,13 @@ public class ChatService {
         broadcastMessage(roomId, newChat, user);
     }
 
+    @Transactional
     public void sendJoinRequest(Long roomId, String requesterId) {
         User user = userRepository.findById(requesterId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        chatRepository.findFirstByRoomIdAndAuthorUser_IdAndMessageTypeOrderBySendingTimeDesc(roomId, requesterId, MessageType.REQUEST)
+                .ifPresent(oldChat -> chatRepository.delete(oldChat));
 
         Chat requestChat = new Chat(roomId, user, "Requesting access to the room.", MessageType.REQUEST);
         chatRepository.save(requestChat);
@@ -94,7 +98,10 @@ public class ChatService {
         User adminUser = userRepository.findById(adminId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        Chat approvalChat = new Chat(roomId, adminUser, "Approved access to join.", MessageType.APPROVAL);
+        User targetUser = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new IllegalArgumentException("Target user not found"));
+
+        Chat approvalChat = new Chat(roomId, adminUser, "Approved access for " + targetUser.getDisplayName() + " to join.", MessageType.APPROVAL);
         chatRepository.save(approvalChat);
 
         chatRepository.findFirstByRoomIdAndAuthorUser_IdAndMessageTypeOrderBySendingTimeDesc(roomId, targetUserId, MessageType.REQUEST)
@@ -118,6 +125,34 @@ public class ChatService {
     }
 
     @Transactional
+    public void kickUser(Long roomId, String adminId, String targetUserId) {
+        if (adminId.equals(targetUserId)) {
+            throw new IllegalArgumentException("You cannot kick yourself.");
+        }
+
+        RoomAccess adminAccess = roomAccessRepository.findByRoomIdAndUserId(roomId, adminId)
+                .orElseThrow(() -> new SecurityException("Unauthorized."));
+        if (!adminAccess.isAdmin()) {
+            throw new SecurityException("Only admins can kick users.");
+        }
+
+        RoomAccess targetAccess = roomAccessRepository.findByRoomIdAndUserId(roomId, targetUserId)
+                .orElseThrow(() -> new IllegalStateException("User does not have access to this room."));
+
+        roomAccessRepository.delete(targetAccess);
+
+        User targetUser = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new IllegalArgumentException("Target user not found"));
+        User adminUser = userRepository.findById(adminId).get();
+
+        Chat kickNotification = new Chat(roomId, adminUser, targetUser.getDisplayName() + " has been kicked from the room.", MessageType.TEXT);
+        chatRepository.save(kickNotification);
+
+        broadcastMessage(roomId, kickNotification, adminUser);
+        broadcastReload(roomId);
+    }
+
+    @Transactional
     public void initializeRoomBooker(Long roomId, String bookerId) {
         if (!roomAccessRepository.existsByRoomIdAndUserId(roomId, bookerId)) {
             RoomAccess bookerAccess = new RoomAccess(roomId, bookerId, true);
@@ -132,13 +167,13 @@ public class ChatService {
         broadcastReload(roomId);
     }
 
-
     private void broadcastMessage(Long roomId, Chat chat, User user) {
         ChatMessageDto dto = new ChatMessageDto(
                 chat.getId(),
                 user.getId(),
                 user.getDisplayName(),
                 user.getEmail(),
+                user.getPhotoUrl(),
                 chat.getMessage(),
                 chat.getMessageType(),
                 chat.getSendingTime()

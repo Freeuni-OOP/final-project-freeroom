@@ -20,6 +20,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 
 import java.security.Principal;
 import java.util.Set;
@@ -75,6 +77,14 @@ public class UserController {
 
         if (bio != null && bio.length() > 300) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bio cannot exceed 300 characters");
+        }
+
+        if (bio != null) {
+            bio = Jsoup.clean(bio, Safelist.none());
+        }
+
+        if (displayName != null) {
+            displayName = Jsoup.clean(displayName, Safelist.none());
         }
 
         FirebaseToken token = (FirebaseToken) request.getAttribute("firebaseToken");

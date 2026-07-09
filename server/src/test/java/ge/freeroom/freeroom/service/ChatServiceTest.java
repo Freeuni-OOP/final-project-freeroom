@@ -61,7 +61,7 @@ class ChatServiceTest {
     void getMessages_WhenBeforeIdIsNull_ReturnsLatestMessages() {
         Long roomId = 1L;
         String userId = "authorized-user";
-        ChatMessageDto msg = new ChatMessageDto(10L, "user", "Nick", "t@edu.ge", "Latest", MessageType.TEXT, LocalDateTime.now());
+        ChatMessageDto msg = new ChatMessageDto(10L, "user", "Nick", "placeholder", "t@edu.ge", "Latest", MessageType.TEXT, LocalDateTime.now());
         List<ChatMessageDto> messages = List.of(msg);
 
         when(roomAccessRepository.existsByRoomIdAndUserId(roomId, userId)).thenReturn(true);
@@ -79,8 +79,8 @@ class ChatServiceTest {
         Long beforeId = 50L;
         String userId = "authorized-user";
 
-        ChatMessageDto msg1 = new ChatMessageDto(10L, "u1", "N1", "e1", "First", MessageType.TEXT, LocalDateTime.now());
-        ChatMessageDto msg2 = new ChatMessageDto(11L, "u2", "N2", "e2", "Second", MessageType.TEXT, LocalDateTime.now());
+        ChatMessageDto msg1 = new ChatMessageDto(10L, "u1", "N1", "placeholder1", "e1", "First", MessageType.TEXT, LocalDateTime.now());
+        ChatMessageDto msg2 = new ChatMessageDto(11L, "u2", "N2", "placeholder2", "e2", "Second", MessageType.TEXT, LocalDateTime.now());
 
         List<ChatMessageDto> repoReturned = List.of(msg2, msg1);
         List<ChatMessageDto> expected = List.of(msg1, msg2);
@@ -146,15 +146,22 @@ class ChatServiceTest {
         Long roomId = 1L;
         String adminId = "real-admin-id";
         String targetUserId = "target-user-id";
+
         RoomAccess adminAccess = new RoomAccess(roomId, adminId, true);
         User adminUser = new User();
+
+        User targetUser = new User();
+        targetUser.setDisplayName("John Doe");
+
         Chat pendingRequest = new Chat();
 
         when(roomAccessRepository.findByRoomIdAndUserId(roomId, adminId)).thenReturn(Optional.of(adminAccess));
         when(chatRepository.findFirstByRoomIdAndAuthorUser_IdAndMessageTypeOrderBySendingTimeDesc(roomId, targetUserId, MessageType.REQUEST))
                 .thenReturn(Optional.of(pendingRequest));
         when(roomAccessRepository.existsByRoomIdAndUserId(roomId, targetUserId)).thenReturn(false);
+
         when(userRepository.findById(adminId)).thenReturn(Optional.of(adminUser));
+        when(userRepository.findById(targetUserId)).thenReturn(Optional.of(targetUser)); // <-- This was the missing line!
 
         chatService.approveJoinRequest(roomId, adminId, targetUserId);
 
