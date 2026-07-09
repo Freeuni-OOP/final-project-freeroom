@@ -2,14 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotification } from '@/context';
 
-const TYPE_ICONS = {
-    FRIEND_REQUEST_RECEIVED: '👥',
-    FRIEND_REQUEST_ACCEPTED: '✅',
-    FRIEND_REQUEST_REJECTED: '❌',
-    CHAT_JOIN_REQUEST: '🚪',
-    CHAT_JOIN_APPROVED: '🔓',
-    CHAT_JOIN_REJECTED: '🚫',
-};
 
 function timeAgo(isoString) {
     if (!isoString) return '';
@@ -63,7 +55,6 @@ const useNotificationPanel = (onClose) => {
         handleClick,
         handleMarkAllRead,
         handleLoadMore,
-        TYPE_ICONS,
         timeAgo
     };
 };

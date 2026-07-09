@@ -37,10 +37,23 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
     const [hasRequestedJoin, setHasRequestedJoin] = useState(false);
 
     const chatContainerRef = useRef(null);
+    const usersMenuRef = useRef(null);
     const isFetchingOlder = useRef(false);
     const isMountedRef = useRef(true);
     const hasEditedNoteRef = useRef(false);
     const messagesRef = useRef(messages);
+
+    const [showUsersMenu, setShowUsersMenu] = useState(false);
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (usersMenuRef.current && !usersMenuRef.current.contains(e.target)) {
+                setShowUsersMenu(false);
+            }
+        };
+        if (showUsersMenu) document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showUsersMenu]);
 
     useEffect(() => {
         isMountedRef.current = true;
@@ -571,7 +584,10 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         handleUpdateNote,
         loadingAction,
         hasEditedNoteRef,
-        hasRequestedJoin
+        hasRequestedJoin,
+        showUsersMenu,
+        setShowUsersMenu,
+        usersMenuRef
     };
 };
 
