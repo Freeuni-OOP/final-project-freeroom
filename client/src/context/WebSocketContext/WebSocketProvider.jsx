@@ -5,8 +5,8 @@ import { WebSocketContext } from './websocketContext';
 import { FRIEND_EVENT_TYPE } from '@/utils';
 
 const FRIEND_EVENT_MESSAGES = {
-    [FRIEND_EVENT_TYPE.REQUEST_SENT]: (a) => ({ type: 'info', message: `${a}-მა გამოგიგზავნათ მეგობრობის მოთხოვნა` }),
-    [FRIEND_EVENT_TYPE.REQUEST_ACCEPTED]: (a) => ({ type: 'success', message: `${a}-მა დაეთანხმა თქვენს მოთხოვნას` }),
+    [FRIEND_EVENT_TYPE.REQUEST_SENT]: (a) => ({ type: 'info', message: `${a}-სგან მოგივიდათ მეგობრობის მოთხოვნა` }),
+    [FRIEND_EVENT_TYPE.REQUEST_ACCEPTED]: (a) => ({ type: 'success', message: `${a} დაეთანხმა თქვენს მოთხოვნას` }),
 };
 
 const WebSocketProvider = ({ children }) => {
