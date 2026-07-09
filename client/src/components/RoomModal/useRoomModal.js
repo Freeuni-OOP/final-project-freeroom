@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
+
 import {
     reserveRoom,
     cancelOccupancy,
@@ -16,8 +15,7 @@ import { useNotification } from '@/context';
 import { useRealtime } from '@/context';
 import { ROOM_STATUS } from '@/utils';
 
-const ENV_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
-const CLEAN_BASE_URL = ENV_BASE_URL.endsWith('/') ? ENV_BASE_URL.slice(0, -1) : ENV_BASE_URL;
+
 
 const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
     const { showNotification } = useNotification();
@@ -83,8 +81,12 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         let isMounted = true;
 
         if (roomData?.status !== ROOM_STATUS.OCCUPIED) {
-            setIsAuthorized(false);
-            setMessages([]);
+            setTimeout(() => {
+                if (isMounted) {
+                    setIsAuthorized(false);
+                    setMessages([]);
+                }
+            }, 0);
             return;
         }
 
