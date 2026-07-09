@@ -69,7 +69,7 @@ public class ChatService {
             if (!access.getUserId().equals(authorId)) {
                 notificationService.publishToast(
                         access.getUserId(), NotificationType.CHAT_MESSAGE, user, roomId,
-                        user.getDisplayName() + "-მა მოგწერათ: " + message);
+                        user.getDisplayName() + " ოთახი #" + roomId + "-ის ჩათში წერს: " + message);
             }
         });
     }
@@ -92,7 +92,7 @@ public class ChatService {
             if (!ownerAccess.getUserId().equals(requesterId)) {
                 notificationService.createAndPublish(
                         ownerAccess.getUserId(), NotificationType.CHAT_JOIN_REQUEST, user, roomId,
-                        user.getDisplayName() + "-მა ოთახის ჩათში შესვლას ითხოვს #" + roomId);
+                        user.getDisplayName() + "ოთახი #" + roomId + "-ის ჩათში შესვლას ითხოვს");
             }
         });
     }
