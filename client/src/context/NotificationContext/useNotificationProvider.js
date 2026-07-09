@@ -74,6 +74,7 @@ const useNotificationProvider = () => {
     fetchNotifications,
     addPersistentNotification,
     markRead,
+    markAllRead,
     hasMoreNotifications,
     notificationPage,
   }), [showNotification, removeNotification, persistentNotifications, unreadCount, fetchNotifications, addPersistentNotification, markRead, markAllRead, hasMoreNotifications, notificationPage]);

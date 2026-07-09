@@ -82,6 +82,12 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
 
         let isMounted = true;
 
+        if (roomData?.status !== ROOM_STATUS.OCCUPIED) {
+            setIsAuthorized(false);
+            setMessages([]);
+            return;
+        }
+
         getChatMessages(roomId)
             .then((data) => {
                 if (isMounted) {
@@ -92,7 +98,9 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
             })
             .catch((err) => {
                 if (isMounted) {
-                    console.error(err);
+                    if (err.response?.status !== 403) {
+                        console.error(err);
+                    }
                     setIsAuthorized(false);
                     setMessages([]);
                 }
@@ -101,7 +109,7 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         return () => {
             isMounted = false;
         };
-    }, [roomId, reloadTrigger]);
+    }, [roomId, reloadTrigger, roomData?.status]);
 
     useEffect(() => {
         let interval = null;
