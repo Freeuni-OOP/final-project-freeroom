@@ -22,7 +22,7 @@ export default function NotificationPanel({ onClose }) {
                         onClick={handleMarkAllRead}
                         className="text-xs font-semibold text-brand-accent-text hover:underline"
                     >
-                        ყველის წაკითხვა
+                        ყველას წაკითხვა
                     </button>
                 )}
             </div>
