@@ -92,7 +92,7 @@ public class ChatService {
             if (!ownerAccess.getUserId().equals(requesterId)) {
                 notificationService.createAndPublish(
                         ownerAccess.getUserId(), NotificationType.CHAT_JOIN_REQUEST, user, roomId,
-                        user.getDisplayName() + "ოთახი #" + roomId + "-ის ჩათში შესვლას ითხოვს");
+                        user.getDisplayName() + " ოთახი #" + roomId + "-ის ჩათში შესვლას ითხოვს");
             }
         });
     }
