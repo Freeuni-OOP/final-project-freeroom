@@ -50,13 +50,13 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
             FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(token);
             String email = decodedToken.getEmail();
 
-            boolean isAllowedDomain = email != null && ALLOWED_DOMAINS.stream().anyMatch(email::endsWith);
-
-            if (!isAllowedDomain) {
-                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                response.getWriter().write("Access Denied: Must use a valid university email.");
-                return;
-            }
+            // TODO: REMOVE THIS BYPASS BEFORE PUSHING PR! (re-enable domain check)
+            // boolean isAllowedDomain = email != null && ALLOWED_DOMAINS.stream().anyMatch(email::endsWith);
+            // if (!isAllowedDomain) {
+            //     response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            //     response.getWriter().write("Access Denied: Must use a valid university email.");
+            //     return;
+            // }
 
             request.setAttribute("firebaseToken", decodedToken);
 

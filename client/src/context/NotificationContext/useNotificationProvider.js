@@ -1,7 +1,9 @@
 import { useState, useCallback, useMemo } from 'react';
+import { getNotifications, markNotificationRead, markAllNotificationsRead } from '@/services/api/endpoints';
 
 const useNotificationProvider = () => {
   const [notifications, setNotifications] = useState([]);
+  const [persistentNotifications, setPersistentNotifications] = useState([]);
 
   const removeNotification = useCallback((id) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
@@ -13,7 +15,7 @@ const useNotificationProvider = () => {
     const newNotification = {
       id,
       message: options.message,
-      type: options.type || 'info', // 'info', 'success', 'error', 'action'
+      type: options.type || 'info',
       onAccept: options.onAccept,
       onReject: options.onReject,
       duration: options.type === 'action' ? 10000 : (options.duration || 4000),
@@ -28,10 +30,43 @@ const useNotificationProvider = () => {
     }
   }, [removeNotification]);
 
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const data = await getNotifications();
+      setPersistentNotifications(data);
+    } catch {
+      // ignore — user may not be logged in yet
+    }
+  }, []);
+
+  const addPersistentNotification = useCallback((notif) => {
+    setPersistentNotifications((prev) => [notif, ...prev]);
+  }, []);
+
+  const markRead = useCallback(async (id) => {
+    await markNotificationRead(id);
+    setPersistentNotifications((prev) =>
+      prev.map((n) => n.id === id ? { ...n, isRead: true } : n)
+    );
+  }, []);
+
+  const markAllRead = useCallback(async () => {
+    await markAllNotificationsRead();
+    setPersistentNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+  }, []);
+
+  const unreadCount = persistentNotifications.filter((n) => !n.isRead).length;
+
   const contextValue = useMemo(() => ({
     showNotification,
-    removeNotification
-  }), [showNotification, removeNotification]);
+    removeNotification,
+    persistentNotifications,
+    unreadCount,
+    fetchNotifications,
+    addPersistentNotification,
+    markRead,
+    markAllRead,
+  }), [showNotification, removeNotification, persistentNotifications, unreadCount, fetchNotifications, addPersistentNotification, markRead, markAllRead]);
 
   return {
     contextValue,

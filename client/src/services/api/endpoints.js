@@ -72,3 +72,9 @@ export const getPublicProfile = (userId) => axiosInstance.get(`/user/${userId}/p
 export const reportUser = (userId, reason, details) => axiosInstance.post(`/users/${userId}/report`, { reason, details })
 
 export const getPendingReports = () => axiosInstance.get('/admin/reports');
+
+// NOTIFICATIONS
+export const getNotifications = () => axiosInstance.get('/notifications').then(r => r.data);
+export const getUnreadNotificationCount = () => axiosInstance.get('/notifications/unread-count').then(r => r.data);
+export const markNotificationRead = (id) => axiosInstance.post(`/notifications/${id}/read`);
+export const markAllNotificationsRead = () => axiosInstance.post('/notifications/read-all');

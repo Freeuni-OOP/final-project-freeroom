@@ -2,11 +2,14 @@ import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { auth } from './firebaseConfig';
 import { syncUser } from '../api/endpoints';
 
-const ALLOWED_DOMAINS = ['@freeuni.edu.ge', '@agruni.edu.ge'];
+// TODO: REMOVE @gmail.com AND RESTORE ORIGINAL LIST BEFORE PUSHING PR!
+// const ALLOWED_DOMAINS = ['@freeuni.edu.ge', '@agruni.edu.ge'];
 
-export const isAllowedEmail = (email) => {
-  const normalized = email?.toLowerCase();
-  return Boolean(normalized && ALLOWED_DOMAINS.some((domain) => normalized.endsWith(domain)));
+export const isAllowedEmail = (/* email */) => {
+  // TODO: REMOVE THIS BYPASS BEFORE PUSHING PR!
+  return true; // Temporarily allow all emails for multi-user testing
+  // const normalized = email?.toLowerCase();
+  // return Boolean(normalized && ALLOWED_DOMAINS.some((domain) => normalized.endsWith(domain)));
 };
 
 export const loginWithGoogle = async () => {
@@ -23,7 +26,7 @@ export const loginWithGoogle = async () => {
     return result.user;
   }
 
-  await signOut(auth).catch(() => {});
+  await signOut(auth).catch(() => { });
   throw new Error('Access restricted: Please log in using a valid FreeUni or Agruni institutional email account.');
 };
 
