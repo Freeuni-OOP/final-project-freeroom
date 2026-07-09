@@ -2,14 +2,11 @@ import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { auth } from './firebaseConfig';
 import { syncUser } from '../api/endpoints';
 
-// TODO: REMOVE @gmail.com AND RESTORE ORIGINAL LIST BEFORE PUSHING PR!
-// const ALLOWED_DOMAINS = ['@freeuni.edu.ge', '@agruni.edu.ge'];
+const ALLOWED_DOMAINS = ['@freeuni.edu.ge', '@agruni.edu.ge'];
 
-export const isAllowedEmail = (/* email */) => {
-  // TODO: REMOVE THIS BYPASS BEFORE PUSHING PR!
-  return true; // Temporarily allow all emails for multi-user testing
-  // const normalized = email?.toLowerCase();
-  // return Boolean(normalized && ALLOWED_DOMAINS.some((domain) => normalized.endsWith(domain)));
+export const isAllowedEmail = (email) => {
+  const normalized = email?.toLowerCase();
+  return Boolean(normalized && ALLOWED_DOMAINS.some((domain) => normalized.endsWith(domain)));
 };
 
 export const loginWithGoogle = async () => {
