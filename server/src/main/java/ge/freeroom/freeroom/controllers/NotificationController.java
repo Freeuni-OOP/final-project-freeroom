@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
+import org.springframework.data.domain.Page;
 
 @RestController
 @RequestMapping("/notifications")
@@ -20,8 +21,12 @@ public class NotificationController {
     }
 
     @GetMapping
-    public List<NotificationDto> getNotifications(Principal principal) {
-        return notificationService.getNotifications(principal.getName());
+    public Page<NotificationDto> getNotifications(
+            Principal principal,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "30") int size
+    ) {
+        return notificationService.getNotifications(principal.getName(), page, size);
     }
 
     @GetMapping("/unread-count")

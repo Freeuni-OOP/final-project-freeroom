@@ -30,10 +30,19 @@ const useNotificationProvider = () => {
     }
   }, [removeNotification]);
 
-  const fetchNotifications = useCallback(async () => {
+  const [notificationPage, setNotificationPage] = useState(0);
+  const [hasMoreNotifications, setHasMoreNotifications] = useState(true);
+
+  const fetchNotifications = useCallback(async (page = 0) => {
     try {
-      const data = await getNotifications();
-      setPersistentNotifications(data);
+      const data = await getNotifications(page);
+      if (page === 0) {
+        setPersistentNotifications(data.content);
+      } else {
+        setPersistentNotifications((prev) => [...prev, ...data.content]);
+      }
+      setNotificationPage(page);
+      setHasMoreNotifications(!data.last);
     } catch {
       // ignore — user may not be logged in yet
     }
@@ -65,8 +74,9 @@ const useNotificationProvider = () => {
     fetchNotifications,
     addPersistentNotification,
     markRead,
-    markAllRead,
-  }), [showNotification, removeNotification, persistentNotifications, unreadCount, fetchNotifications, addPersistentNotification, markRead, markAllRead]);
+    hasMoreNotifications,
+    notificationPage,
+  }), [showNotification, removeNotification, persistentNotifications, unreadCount, fetchNotifications, addPersistentNotification, markRead, markAllRead, hasMoreNotifications, notificationPage]);
 
   return {
     contextValue,

@@ -10,6 +10,7 @@ import ge.freeroom.freeroom.websocket.RealtimeEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -53,12 +54,10 @@ public class NotificationService {
         realtimeEventPublisher.publishNotificationEvent(recipientId, dto);
     }
 
-    public List<NotificationDto> getNotifications(String userId) {
+    public Page<NotificationDto> getNotifications(String userId, int page, int size) {
         return notificationRepository
-                .findByRecipientIdOrderByCreatedAtDesc(userId, PageRequest.of(0, 30))
-                .stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
+                .findByRecipientIdOrderByCreatedAtDesc(userId, PageRequest.of(page, size))
+                .map(this::toDto);
     }
 
     public long getUnreadCount(String userId) {
