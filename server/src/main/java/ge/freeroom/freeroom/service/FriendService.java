@@ -129,7 +129,7 @@ public class FriendService {
         realtimeEventPublisher.publishFriendEvent(receiverId, buildEvent(FriendEventType.REQUEST_SENT, request.getId(), sender));
         notificationService.createAndPublish(
                 receiverId, NotificationType.FRIEND_REQUEST_RECEIVED, sender, request.getId(),
-                sender.getDisplayName() + "-მა გამოგიგზავნათ მეგობრობის მოთხოვნა");
+                sender.getDisplayName() + "-სგან მოგივიდათ მეგობრობის მოთხოვნა");
     }
 
     @Transactional
@@ -161,7 +161,7 @@ public class FriendService {
         realtimeEventPublisher.publishFriendEvent(sender.getId(), buildEvent(FriendEventType.REQUEST_ACCEPTED, request.getId(), receiver));
         notificationService.createAndPublish(
                 sender.getId(), NotificationType.FRIEND_REQUEST_ACCEPTED, receiver, request.getId(),
-                receiver.getDisplayName() + "-მა დაეთანხმა თქვენს მოთხოვნას");
+                receiver.getDisplayName() + " დაეთანხმა თქვენს მოთხოვნას");
     }
 
     @Transactional
@@ -183,7 +183,7 @@ public class FriendService {
         realtimeEventPublisher.publishFriendEvent(request.getSender().getId(), buildEvent(FriendEventType.REQUEST_REJECTED, request.getId(), request.getReceiver()));
         notificationService.createAndPublish(
                 request.getSender().getId(), NotificationType.FRIEND_REQUEST_REJECTED, request.getReceiver(), request.getId(),
-                request.getReceiver().getDisplayName() + "-მა უარყო თქვენი მოთხოვნა");
+                request.getReceiver().getDisplayName() + "-სთან მეგობრობის მოთხოვნა უარყოფილია");
     }
 
     public List<FriendDto> getFriends(String currentUserId){
