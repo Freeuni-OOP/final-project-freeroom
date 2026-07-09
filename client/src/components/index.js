@@ -11,3 +11,4 @@ export * from './Loader';
 export { FriendsPanel } from './FriendsPanel';
 export * from './NotificationContainer';
 export * from './NotificationItem';
+export * from './NotificationBell';

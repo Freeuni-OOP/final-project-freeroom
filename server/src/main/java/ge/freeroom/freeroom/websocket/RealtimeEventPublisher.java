@@ -31,6 +31,10 @@ public class RealtimeEventPublisher {
         publishAfterCommit("/topic/users/" + targetUserId + "/profile", payload);
     }
 
+    public void publishNotificationEvent(String targetUserId, Object payload) {
+        publishAfterCommit("/topic/users/" + targetUserId + "/notifications", payload);
+    }
+
     public void publishOccupancyRipple(String userId, java.util.List<String> friendIds) {
         FriendEventDto friendPayload = new FriendEventDto(
                 FriendEventType.OCCUPANCY_CHANGED, null, userId, null, null, timeService.now()

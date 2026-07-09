@@ -41,6 +41,9 @@ class ChatServiceTest {
     @Mock
     private SimpMessagingTemplate messagingTemplate;
 
+    @Mock
+    private NotificationService notificationService;
+
     @InjectMocks
     private ChatService chatService;
 

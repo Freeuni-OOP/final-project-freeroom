@@ -47,6 +47,9 @@ class FriendServiceTest {
     @Mock
     RealtimeEventPublisher realtimeEventPublisher;
 
+    @Mock
+    NotificationService notificationService;
+
     @InjectMocks
     FriendService friendService;
 

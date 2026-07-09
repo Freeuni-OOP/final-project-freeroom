@@ -2,6 +2,7 @@ import freeuniLogo from '@/assets/freeuni-logo.png';
 import agruniLogo from '@/assets/agruni-logo.png';
 import useNavbar from './useNavbar';
 import { LectureSearch } from '@/components/LectureSearch';
+import { NotificationBell } from '@/components/NotificationBell';
 
 export default function Navbar() {
     const {
@@ -68,6 +69,8 @@ export default function Navbar() {
                             )}
                         </div>
 
+                        <NotificationBell />
+
                         <button
                             onClick={handleLogout}
                             className="ml-1 rounded-lg px-3 py-2 text-sm font-semibold text-brand-ink/70 transition-colors hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
@@ -76,15 +79,18 @@ export default function Navbar() {
                         </button>
                     </div>
 
-                    <button
-                        className="flex sm:hidden flex-col justify-center items-center w-8 h-8 space-y-1.5 focus:outline-none"
-                        onClick={toggleMenu}
-                        aria-label="Toggle Menu"
-                    >
-                        <span className={`block w-6 h-0.5 bg-brand-ink transition-transform duration-300 ${isMenuOpen ? 'rotate-45 translate-y-2' : ''}`} />
-                        <span className={`block w-6 h-0.5 bg-brand-ink transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`} />
-                        <span className={`block w-6 h-0.5 bg-brand-ink transition-transform duration-300 ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
-                    </button>
+                    <div className="flex sm:hidden items-center gap-3">
+                        <NotificationBell />
+                        <button
+                            className="flex flex-col justify-center items-center w-8 h-8 space-y-1.5 focus:outline-none"
+                            onClick={toggleMenu}
+                            aria-label="Toggle Menu"
+                        >
+                            <span className={`block w-6 h-0.5 bg-brand-ink transition-transform duration-300 ${isMenuOpen ? 'rotate-45 translate-y-2' : ''}`} />
+                            <span className={`block w-6 h-0.5 bg-brand-ink transition-opacity duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`} />
+                            <span className={`block w-6 h-0.5 bg-brand-ink transition-transform duration-300 ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+                        </button>
+                    </div>
                 </nav>
             </header>
 

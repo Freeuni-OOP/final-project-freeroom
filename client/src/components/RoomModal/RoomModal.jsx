@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import useRoomModal from './useRoomModal';
 
@@ -10,7 +9,6 @@ const ButtonSpinner = () => (
 );
 
 export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess }) {
-  const [showUsersMenu, setShowUsersMenu] = useState(false);
 
   const {
     roomData: modalData,
@@ -37,7 +35,10 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
     hasEditedNoteRef,
     handleUpdateNote,
     loadingAction,
-    hasRequestedJoin
+    hasRequestedJoin,
+    showUsersMenu,
+    setShowUsersMenu,
+    usersMenuRef
   } = useRoomModal(roomId, roomData, onClose, onReserveSuccess);
 
   if (!roomId || !modalData) return null;
@@ -322,7 +323,7 @@ export default function RoomModal({ roomId, roomData, onClose, onReserveSuccess 
                       ← უკან
                     </button>
                     <h3 className="text-lg font-bold text-gray-900">ოთახის ჩათი ({roomId})</h3>
-                    <div className="relative w-16 flex justify-end mr-10">
+                    <div ref={usersMenuRef} className="relative w-16 flex justify-end mr-10">
                       {isAuthorized && (
                           <button
                               onClick={() => setShowUsersMenu(!showUsersMenu)}

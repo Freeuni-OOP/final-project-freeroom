@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
+
 import {
     reserveRoom,
     cancelOccupancy,
@@ -13,13 +12,14 @@ import {
     kickUserFromRoom
 } from '@/services/api/endpoints.js';
 import { useNotification } from '@/context';
+import { useRealtime } from '@/context';
 import { ROOM_STATUS } from '@/utils';
 
-const ENV_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
-const CLEAN_BASE_URL = ENV_BASE_URL.endsWith('/') ? ENV_BASE_URL.slice(0, -1) : ENV_BASE_URL;
+
 
 const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
     const { showNotification } = useNotification();
+    const { setIsChatOpenGlobal } = useRealtime();
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [messages, setMessages] = useState([]);
     const [isAuthorized, setIsAuthorized] = useState(null);
@@ -35,10 +35,23 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
     const [hasRequestedJoin, setHasRequestedJoin] = useState(false);
 
     const chatContainerRef = useRef(null);
+    const usersMenuRef = useRef(null);
     const isFetchingOlder = useRef(false);
     const isMountedRef = useRef(true);
     const hasEditedNoteRef = useRef(false);
     const messagesRef = useRef(messages);
+
+    const [showUsersMenu, setShowUsersMenu] = useState(false);
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (usersMenuRef.current && !usersMenuRef.current.contains(e.target)) {
+                setShowUsersMenu(false);
+            }
+        };
+        if (showUsersMenu) document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showUsersMenu]);
 
     useEffect(() => {
         isMountedRef.current = true;
@@ -67,6 +80,16 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
 
         let isMounted = true;
 
+        if (roomData?.status !== ROOM_STATUS.OCCUPIED) {
+            setTimeout(() => {
+                if (isMounted) {
+                    setIsAuthorized(false);
+                    setMessages([]);
+                }
+            }, 0);
+            return;
+        }
+
         getChatMessages(roomId)
             .then((data) => {
                 if (isMounted) {
@@ -77,7 +100,9 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
             })
             .catch((err) => {
                 if (isMounted) {
-                    console.error(err);
+                    if (err.response?.status !== 403) {
+                        console.error(err);
+                    }
                     setIsAuthorized(false);
                     setMessages([]);
                 }
@@ -86,7 +111,7 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         return () => {
             isMounted = false;
         };
-    }, [roomId, reloadTrigger]);
+    }, [roomId, reloadTrigger, roomData?.status]);
 
     useEffect(() => {
         let interval = null;
@@ -120,102 +145,83 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
     }, [isChatOpen, messages]);
 
     useEffect(() => {
-        let stompClient = null;
+        setIsChatOpenGlobal(roomId, isChatOpen);
+        return () => setIsChatOpenGlobal(roomId, false);
+    }, [isChatOpen, setIsChatOpenGlobal, roomId]);
 
-        if (roomId) {
-            const token = localStorage.getItem('token');
-            const socketUrl = token ? `${CLEAN_BASE_URL}/ws?token=${token}` : `${CLEAN_BASE_URL}/ws`;
-            const socket = new SockJS(socketUrl);
+    const { subscribeToRoom } = useRealtime();
 
-            stompClient = new Client({
-                webSocketFactory: () => socket,
-                onConnect: () => {
-                    if (isMountedRef.current) {
-                        setReloadTrigger((prev) => prev + 1);
-                    }
+    useEffect(() => {
+        if (!roomId) return;
 
-                    stompClient.subscribe(`/topic/room/${roomId}`, (message) => {
-                        const newMsg = JSON.parse(message.body);
-                        if (isMountedRef.current) {
-                            if (newMsg.messageType === 'APPROVAL' && newMsg.message.startsWith("Approved access for ") && newMsg.message.endsWith(" to join.")) {
-                                const targetNickname = newMsg.message.slice(20, -9);
-                                const targetUserMsg = messagesRef.current.find(m => m.nickname === targetNickname);
-                                if (targetUserMsg) {
-                                    setLocalApprovedUsers(prev => {
-                                        const map = new Map(prev);
-                                        map.set(targetUserMsg.author, {
-                                            id: targetUserMsg.author,
-                                            nickname: targetUserMsg.nickname,
-                                            photoUrl: targetUserMsg.photoUrl,
-                                            email: targetUserMsg.email
-                                        });
-                                        return map;
-                                    });
-                                    setLocalKickedUsers(prev => {
-                                        const set = new Set(prev);
-                                        set.delete(targetUserMsg.author);
-                                        return set;
-                                    });
-                                }
-                            } else if (newMsg.messageType === 'TEXT' && newMsg.message.endsWith(" has been kicked from the room.")) {
-                                const targetNickname = newMsg.message.slice(0, -31);
-                                const targetUserMsg = messagesRef.current.find(m => m.nickname === targetNickname);
-                                if (targetUserMsg) {
-                                    setLocalKickedUsers(prev => new Set(prev).add(targetUserMsg.author));
-                                    setLocalApprovedUsers(prev => {
-                                        const map = new Map(prev);
-                                        map.delete(targetUserMsg.author);
-                                        return map;
-                                    });
-                                }
-                            }
-
-                            if (newMsg.messageType === 'APPROVAL') {
-                                setReloadTrigger((prev) => prev + 1);
-                            }
-
-                            setMessages((prev) => {
-                                let updated = prev;
-                                if (newMsg.messageType === 'REQUEST') {
-                                    updated = updated.filter(m => !(m.messageType === 'REQUEST' && m.author === newMsg.author));
-                                }
-                                if (updated.some(m => m.id === newMsg.id)) {
-                                    return updated.map(m => m.id === newMsg.id ? newMsg : m);
-                                }
-                                return [...updated, newMsg].sort((a, b) => a.id - b.id);
+        const handleMessage = (newMsg) => {
+            if (isMountedRef.current) {
+                if (newMsg.messageType === 'APPROVAL' && newMsg.message.startsWith("Approved access for ") && newMsg.message.endsWith(" to join.")) {
+                    const targetNickname = newMsg.message.slice(20, -9);
+                    const targetUserMsg = messagesRef.current.find(m => m.nickname === targetNickname);
+                    if (targetUserMsg) {
+                        setLocalApprovedUsers(prev => {
+                            const map = new Map(prev);
+                            map.set(targetUserMsg.author, {
+                                id: targetUserMsg.author,
+                                nickname: targetUserMsg.nickname,
+                                photoUrl: targetUserMsg.photoUrl,
+                                email: targetUserMsg.email
                             });
-                        }
-                    });
-
-                    stompClient.subscribe(`/topic/room/${roomId}/reload`, () => {
-                        if (isMountedRef.current) {
-                            setReloadTrigger((prev) => prev + 1);
-                        }
-                    });
-                },
-                onStompError: (err) => {
-                    console.error(err);
-                    showNotification({
-                        message: 'ჩატთან კავშირი შეწყდა. შეტყობინებები დროებით ვერ განახლდება.',
-                        type: 'error'
-                    });
-                },
-                onWebSocketClose: () => {
-                    if (isMountedRef.current && isChatOpen) {
-                        showNotification({
-                            message: 'სერვერთან კავშირი დაკარგულია. მიმდინარეობს ხელახლა დაკავშირება...',
-                            type: 'info'
+                            return map;
+                        });
+                        setLocalKickedUsers(prev => {
+                            const set = new Set(prev);
+                            set.delete(targetUserMsg.author);
+                            return set;
+                        });
+                    }
+                } else if (newMsg.messageType === 'TEXT' && newMsg.message.endsWith(" has been kicked from the room.")) {
+                    const targetNickname = newMsg.message.slice(0, -31);
+                    const targetUserMsg = messagesRef.current.find(m => m.nickname === targetNickname);
+                    if (targetUserMsg) {
+                        setLocalKickedUsers(prev => new Set(prev).add(targetUserMsg.author));
+                        setLocalApprovedUsers(prev => {
+                            const map = new Map(prev);
+                            map.delete(targetUserMsg.author);
+                            return map;
                         });
                     }
                 }
-            });
-            stompClient.activate();
+
+                if (newMsg.messageType === 'APPROVAL') {
+                    setReloadTrigger((prev) => prev + 1);
+                }
+
+                setMessages((prev) => {
+                    let updated = prev;
+                    if (newMsg.messageType === 'REQUEST') {
+                        updated = updated.filter(m => !(m.messageType === 'REQUEST' && m.author === newMsg.author));
+                    }
+                    if (updated.some(m => m.id === newMsg.id)) {
+                        return updated.map(m => m.id === newMsg.id ? newMsg : m);
+                    }
+                    return [...updated, newMsg].sort((a, b) => a.id - b.id);
+                });
+            }
+        };
+
+        const handleReload = () => {
+            if (isMountedRef.current) {
+                setReloadTrigger((prev) => prev + 1);
+            }
+        };
+
+        const unsubscribe = subscribeToRoom(roomId, handleMessage, handleReload);
+
+        if (isMountedRef.current) {
+            setReloadTrigger((prev) => prev + 1);
         }
 
         return () => {
-            if (stompClient) stompClient.deactivate();
+            unsubscribe();
         };
-    }, [roomId, isChatOpen]);
+    }, [roomId, subscribeToRoom]);
 
     const loadOlderMessages = async () => {
         if (!roomId || isFetchingOlder.current || !hasMore || messages.length === 0) return;
@@ -588,7 +594,10 @@ const useRoomModal = (roomId, roomData, onClose, onReserveSuccess) => {
         handleUpdateNote,
         loadingAction,
         hasEditedNoteRef,
-        hasRequestedJoin
+        hasRequestedJoin,
+        showUsersMenu,
+        setShowUsersMenu,
+        usersMenuRef
     };
 };
 

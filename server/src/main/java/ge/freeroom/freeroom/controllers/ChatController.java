@@ -68,4 +68,9 @@ public class ChatController {
         chatService.kickUser(request.roomId(), principal.getName(), request.targetUserId());
         return ResponseEntity.ok().build();
     }
+
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<String> handleSecurityException(SecurityException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+    }
 }

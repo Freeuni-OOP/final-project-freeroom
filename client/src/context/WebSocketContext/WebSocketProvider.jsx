@@ -5,17 +5,26 @@ import { WebSocketContext } from './websocketContext';
 import { FRIEND_EVENT_TYPE } from '@/utils';
 
 const FRIEND_EVENT_MESSAGES = {
-    [FRIEND_EVENT_TYPE.REQUEST_SENT]: (a) => ({ type: 'info', message: `${a} გამოგიგზავნათ მეგობრობის მოთხოვნა` }),
+    [FRIEND_EVENT_TYPE.REQUEST_SENT]: (a) => ({ type: 'info', message: `${a}-სგან მოგივიდათ მეგობრობის მოთხოვნა` }),
     [FRIEND_EVENT_TYPE.REQUEST_ACCEPTED]: (a) => ({ type: 'success', message: `${a} დაეთანხმა თქვენს მოთხოვნას` }),
 };
 
 const WebSocketProvider = ({ children }) => {
     const { user } = useAuth();
-    const { showNotification } = useNotification();
+    const { showNotification, addPersistentNotification, fetchNotifications } = useNotification();
     const friendListenersRef = useRef(new Set());
     const roomListenersRef = useRef(new Set());
     const stompClientRef = useRef(null);
     const [connected, setConnected] = useState(false);
+    const openChatRoomIdRef = useRef(null);
+
+    const setIsChatOpenGlobal = useCallback((roomId, isOpen) => {
+        if (isOpen) {
+            openChatRoomIdRef.current = roomId;
+        } else if (openChatRoomIdRef.current === roomId) {
+            openChatRoomIdRef.current = null;
+        }
+    }, []);
 
     const onFriendEvent = useCallback((callback) => {
         friendListenersRef.current.add(callback);
@@ -37,12 +46,31 @@ const WebSocketProvider = ({ children }) => {
         return () => subscription.unsubscribe();
     }, []);
 
+    const subscribeToRoom = useCallback((roomId, onMessage, onReload) => {
+        if (!stompClientRef.current || !roomId) return () => {};
+
+        const msgSub = stompClientRef.current.subscribe(`/topic/room/${roomId}`, (message) => {
+            onMessage(JSON.parse(message.body));
+        });
+
+        const reloadSub = stompClientRef.current.subscribe(`/topic/room/${roomId}/reload`, (message) => {
+            onReload(message.body);
+        });
+
+        return () => {
+            msgSub.unsubscribe();
+            reloadSub.unsubscribe();
+        };
+    }, []);
+
     useEffect(() => {
         if (!user) {
             disconnectStomp();
             stompClientRef.current = null;
             return () => setConnected(false);
         }
+
+        fetchNotifications();
 
         let cancelled = false;
 
@@ -64,6 +92,24 @@ const WebSocketProvider = ({ children }) => {
                         roomListenersRef.current.forEach((cb) => cb(event));
                     });
 
+                    client.subscribe(`/topic/users/${user.uid}/notifications`, (message) => {
+                        const notif = JSON.parse(message.body);
+                        
+                        if (notif.id) {
+                            addPersistentNotification(notif);
+                        }
+
+                        const handledByFriendSub = new Set(['FRIEND_REQUEST_RECEIVED', 'FRIEND_REQUEST_ACCEPTED']);
+                        if (handledByFriendSub.has(notif.type)) return;
+
+                        const chatTypes = new Set(['CHAT_JOIN_REQUEST', 'CHAT_JOIN_APPROVED', 'CHAT_JOIN_REJECTED', 'CHAT_MESSAGE']);
+                        if (chatTypes.has(notif.type) && openChatRoomIdRef.current === notif.referenceId) {
+                            return;
+                        }
+
+                        showNotification({ type: 'info', message: notif.message });
+                    });
+
                     stompClientRef.current = client;
                     setConnected(true);
                 },
@@ -78,11 +124,11 @@ const WebSocketProvider = ({ children }) => {
             stompClientRef.current = null;
             setConnected(false);
         };
-    }, [user, showNotification]);
+    }, [user, showNotification, addPersistentNotification, fetchNotifications]);
 
     const value = useMemo(
-        () => ({ onFriendEvent, onRoomEvent, subscribeToProfile, connected }),
-        [onFriendEvent, onRoomEvent, subscribeToProfile, connected]
+        () => ({ onFriendEvent, onRoomEvent, subscribeToProfile, subscribeToRoom, connected, setIsChatOpenGlobal }),
+        [onFriendEvent, onRoomEvent, subscribeToProfile, subscribeToRoom, connected, setIsChatOpenGlobal]
     );
 
     return <WebSocketContext.Provider value={value}>{children}</WebSocketContext.Provider>;

@@ -29,6 +29,7 @@ public class FriendService {
     private final RoomOccupancyRepository roomOccupancyRepository;
     private final TimeService timeService;
     private final RealtimeEventPublisher realtimeEventPublisher;
+    private final NotificationService notificationService;
 
     public FriendService(
             FriendRequestRepository friendRequestRepository,
@@ -36,13 +37,15 @@ public class FriendService {
             UserRepository userRepository,
             RoomOccupancyRepository roomOccupancyRepository,
             TimeService timeService,
-            RealtimeEventPublisher realtimeEventPublisher) {
+            RealtimeEventPublisher realtimeEventPublisher,
+            NotificationService notificationService) {
         this.friendRequestRepository = friendRequestRepository;
         this.friendshipRepository = friendshipRepository;
         this.userRepository = userRepository;
         this.roomOccupancyRepository = roomOccupancyRepository;
         this.timeService = timeService;
         this.realtimeEventPublisher = realtimeEventPublisher;
+        this.notificationService = notificationService;
     }
 
     public List<UserSearchResultDto> searchUsers(String currentUserId, String query){
@@ -124,6 +127,9 @@ public class FriendService {
         friendRequestRepository.save(request);
 
         realtimeEventPublisher.publishFriendEvent(receiverId, buildEvent(FriendEventType.REQUEST_SENT, request.getId(), sender));
+        notificationService.createAndPublish(
+                receiverId, NotificationType.FRIEND_REQUEST_RECEIVED, sender, request.getId(),
+                sender.getDisplayName() + "-სგან მოგივიდათ მეგობრობის მოთხოვნა");
     }
 
     @Transactional
@@ -153,6 +159,9 @@ public class FriendService {
         friendshipRepository.save(friendship);
 
         realtimeEventPublisher.publishFriendEvent(sender.getId(), buildEvent(FriendEventType.REQUEST_ACCEPTED, request.getId(), receiver));
+        notificationService.createAndPublish(
+                sender.getId(), NotificationType.FRIEND_REQUEST_ACCEPTED, receiver, request.getId(),
+                receiver.getDisplayName() + " დაეთანხმა თქვენს მოთხოვნას");
     }
 
     @Transactional
@@ -172,6 +181,9 @@ public class FriendService {
         friendRequestRepository.save(request);
 
         realtimeEventPublisher.publishFriendEvent(request.getSender().getId(), buildEvent(FriendEventType.REQUEST_REJECTED, request.getId(), request.getReceiver()));
+        notificationService.createAndPublish(
+                request.getSender().getId(), NotificationType.FRIEND_REQUEST_REJECTED, request.getReceiver(), request.getId(),
+                request.getReceiver().getDisplayName() + "-სთან მეგობრობის მოთხოვნა უარყოფილია");
     }
 
     public List<FriendDto> getFriends(String currentUserId){

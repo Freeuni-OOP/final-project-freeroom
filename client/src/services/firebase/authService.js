@@ -23,7 +23,7 @@ export const loginWithGoogle = async () => {
     return result.user;
   }
 
-  await signOut(auth).catch(() => {});
+  await signOut(auth).catch(() => { });
   throw new Error('Access restricted: Please log in using a valid FreeUni or Agruni institutional email account.');
 };
 

@@ -51,7 +51,6 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
             String email = decodedToken.getEmail();
 
             boolean isAllowedDomain = email != null && ALLOWED_DOMAINS.stream().anyMatch(email::endsWith);
-
             if (!isAllowedDomain) {
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 response.getWriter().write("Access Denied: Must use a valid university email.");

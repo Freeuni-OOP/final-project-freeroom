@@ -1,10 +1,7 @@
 package ge.freeroom.freeroom.service;
 
 import ge.freeroom.freeroom.dto.ChatMessageDto;
-import ge.freeroom.freeroom.entities.Chat;
-import ge.freeroom.freeroom.entities.MessageType;
-import ge.freeroom.freeroom.entities.RoomAccess;
-import ge.freeroom.freeroom.entities.User;
+import ge.freeroom.freeroom.entities.*;
 import ge.freeroom.freeroom.repositories.ChatRepository;
 import ge.freeroom.freeroom.repositories.RoomAccessRepository;
 import ge.freeroom.freeroom.repositories.UserRepository;
@@ -32,6 +29,9 @@ public class ChatService {
 
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
+
+    @Autowired
+    private NotificationService notificationService;
 
     public List<ChatMessageDto> getMessages(Long roomId, Long beforeId, String userId) {
         if (!roomAccessRepository.existsByRoomIdAndUserId(roomId, userId)) {
@@ -64,6 +64,14 @@ public class ChatService {
         chatRepository.save(newChat);
 
         broadcastMessage(roomId, newChat, user);
+
+        roomAccessRepository.findByRoomId(roomId).forEach(access -> {
+            if (!access.getUserId().equals(authorId)) {
+                notificationService.publishToast(
+                        access.getUserId(), NotificationType.CHAT_MESSAGE, user, roomId,
+                        user.getDisplayName() + " ოთახი #" + roomId + "-ის ჩათში წერს: " + message);
+            }
+        });
     }
 
     @Transactional
@@ -78,6 +86,15 @@ public class ChatService {
         chatRepository.save(requestChat);
 
         broadcastMessage(roomId, requestChat, user);
+
+        // Notify the room owner
+        roomAccessRepository.findFirstByRoomIdAndIsAdminTrue(roomId).ifPresent(ownerAccess -> {
+            if (!ownerAccess.getUserId().equals(requesterId)) {
+                notificationService.createAndPublish(
+                        ownerAccess.getUserId(), NotificationType.CHAT_JOIN_REQUEST, user, roomId,
+                        user.getDisplayName() + " ოთახი #" + roomId + "-ის ჩათში შესვლას ითხოვს");
+            }
+        });
     }
 
     @Transactional
@@ -109,6 +126,11 @@ public class ChatService {
 
         broadcastMessage(roomId, approvalChat, adminUser);
         broadcastReload(roomId);
+
+        // Notify the approved user
+        notificationService.createAndPublish(
+                targetUserId, NotificationType.CHAT_JOIN_APPROVED, adminUser, roomId,
+                "დაგიშვეს ჩათში #" + roomId);
     }
 
     @Transactional
@@ -122,6 +144,12 @@ public class ChatService {
                 .ifPresent(chat -> chatRepository.delete(chat));
 
         broadcastReload(roomId);
+
+        // Notify the rejected user
+        User adminUser = userRepository.findById(adminId).orElse(null);
+        notificationService.createAndPublish(
+                targetUserId, NotificationType.CHAT_JOIN_REJECTED, adminUser, roomId,
+                "ოთახის ჩათში #" + roomId + " შესვლა უარყოფილია");
     }
 
     @Transactional
