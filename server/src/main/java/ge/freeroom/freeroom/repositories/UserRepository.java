@@ -15,6 +15,7 @@ public interface UserRepository extends JpaRepository<User, String> {
     @Query("""
         SELECT u FROM User u
         WHERE LOWER(u.displayName) LIKE LOWER(CONCAT('%', :query, '%'))
+                
         AND u.id != :excludeId
         """)
     List<User> searchByDisplayName(

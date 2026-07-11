@@ -21,6 +21,8 @@ export const searchLectures = (query) => {
 // CHAT ACTIONS
 export const getChatMessages = (roomId, beforeId) => axiosInstance.get(beforeId ? `/chat/${roomId}?beforeId=${beforeId}` : `/chat/${roomId}`).then(res => res.data);
 
+export const getRoomMembers = (roomId) => axiosInstance.get(`/chat/${roomId}/members`).then(res => res.data);
+
 export const sendChatMessage = (roomId, message) => axiosInstance.post('/chat/send', { roomId, message });
 
 export const requestJoinRoom = (roomId) => axiosInstance.post('/chat/request-join', { roomId });
@@ -69,7 +71,7 @@ export const getPublicProfile = (userId) => axiosInstance.get(`/user/${userId}/p
 
 
 // ADMIN & REPORTS
-export const reportUser = (userId, reason, details) => axiosInstance.post(`/users/${userId}/report`, { reason, details })
+export const reportUser = (userId, reason, details) => axiosInstance.post(`/users/${userId}/report`, { reason, details });
 
 export const getPendingReports = () => axiosInstance.get('/admin/reports');
 

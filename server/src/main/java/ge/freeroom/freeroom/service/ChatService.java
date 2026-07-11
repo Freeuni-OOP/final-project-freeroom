@@ -1,6 +1,7 @@
 package ge.freeroom.freeroom.service;
 
 import ge.freeroom.freeroom.dto.ChatMessageDto;
+import ge.freeroom.freeroom.dto.RoomMemberDto;
 import ge.freeroom.freeroom.entities.*;
 import ge.freeroom.freeroom.repositories.ChatRepository;
 import ge.freeroom.freeroom.repositories.RoomAccessRepository;
@@ -211,5 +212,12 @@ public class ChatService {
 
     private void broadcastReload(Long roomId) {
         messagingTemplate.convertAndSend("/topic/room/" + roomId + "/reload", "RELOAD");
+    }
+
+    public List<RoomMemberDto> getRoomMembers(Long roomId, String requesterId) {
+        if (!roomAccessRepository.existsByRoomIdAndUserId(roomId, requesterId)) {
+            throw new SecurityException("Unauthorized access to room members.");
+        }
+        return roomAccessRepository.findMembersByRoomId(roomId);
     }
 }

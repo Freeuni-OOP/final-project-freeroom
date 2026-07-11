@@ -73,4 +73,9 @@ public class ChatController {
     public ResponseEntity<String> handleSecurityException(SecurityException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
     }
+
+    @GetMapping("/{roomId}/members")
+    public List<RoomMemberDto> getRoomMembers(@PathVariable Long roomId, Principal principal) {
+        return chatService.getRoomMembers(roomId, principal.getName());
+    }
 }
